@@ -17,17 +17,36 @@ import org.nigelsmall.geoff.GEOFFLoader;
 import org.nigelsmall.geoff.UnknownNodeException;
 import org.nigelsmall.geoff.UnknownRelationshipException;
 
+/**
+ * The main server plugin class which provides the link via the RESTful web
+ * service interface
+ * 
+ * @author Nigel Small
+ *
+ */
 public class GEOFFPlugin extends ServerPlugin {
 
-	@Name("load")
+	/**
+	 * Load routine for importing GEOFF files into database
+	 * 
+	 * @param graphDB the database into which to import the data
+	 * @param source the GEOFF file source code
+	 * @return the first Node loaded from this file
+     * @throws BadDescriptorException
+     * @throws IOException
+     * @throws JsonParseException
+     * @throws UnknownNodeException
+     * @throws UnknownRelationshipException
+     */
+    @Name("load")
     @Description("Load definitions from GEOFF file into Neo4j graph database")
     @PluginTarget(GraphDatabaseService.class)
     public Node load(@Source GraphDatabaseService graphDB,
-    		         @Parameter(name="source") String source)
-	throws BadDescriptorException, IOException, JsonParseException,
+                     @Parameter(name="source") String source)
+    throws BadDescriptorException, IOException, JsonParseException,
            UnknownNodeException, UnknownRelationshipException
     {
-		return GEOFFLoader.load(new StringReader(source), graphDB).getFirstNode();
+        return GEOFFLoader.load(new StringReader(source), graphDB).getFirstNode();
     }
 
 }

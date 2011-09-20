@@ -13,12 +13,30 @@ public class NodeIndexEntry extends Descriptor {
 		this.nodeName = nodeName;
 	}
 
-	public String getIndexName() {
-		return this.indexName;
-	}
+    /**
+     * Return the name of the Index described
+     * 
+     * @return the Index name
+     */
+    public String getIndexName() {
+        return this.indexName;
+    }
 
-	public String getNodeName() {
-		return this.nodeName;
-	}
-	
+    /**
+     * Return the name of the Node described
+     * 
+     * @return the Node name
+     */
+    public String getNodeName() {
+        return this.nodeName;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{%s}->(%s)",
+            this.indexName,
+            this.nodeName
+        );
+    }
+
 }

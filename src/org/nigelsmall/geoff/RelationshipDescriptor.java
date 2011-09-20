@@ -17,19 +17,39 @@ public class RelationshipDescriptor extends Descriptor {
 		this.endNodeName = endNodeName;
 	}
 
-	public String getStartNodeName() {
+	/**
+     * Return the name of the Node at the start of the Relationship described
+     * 
+     * @return the start Node name
+     */
+    public String getStartNodeName() {
 		return this.startNodeName;
 	}
 
-	public String getRelationshipName() {
+	/**
+     * Return the name of the Relationship described
+     * 
+     * @return the Relationship name
+     */
+    public String getRelationshipName() {
 		return this.relationshipName;
 	}
 
-	public String getRelationshipType() {
+    /**
+     * Return the type of the Relationship described
+     * 
+     * @return the Relationship type
+     */
+    public String getRelationshipType() {
 		return this.relationshipType;
 	}
 
-	public String getEndNodeName() {
+	/**
+     * Return the name of the Node at the end of the Relationship described
+     * 
+     * @return the end Node name
+     */
+    public String getEndNodeName() {
 		return this.endNodeName;
 	}
 	

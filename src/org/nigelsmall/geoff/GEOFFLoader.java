@@ -10,39 +10,60 @@ import org.neo4j.server.rest.domain.JsonParseException;
 
 public class GEOFFLoader {
 	
+	/**
+	 * Static method to kick off loading a GEOFF file into the specified
+	 * GraphDatabaseService, taking data from the supplied Reader
+	 * 
+	 * @param reader the reader to grab data from
+	 * @param graphDB the database to put stuff into
+	 * @return the Namespace used to store all named entities
+	 * @throws BadDescriptorException
+	 * @throws IOException
+	 * @throws JsonParseException
+	 * @throws UnknownNodeException
+	 * @throws UnknownRelationshipException
+	 */
 	public static Namespace load(Reader reader, GraphDatabaseService graphDB)
 	throws BadDescriptorException, IOException, JsonParseException,
 	       UnknownNodeException, UnknownRelationshipException
 	{
-		BufferedReader bufferedReader = new BufferedReader(reader);
-		Namespace namespace = new Namespace(graphDB);
-		Transaction tx = graphDB.beginTx();
-		int lineNumber = 0;
-		String line = null;
-		Descriptor descriptor;
-		try {
-			do {
-				line = bufferedReader.readLine();
-				lineNumber++;
-				if(line != null) {
-					descriptor = Descriptor.from(lineNumber, line);
-					if(descriptor instanceof NodeDescriptor) {
-						namespace.createNode((NodeDescriptor)descriptor);
-					} else if(descriptor instanceof NodeIndexEntry) {
-						namespace.addNodeIndexEntry((NodeIndexEntry)descriptor);
-					} else if(descriptor instanceof RelationshipDescriptor) {
-						namespace.createRelationship((RelationshipDescriptor)descriptor);
-					} else if(descriptor instanceof RelationshipIndexEntry) {
-						namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
-					}
-				}
-			} while(line != null);
-			tx.success();
-			return namespace;
-		} finally {
-			tx.finish();
-			bufferedReader.close();
-		}
-	}
-	
+		// better to use a BufferedReader so we can grab one line at a time
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        // initialise the Namespace for use with this GraphDatabaseService
+        Namespace namespace = new Namespace(graphDB);
+        // and start a lovely new transaction
+        Transaction tx = graphDB.beginTx();
+        // move along, nothing to see here
+        int lineNumber = 0;
+        String line = null;
+        Descriptor descriptor;
+        try {
+        	// iterate through every line in the source data
+            do {
+                line = bufferedReader.readLine();
+                lineNumber++;
+                if(line != null) {
+                	// turn the line of text into a Descriptor
+                    descriptor = Descriptor.from(lineNumber, line);
+                    // and process accordingly
+                    if(descriptor instanceof NodeDescriptor) {
+                        namespace.createNode((NodeDescriptor)descriptor);
+                    } else if(descriptor instanceof NodeIndexEntry) {
+                        namespace.addNodeIndexEntry((NodeIndexEntry)descriptor);
+                    } else if(descriptor instanceof RelationshipDescriptor) {
+                        namespace.createRelationship((RelationshipDescriptor)descriptor);
+                    } else if(descriptor instanceof RelationshipIndexEntry) {
+                        namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
+                    }
+                }
+            } while(line != null);
+            // if we're here, nothing has gone wrong so label it a success
+            tx.success();
+            return namespace;
+        } finally {
+            tx.finish();
+            bufferedReader.close();
+        }
+    }
+    
 }

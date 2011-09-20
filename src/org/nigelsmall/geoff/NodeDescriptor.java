@@ -11,6 +11,11 @@ public class NodeDescriptor extends Descriptor {
 		this.nodeName = nodeName;
 	}
 	
+	/**
+	 * Return the name of the Node described
+	 * 
+	 * @return the Node name
+	 */
 	public String getNodeName() {
 		return this.nodeName;
 	}

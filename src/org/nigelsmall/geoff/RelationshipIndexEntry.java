@@ -13,12 +13,30 @@ public class RelationshipIndexEntry extends Descriptor {
 		this.relationshipName = relationshipName;
 	}
 
-	public String getIndexName() {
+	/**
+     * Return the name of the Index described
+     * 
+     * @return the Index name
+     */
+    public String getIndexName() {
 		return this.indexName;
 	}
 
-	public String getRelationshipName() {
+    /**
+     * Return the name of the Relationship described
+     * 
+     * @return the Relationship name
+     */
+    public String getRelationshipName() {
 		return this.relationshipName;
 	}
-	
+
+	@Override
+	public String toString() {
+		return String.format("{%s}->[%s]",
+			this.indexName,
+		    this.relationshipName
+        );
+    }
+
 }
