@@ -13,9 +13,9 @@ import org.neo4j.server.plugins.ServerPlugin;
 import org.neo4j.server.plugins.Source;
 import org.neo4j.server.rest.domain.JsonParseException;
 import org.nigelsmall.geoff.BadDescriptorException;
-import org.nigelsmall.geoff.GEOFFLoader;
 import org.nigelsmall.geoff.UnknownNodeException;
 import org.nigelsmall.geoff.UnknownRelationshipException;
+import org.nigelsmall.neo4j.GEOFFLoader;
 
 /**
  * The main server plugin class which provides the link via the RESTful web

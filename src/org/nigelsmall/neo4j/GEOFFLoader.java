@@ -1,4 +1,4 @@
-package org.nigelsmall.geoff;
+package org.nigelsmall.neo4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,6 +7,14 @@ import java.io.Reader;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.server.rest.domain.JsonParseException;
+import org.nigelsmall.geoff.BadDescriptorException;
+import org.nigelsmall.geoff.Descriptor;
+import org.nigelsmall.geoff.NodeDescriptor;
+import org.nigelsmall.geoff.NodeIndexEntry;
+import org.nigelsmall.geoff.RelationshipDescriptor;
+import org.nigelsmall.geoff.RelationshipIndexEntry;
+import org.nigelsmall.geoff.UnknownNodeException;
+import org.nigelsmall.geoff.UnknownRelationshipException;
 
 public class GEOFFLoader {
 	
@@ -23,14 +31,14 @@ public class GEOFFLoader {
 	 * @throws UnknownNodeException
 	 * @throws UnknownRelationshipException
 	 */
-	public static Namespace load(Reader reader, GraphDatabaseService graphDB)
+	public static Neo4jNamespace load(Reader reader, GraphDatabaseService graphDB)
 	throws BadDescriptorException, IOException, JsonParseException,
 	       UnknownNodeException, UnknownRelationshipException
 	{
 		// better to use a BufferedReader so we can grab one line at a time
         BufferedReader bufferedReader = new BufferedReader(reader);
         // initialise the Namespace for use with this GraphDatabaseService
-        Namespace namespace = new Namespace(graphDB);
+        Neo4jNamespace namespace = new Neo4jNamespace(graphDB);
         // and start a lovely new transaction
         Transaction tx = graphDB.beginTx();
         // move along, nothing to see here
