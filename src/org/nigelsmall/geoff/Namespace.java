@@ -1,8 +1,12 @@
 package org.nigelsmall.geoff;
 
 /**
- * Provides context for items to be added to a database and retained by name
- * so that they may be referred to from within the same context 
+ * Provides generic context for items to be added to a database and retained by
+ * name so that they may be referred to from within the same context.
+ * 
+ * Generic parameters:
+ *   N - to be substituted with database Node class
+ *   R - to be substituted with database Relationship class
  * 
  * @author Nigel Small
  *
