@@ -1,19 +1,13 @@
 package org.nigelsmall.neo4j;
 
-import java.util.HashMap;
-
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
-import org.nigelsmall.geoff.Namespace;
-import org.nigelsmall.geoff.NodeDescriptor;
-import org.nigelsmall.geoff.NodeIndexEntry;
-import org.nigelsmall.geoff.RelationshipDescriptor;
-import org.nigelsmall.geoff.RelationshipIndexEntry;
-import org.nigelsmall.geoff.UnknownNodeException;
-import org.nigelsmall.geoff.UnknownRelationshipException;
+import org.nigelsmall.geoff.*;
+
+import java.util.HashMap;
 
 /**
  * Provides context for items to be added to a database and retained by name
@@ -58,7 +52,7 @@ public class Neo4jNamespace implements Namespace<Node,Relationship> {
 		if(this.nodes.containsKey(name)) {
 			return this.nodes.get(name);
 		} else {
-			throw new UnknownNodeException();
+			throw new UnknownNodeException(name);
 		}
 	}
 
@@ -116,7 +110,7 @@ public class Neo4jNamespace implements Namespace<Node,Relationship> {
 		if(this.relationships.containsKey(name)) {
 			return this.relationships.get(name);
 		} else {
-			throw new UnknownRelationshipException();
+			throw new UnknownRelationshipException(name);
 		}
 	}
 

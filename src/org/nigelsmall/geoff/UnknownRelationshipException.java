@@ -2,6 +2,15 @@ package org.nigelsmall.geoff;
 
 public class UnknownRelationshipException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+    private final String relationshipName;
+
+    public UnknownRelationshipException(String relationshipName) {
+        super();
+        this.relationshipName = relationshipName;
+    }
+
+    public String getRelationshipName() {
+        return this.relationshipName;
+    }
 
 }

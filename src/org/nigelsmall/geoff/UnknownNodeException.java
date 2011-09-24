@@ -2,6 +2,15 @@ package org.nigelsmall.geoff;
 
 public class UnknownNodeException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+    private final String nodeName;
+
+    public UnknownNodeException(String nodeName) {
+        super();
+        this.nodeName = nodeName;
+    }
+
+    public String getNodeName() {
+        return this.nodeName;
+    }
 
 }
