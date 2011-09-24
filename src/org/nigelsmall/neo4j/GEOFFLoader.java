@@ -1,20 +1,12 @@
 package org.nigelsmall.neo4j;
 
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
+import org.nigelsmall.geoff.*;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.server.rest.domain.JsonParseException;
-import org.nigelsmall.geoff.BadDescriptorException;
-import org.nigelsmall.geoff.Descriptor;
-import org.nigelsmall.geoff.NodeDescriptor;
-import org.nigelsmall.geoff.NodeIndexEntry;
-import org.nigelsmall.geoff.RelationshipDescriptor;
-import org.nigelsmall.geoff.RelationshipIndexEntry;
-import org.nigelsmall.geoff.UnknownNodeException;
-import org.nigelsmall.geoff.UnknownRelationshipException;
 
 public class GEOFFLoader {
 	
@@ -27,13 +19,11 @@ public class GEOFFLoader {
 	 * @return the Namespace used to store all named entities
 	 * @throws BadDescriptorException
 	 * @throws IOException
-	 * @throws JsonParseException
 	 * @throws UnknownNodeException
 	 * @throws UnknownRelationshipException
 	 */
 	public static Neo4jNamespace load(Reader reader, GraphDatabaseService graphDB)
-	throws BadDescriptorException, IOException, JsonParseException,
-	       UnknownNodeException, UnknownRelationshipException
+	throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
 	{
 		// better to use a BufferedReader so we can grab one line at a time
         BufferedReader bufferedReader = new BufferedReader(reader);
@@ -43,7 +33,7 @@ public class GEOFFLoader {
         Transaction tx = graphDB.beginTx();
         // move along, nothing to see here
         int lineNumber = 0;
-        String line = null;
+        String line;
         Descriptor descriptor;
         try {
         	// iterate through every line in the source data

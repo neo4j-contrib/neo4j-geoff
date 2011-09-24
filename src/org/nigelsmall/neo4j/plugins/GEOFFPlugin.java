@@ -1,21 +1,15 @@
 package org.nigelsmall.neo4j.plugins;
 
-import java.io.IOException;
-import java.io.StringReader;
-
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.server.plugins.Description;
-import org.neo4j.server.plugins.Name;
-import org.neo4j.server.plugins.Parameter;
-import org.neo4j.server.plugins.PluginTarget;
-import org.neo4j.server.plugins.ServerPlugin;
-import org.neo4j.server.plugins.Source;
-import org.neo4j.server.rest.domain.JsonParseException;
+import org.neo4j.server.plugins.*;
 import org.nigelsmall.geoff.BadDescriptorException;
 import org.nigelsmall.geoff.UnknownNodeException;
 import org.nigelsmall.geoff.UnknownRelationshipException;
 import org.nigelsmall.neo4j.GEOFFLoader;
+
+import java.io.IOException;
+import java.io.StringReader;
 
 /**
  * The main server plugin class which provides the link via the RESTful web
@@ -34,7 +28,6 @@ public class GEOFFPlugin extends ServerPlugin {
 	 * @return the first Node loaded from this file
      * @throws BadDescriptorException
      * @throws IOException
-     * @throws JsonParseException
      * @throws UnknownNodeException
      * @throws UnknownRelationshipException
      */
@@ -43,8 +36,7 @@ public class GEOFFPlugin extends ServerPlugin {
     @PluginTarget(GraphDatabaseService.class)
     public Node load(@Source GraphDatabaseService graphDB,
                      @Parameter(name="source") String source)
-    throws BadDescriptorException, IOException, JsonParseException,
-           UnknownNodeException, UnknownRelationshipException
+    throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
     {
         return GEOFFLoader.load(new StringReader(source), graphDB).getFirstNode();
     }

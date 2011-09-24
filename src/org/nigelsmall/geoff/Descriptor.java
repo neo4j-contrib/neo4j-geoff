@@ -1,8 +1,9 @@
 package org.nigelsmall.geoff;
 
-import org.neo4j.server.rest.domain.JsonHelper;
-import org.neo4j.server.rest.domain.JsonParseException;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +51,7 @@ public abstract class Descriptor {
                 return new RelationshipIndexEntry(m.group(1), m.group(2), parseJSONObject(m.group(4)));
             }
             throw new BadDescriptorException(lineNumber, source);
-        } catch(JsonParseException e) {
+        } catch(IOException e) {
             throw new BadDescriptorException(lineNumber, source, e);
         }
     }
@@ -64,12 +65,13 @@ public abstract class Descriptor {
 	 * @throws JsonParseException when all hope is gone...
 	 */
     public static Map<String,Object> parseJSONObject(String source)
-    throws JsonParseException
+    throws IOException
     {
         if(source == null || source.length() == 0) {
             return null;
         } else {
-            return JsonHelper.jsonToMap(source);
+            ObjectMapper mapper = new ObjectMapper();
+            return (Map<String, Object>)mapper.readValue(source, Object.class);
         }
     }
 
