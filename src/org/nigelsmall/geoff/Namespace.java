@@ -58,6 +58,7 @@ public interface Namespace<N,R> {
 	 * by name, if it has a name
 	 * 
 	 * @param descriptor details of the Relationship to be created
+     * @throws UnknownNodeException if a Relationship makes reference to an unknown Node
 	 */
 	public void createRelationship(RelationshipDescriptor descriptor) throws UnknownNodeException;
 

@@ -1,9 +1,8 @@
 package org.nigelsmall.geoff;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.nigelsmall.util.JSON;
+import org.nigelsmall.util.JSONException;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,42 +35,23 @@ public abstract class Descriptor {
             }
             m = NODE_DESCRIPTOR.matcher(source);
             if(m.find()) {
-                return new NodeDescriptor(m.group(1), parseJSONObject(m.group(3)));
+                return new NodeDescriptor(m.group(1), JSON.toObject(m.group(3)));
             }
             m = NODE_INDEX_ENTRY.matcher(source);
             if(m.find()) {
-                return new NodeIndexEntry(m.group(1), m.group(2), parseJSONObject(m.group(4)));
+                return new NodeIndexEntry(m.group(1), m.group(2), JSON.toObject(m.group(4)));
             }
             m = RELATIONSHIP_DESCRIPTOR.matcher(source);
             if(m.find()) {
-                return new RelationshipDescriptor(m.group(1), m.group(2), m.group(3), m.group(4), parseJSONObject(m.group(6)));
+                return new RelationshipDescriptor(m.group(1), m.group(2), m.group(3), m.group(4), JSON.toObject(m.group(6)));
             }
             m = RELATIONSHIP_INDEX_ENTRY.matcher(source);
             if(m.find()) {
-                return new RelationshipIndexEntry(m.group(1), m.group(2), parseJSONObject(m.group(4)));
+                return new RelationshipIndexEntry(m.group(1), m.group(2), JSON.toObject(m.group(4)));
             }
             throw new BadDescriptorException(lineNumber, source);
-        } catch(IOException e) {
+        } catch(JSONException e) {
             throw new BadDescriptorException(lineNumber, source, e);
-        }
-    }
-
-	/**
-	 * Parse the supplied text as a JSON object; might validly be empty so
-	 * fail gracefully in that case
-	 * 
-	 * @param source the JSON source to parse
-	 * @return a String:Object collection
-	 * @throws JsonParseException when all hope is gone...
-	 */
-    public static Map<String,Object> parseJSONObject(String source)
-    throws IOException
-    {
-        if(source == null || source.length() == 0) {
-            return null;
-        } else {
-            ObjectMapper mapper = new ObjectMapper();
-            return (Map<String, Object>)mapper.readValue(source, Object.class);
         }
     }
 
