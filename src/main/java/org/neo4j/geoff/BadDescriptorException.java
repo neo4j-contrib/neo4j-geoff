@@ -17,19 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff;
+package org.neo4j.geoff;
 
-public class UnknownRelationshipException extends Exception {
+public class BadDescriptorException extends Exception {
 
-    private final String relationshipName;
+	protected final int lineNumber;
+	protected final String source;
+	
+	public BadDescriptorException(int lineNumber, String source) {
+		super(String.format("A bad descriptor was found on line %d: %s", lineNumber, source));
+		this.lineNumber = lineNumber;
+		this.source = source;
+	}
 
-    public UnknownRelationshipException(String relationshipName) {
-        super();
-        this.relationshipName = relationshipName;
+    public BadDescriptorException(int lineNumber, String source, Exception cause) {
+        super(String.format("A bad descriptor was found on line %d: %s", lineNumber, source), cause);
+		this.lineNumber = lineNumber;
+		this.source = source;
     }
 
-    public String getRelationshipName() {
-        return this.relationshipName;
-    }
+	public int getLineNumber() {
+		return this.lineNumber;
+	}
 
+	public String getSource() {
+		return this.source;
+	}
+	
 }

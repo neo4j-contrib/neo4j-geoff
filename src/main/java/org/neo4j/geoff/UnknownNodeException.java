@@ -17,45 +17,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff;
+package org.neo4j.geoff;
 
-import java.util.Map;
+public class UnknownNodeException extends Exception {
 
-public class NodeIndexEntry extends Descriptor {
+    private final String nodeName;
 
-	protected final String indexName;
-	protected final String nodeName;
-	
-	protected NodeIndexEntry(String indexName, String nodeName, Map<String,Object> data) {
-		super(data);
-		this.indexName = indexName;
-		this.nodeName = nodeName;
-	}
-
-    /**
-     * Return the name of the Index described
-     * 
-     * @return the Index name
-     */
-    public String getIndexName() {
-        return this.indexName;
+    public UnknownNodeException(String nodeName) {
+        super();
+        this.nodeName = nodeName;
     }
 
-    /**
-     * Return the name of the Node described
-     * 
-     * @return the Node name
-     */
     public String getNodeName() {
         return this.nodeName;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("{%s}->(%s)",
-            this.indexName,
-            this.nodeName
-        );
     }
 
 }

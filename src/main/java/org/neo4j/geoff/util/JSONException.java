@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.util;
+package org.neo4j.geoff.util;
 
 public class JSONException extends Exception {
 

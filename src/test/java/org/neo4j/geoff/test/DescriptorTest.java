@@ -17,11 +17,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff.test;
+package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.nigelsmall.geoff.*;
+import org.neo4j.geoff.BadDescriptorException;
+import org.neo4j.geoff.Descriptor;
+import org.neo4j.geoff.NodeDescriptor;
+import org.neo4j.geoff.NodeIndexEntry;
+import org.neo4j.geoff.RelationshipDescriptor;
+import org.neo4j.geoff.RelationshipIndexEntry;
 
 
 public class DescriptorTest {

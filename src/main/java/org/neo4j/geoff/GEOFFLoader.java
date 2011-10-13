@@ -17,15 +17,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.neo4j;
-
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
-import org.nigelsmall.geoff.*;
+package org.neo4j.geoff;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 
 public class GEOFFLoader {
 	

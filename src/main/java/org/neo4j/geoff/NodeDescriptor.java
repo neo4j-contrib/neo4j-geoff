@@ -17,19 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff;
+package org.neo4j.geoff;
 
-public class UnknownNodeException extends Exception {
+import java.util.Map;
 
-    private final String nodeName;
+public class NodeDescriptor extends Descriptor {
 
-    public UnknownNodeException(String nodeName) {
-        super();
-        this.nodeName = nodeName;
-    }
-
-    public String getNodeName() {
-        return this.nodeName;
-    }
+	protected final String nodeName;
+	
+	protected NodeDescriptor(String nodeName, Map<String,Object> data) {
+		super(data);
+		this.nodeName = nodeName;
+	}
+	
+	/**
+	 * Return the name of the Node described
+	 * 
+	 * @return the Node name
+	 */
+	public String getNodeName() {
+		return this.nodeName;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("(%s)", this.nodeName);
+	}
 
 }

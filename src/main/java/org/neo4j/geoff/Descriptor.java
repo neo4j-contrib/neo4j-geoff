@@ -17,10 +17,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff;
+package org.neo4j.geoff;
 
-import org.nigelsmall.util.JSON;
-import org.nigelsmall.util.JSONException;
+import org.neo4j.geoff.util.JSON;
+import org.neo4j.geoff.util.JSONException;
 
 import java.util.Map;
 import java.util.regex.Matcher;

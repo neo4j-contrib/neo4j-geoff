@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff.test;
+package org.neo4j.geoff.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,8 +27,8 @@ import java.io.StringReader;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.geoff.GEOFFLoader;
 import org.neo4j.test.ImpermanentGraphDatabase;
-import org.nigelsmall.neo4j.GEOFFLoader;
 
 public class GraphDescriptionTest
 {

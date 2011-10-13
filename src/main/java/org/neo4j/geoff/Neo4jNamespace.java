@@ -17,16 +17,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.neo4j;
+package org.neo4j.geoff;
+
+import java.util.HashMap;
 
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
-import org.nigelsmall.geoff.*;
-
-import java.util.HashMap;
 
 /**
  * Provides context for items to be added to a database and retained by name

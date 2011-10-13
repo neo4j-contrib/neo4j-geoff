@@ -17,35 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.nigelsmall.geoff;
+package org.neo4j.geoff;
 
 import java.util.Map;
 
-public class RelationshipDescriptor extends Descriptor {
+public class RelationshipIndexEntry extends Descriptor {
 
-	protected final String startNodeName;
+	protected final String indexName;
 	protected final String relationshipName;
-	protected final String relationshipType;
-	protected final String endNodeName;
 	
-	protected RelationshipDescriptor(String startNodeName, String relationshipName, String relationshipType, String endNodeName, Map<String,Object> data) {
+	protected RelationshipIndexEntry(String indexName, String relationshipName, Map<String,Object> data) {
 		super(data);
-		this.startNodeName = startNodeName;
+		this.indexName = indexName;
 		this.relationshipName = relationshipName;
-		this.relationshipType = relationshipType;
-		this.endNodeName = endNodeName;
 	}
 
 	/**
-     * Return the name of the Node at the start of the Relationship described
+     * Return the name of the Index described
      * 
-     * @return the start Node name
+     * @return the Index name
      */
-    public String getStartNodeName() {
-		return this.startNodeName;
+    public String getIndexName() {
+		return this.indexName;
 	}
 
-	/**
+    /**
      * Return the name of the Relationship described
      * 
      * @return the Relationship name
@@ -54,32 +50,12 @@ public class RelationshipDescriptor extends Descriptor {
 		return this.relationshipName;
 	}
 
-    /**
-     * Return the type of the Relationship described
-     * 
-     * @return the Relationship type
-     */
-    public String getRelationshipType() {
-		return this.relationshipType;
-	}
-
-	/**
-     * Return the name of the Node at the end of the Relationship described
-     * 
-     * @return the end Node name
-     */
-    public String getEndNodeName() {
-		return this.endNodeName;
-	}
-	
 	@Override
 	public String toString() {
-		return String.format("(%s)-[%s:%s]->(%s)",
-			this.startNodeName,
-			this.relationshipName,
-			this.relationshipType,
-			this.endNodeName
-		);
-	}
+		return String.format("{%s}->[%s]",
+			this.indexName,
+		    this.relationshipName
+        );
+    }
 
 }
