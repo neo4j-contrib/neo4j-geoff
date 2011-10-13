@@ -19,6 +19,7 @@
  */
 package org.nigelsmall.geoff.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.Reader;
@@ -41,11 +42,12 @@ public class GraphDescriptionTest
         		"(doc) {\"name\": \"doctor\"}\n" +
         		"(dal) {\"name\": \"dalek\"}\n" +
         		"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
-        		"{People}->(dal)     {\"name\": \"The Doctor\"}\n" +
+        		"{People}->(doc)     {\"name\": \"The Doctor\"}\n" +
                 "" );
         GEOFFLoader.load( reader, db );
         assertTrue(db.index().existsForNodes( "People" ));
         assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
+        assertEquals("doctor", db.index().forNodes("People" ).get( "name", "The Doctor" ).getSingle().getProperty( "name" ));
     }
 
     
