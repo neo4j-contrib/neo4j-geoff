@@ -25,11 +25,13 @@ public class RelationshipIndexEntry extends Descriptor {
 
 	protected final String indexName;
 	protected final String relationshipName;
-	
-	protected RelationshipIndexEntry(String indexName, String relationshipName, Map<String,Object> data) {
-		super(data);
+    protected final Map<String,Object> data;
+
+    protected RelationshipIndexEntry(String indexName, String relationshipName, Map<String,Object> data) {
+		super();
 		this.indexName = indexName;
 		this.relationshipName = relationshipName;
+        this.data = data;
 	}
 
 	/**
@@ -58,4 +60,12 @@ public class RelationshipIndexEntry extends Descriptor {
         );
     }
 
+    /**
+     * Return the key:value pairs attached to this Descriptor
+     *
+     * @return Map of key:value pairs
+     */
+    public Map<String,Object> getData() {
+        return this.data;
+    }
 }

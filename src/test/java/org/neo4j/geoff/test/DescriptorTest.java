@@ -21,12 +21,7 @@ package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.neo4j.geoff.BadDescriptorException;
-import org.neo4j.geoff.Descriptor;
-import org.neo4j.geoff.NodeDescriptor;
-import org.neo4j.geoff.NodeIndexEntry;
-import org.neo4j.geoff.RelationshipDescriptor;
-import org.neo4j.geoff.RelationshipIndexEntry;
+import org.neo4j.geoff.*;
 
 
 public class DescriptorTest {
@@ -35,7 +30,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsBlankLines()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "");
+		Descriptor descriptor = Descriptor.from("");
 		Assert.assertNull(descriptor);
 	}
 
@@ -43,7 +38,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsLinesOfWhitespace()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "\t    ");
+		Descriptor descriptor = Descriptor.from("\t    ");
 		Assert.assertNull(descriptor);
 	}
 
@@ -51,7 +46,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsComments()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "# this is a comment");
+		Descriptor descriptor = Descriptor.from("# this is a comment");
 		Assert.assertNull(descriptor);
 	}
 
@@ -59,7 +54,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsNodeDescriptors()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "(foo)");
+		Descriptor descriptor = Descriptor.from("(foo)");
 		Assert.assertTrue(descriptor instanceof NodeDescriptor);
 		NodeDescriptor nodeDescriptor = (NodeDescriptor)descriptor;
 		Assert.assertEquals(nodeDescriptor.getNodeName(), "foo");
@@ -69,7 +64,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsNodeDescriptorsWithData()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "(foo) {\"pi\":3.1415}");
+		Descriptor descriptor = Descriptor.from("(foo) {\"pi\":3.1415}");
 		Assert.assertTrue(descriptor instanceof NodeDescriptor);
 		NodeDescriptor nodeDescriptor = (NodeDescriptor)descriptor;
 		Assert.assertEquals(nodeDescriptor.getNodeName(), "foo");
@@ -81,7 +76,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsNodeIndexEntries()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "{index1}->(bob) {\"foo\":\"bar\"}");
+		Descriptor descriptor = Descriptor.from("{index1}->(bob) {\"foo\":\"bar\"}");
 		Assert.assertTrue(descriptor instanceof NodeIndexEntry);
 		NodeIndexEntry nodeIndexEntry = (NodeIndexEntry)descriptor;
 		Assert.assertEquals(nodeIndexEntry.getIndexName(), "index1");
@@ -94,7 +89,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsUnnamedRelationshipDescriptors()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "(foo)-[:KNOWS]->(bar)");
+		Descriptor descriptor = Descriptor.from("(foo)-[:KNOWS]->(bar)");
 		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
 		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
 		Assert.assertEquals(relDescriptor.getStartNodeName(), "foo");
@@ -107,7 +102,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsNamedRelationshipDescriptors()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "(foo)-[bob:KNOWS]->(bar)");
+		Descriptor descriptor = Descriptor.from("(foo)-[bob:KNOWS]->(bar)");
 		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
 		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
 		Assert.assertEquals(relDescriptor.getStartNodeName(), "foo");
@@ -120,7 +115,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsRelationshipDescriptorsWithData()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "(foo)-[bob:KNOWS]->(bar) {\"pi\":3.1415}");
+		Descriptor descriptor = Descriptor.from("(foo)-[bob:KNOWS]->(bar) {\"pi\":3.1415}");
 		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
 		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
 		Assert.assertEquals(relDescriptor.getStartNodeName(), "foo");
@@ -135,7 +130,7 @@ public class DescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsRelationshipIndexEntries()
 	throws BadDescriptorException
 	{
-		Descriptor descriptor = Descriptor.from(1, "{index1}->[bob] {\"foo\":\"bar\"}");
+		Descriptor descriptor = Descriptor.from("{index1}->[bob] {\"foo\":\"bar\"}");
 		Assert.assertTrue(descriptor instanceof RelationshipIndexEntry);
 		RelationshipIndexEntry relIndexEntry = (RelationshipIndexEntry)descriptor;
 		Assert.assertEquals(relIndexEntry.getIndexName(), "index1");

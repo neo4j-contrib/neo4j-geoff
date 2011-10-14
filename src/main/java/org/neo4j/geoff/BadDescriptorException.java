@@ -21,27 +21,29 @@ package org.neo4j.geoff;
 
 public class BadDescriptorException extends Exception {
 
-	protected final int lineNumber;
 	protected final String source;
-	
-	public BadDescriptorException(int lineNumber, String source) {
-		super(String.format("A bad descriptor was found on line %d: %s", lineNumber, source));
-		this.lineNumber = lineNumber;
+    protected Integer lineNumber;
+
+	public BadDescriptorException(String source) {
+		super(String.format("Bad descriptor found: %s", source));
 		this.source = source;
 	}
 
-    public BadDescriptorException(int lineNumber, String source, Exception cause) {
-        super(String.format("A bad descriptor was found on line %d: %s", lineNumber, source), cause);
-		this.lineNumber = lineNumber;
+    public BadDescriptorException(String source, Exception cause) {
+        super(String.format("Bad descriptor found: %s", source), cause);
 		this.source = source;
     }
-
-	public int getLineNumber() {
-		return this.lineNumber;
-	}
 
 	public String getSource() {
 		return this.source;
 	}
-	
+
+    public Integer getLineNumber() {
+        return this.lineNumber;
+    }
+
+    public void setLineNumber(Integer lineNumber) {
+        this.lineNumber = lineNumber;
+    }
+    
 }

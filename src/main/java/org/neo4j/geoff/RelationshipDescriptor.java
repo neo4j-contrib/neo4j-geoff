@@ -27,13 +27,15 @@ public class RelationshipDescriptor extends Descriptor {
 	protected final String relationshipName;
 	protected final String relationshipType;
 	protected final String endNodeName;
-	
-	protected RelationshipDescriptor(String startNodeName, String relationshipName, String relationshipType, String endNodeName, Map<String,Object> data) {
-		super(data);
+    protected final Map<String,Object> data;
+
+    protected RelationshipDescriptor(String startNodeName, String relationshipName, String relationshipType, String endNodeName, Map<String,Object> data) {
+		super();
 		this.startNodeName = startNodeName;
 		this.relationshipName = relationshipName;
 		this.relationshipType = relationshipType;
 		this.endNodeName = endNodeName;
+        this.data = data;
 	}
 
 	/**
@@ -82,4 +84,12 @@ public class RelationshipDescriptor extends Descriptor {
 		);
 	}
 
+    /**
+     * Return the key:value pairs attached to this Descriptor
+     *
+     * @return Map of key:value pairs
+     */
+    public Map<String,Object> getData() {
+        return this.data;
+    }
 }

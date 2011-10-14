@@ -19,16 +19,16 @@
  */
 package org.neo4j.geoff.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.Reader;
-import java.io.StringReader;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFFLoader;
 import org.neo4j.test.ImpermanentGraphDatabase;
+
+import java.io.Reader;
+import java.io.StringReader;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class GraphDescriptionTest
 {
@@ -44,12 +44,26 @@ public class GraphDescriptionTest
         		"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
         		"{People}->(doc)     {\"name\": \"The Doctor\"}\n" +
                 "" );
-        GEOFFLoader.load( reader, db );
+        GEOFFLoader.loadIntoNeo4j(reader, db);
         assertTrue(db.index().existsForNodes( "People" ));
         assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
         assertEquals("doctor", db.index().forNodes("People" ).get( "name", "The Doctor" ).getSingle().getProperty( "name" ));
     }
 
+    @Test
+    public void canCreateGraphFromSingleCompositeDescriptor() throws Exception
+    {
+        Reader reader = new StringReader( "{" +
+        		"\"(doc)\": {\"name\": \"doctor\"}," +
+        		"\"(dal)\": {\"name\": \"dalek\"}," +
+        		"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
+        		"\"{People}->(doc)\":     {\"name\": \"The Doctor\"}" +
+                "}" );
+        GEOFFLoader.loadIntoNeo4j(reader, db);
+        assertTrue(db.index().existsForNodes( "People" ));
+        assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
+        assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+    }
     
     @Before
     public void setUp() throws Exception {

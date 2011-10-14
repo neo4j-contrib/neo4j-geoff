@@ -24,10 +24,12 @@ import java.util.Map;
 public class NodeDescriptor extends Descriptor {
 
 	protected final String nodeName;
-	
-	protected NodeDescriptor(String nodeName, Map<String,Object> data) {
-		super(data);
+    protected final Map<String,Object> data;
+
+    protected NodeDescriptor(String nodeName, Map<String,Object> data) {
+        super();
 		this.nodeName = nodeName;
+        this.data = data;
 	}
 	
 	/**
@@ -44,4 +46,12 @@ public class NodeDescriptor extends Descriptor {
 		return String.format("(%s)", this.nodeName);
 	}
 
+    /**
+     * Return the key:value pairs attached to this Descriptor
+     *
+     * @return Map of key:value pairs
+     */
+    public Map<String,Object> getData() {
+        return this.data;
+    }
 }

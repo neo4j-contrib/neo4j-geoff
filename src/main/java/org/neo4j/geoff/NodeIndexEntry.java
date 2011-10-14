@@ -25,11 +25,13 @@ public class NodeIndexEntry extends Descriptor {
 
 	protected final String indexName;
 	protected final String nodeName;
-	
-	protected NodeIndexEntry(String indexName, String nodeName, Map<String,Object> data) {
-		super(data);
+    protected final Map<String,Object> data;
+
+    protected NodeIndexEntry(String indexName, String nodeName, Map<String,Object> data) {
+		super();
 		this.indexName = indexName;
 		this.nodeName = nodeName;
+        this.data = data;
 	}
 
     /**
@@ -58,4 +60,12 @@ public class NodeIndexEntry extends Descriptor {
         );
     }
 
+    /**
+     * Return the key:value pairs attached to this Descriptor
+     *
+     * @return Map of key:value pairs
+     */
+    public Map<String,Object> getData() {
+        return this.data;
+    }
 }

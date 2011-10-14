@@ -19,15 +19,15 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
+public class GEOFFLoader<NS extends Namespace> {
 
-public class GEOFFLoader {
-	
 	/**
 	 * Static method to kick off loading a GEOFF file into the specified
 	 * GraphDatabaseService, taking data from the supplied Reader
@@ -35,21 +35,31 @@ public class GEOFFLoader {
 	 * @param reader the reader to grab data from
 	 * @param graphDB the database to put stuff into
 	 * @return the Namespace used to store all named entities
-	 * @throws BadDescriptorException
+	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
 	 * @throws UnknownNodeException
 	 * @throws UnknownRelationshipException
 	 */
-	public static Neo4jNamespace load(Reader reader, GraphDatabaseService graphDB)
+	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB)
 	throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
 	{
-		// better to use a BufferedReader so we can grab one line at a time
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        // initialise the Namespace for use with this GraphDatabaseService
-        Neo4jNamespace namespace = new Neo4jNamespace(graphDB);
-        // and start a lovely new transaction
         Transaction tx = graphDB.beginTx();
-        // move along, nothing to see here
+        try {
+    		GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB));
+            tx.success();
+            return loader.getNamespace();
+        } finally {
+            tx.finish();
+        }
+    }
+
+    private final NS namespace;
+
+    private GEOFFLoader(Reader reader, NS namespace)
+	throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+	{
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        this.namespace = namespace;
         int lineNumber = 0;
         String line;
         Descriptor descriptor;
@@ -60,26 +70,66 @@ public class GEOFFLoader {
                 lineNumber++;
                 if(line != null) {
                 	// turn the line of text into a Descriptor
-                    descriptor = Descriptor.from(lineNumber, line);
-                    // and process accordingly
-                    if(descriptor instanceof NodeDescriptor) {
-                        namespace.createNode((NodeDescriptor)descriptor);
-                    } else if(descriptor instanceof NodeIndexEntry) {
-                        namespace.addNodeIndexEntry((NodeIndexEntry)descriptor);
-                    } else if(descriptor instanceof RelationshipDescriptor) {
-                        namespace.createRelationship((RelationshipDescriptor)descriptor);
-                    } else if(descriptor instanceof RelationshipIndexEntry) {
-                        namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
+                    try {
+                        descriptor = Descriptor.from(line);
+                    } catch(BadDescriptorException e) {
+                        // if something goes wrong, attach the line number and re-throw
+                        e.setLineNumber(lineNumber);
+                        throw e;
                     }
+                    // and add the described data to the namespace
+                    this.add(descriptor);
                 }
             } while(line != null);
-            // if we're here, nothing has gone wrong so label it a success
-            tx.success();
-            return namespace;
         } finally {
-            tx.finish();
             bufferedReader.close();
         }
     }
-    
+
+    /**
+     * Add a descriptor to the namespace associated with this loader
+     *
+     * @param descriptor the descriptor to add
+     * @throws UnknownNodeException when an unknown node is referenced
+     * @throws UnknownRelationshipException when an unknown relationship is referenced
+     */
+    private void add(Descriptor descriptor)
+    throws UnknownNodeException, UnknownRelationshipException
+    {
+        if(descriptor instanceof CompositeDescriptor) {
+            // iterate multiple times to avoid dependency issues - nodes first
+            for(Descriptor d : (CompositeDescriptor)descriptor) {
+                if(d instanceof NodeDescriptor) {
+                    this.namespace.createNode((NodeDescriptor)d);
+                }
+            }
+            // node index entries and relationships depend on nodes
+            for(Descriptor d : (CompositeDescriptor)descriptor) {
+                if(d instanceof NodeIndexEntry) {
+                    this.namespace.addNodeIndexEntry((NodeIndexEntry)d);
+                } else if(d instanceof RelationshipDescriptor) {
+                    this.namespace.createRelationship((RelationshipDescriptor)d);
+                }
+            }
+            // relationship index entries depend on relationships
+            for(Descriptor d : (CompositeDescriptor)descriptor) {
+                if(d instanceof RelationshipIndexEntry) {
+                    this.namespace.addRelationshipIndexEntry((RelationshipIndexEntry)d);
+                }
+            }
+        } else if(descriptor instanceof NodeDescriptor) {
+            this.namespace.createNode((NodeDescriptor)descriptor);
+        } else if(descriptor instanceof NodeIndexEntry) {
+            this.namespace.addNodeIndexEntry((NodeIndexEntry)descriptor);
+        } else if(descriptor instanceof RelationshipDescriptor) {
+            this.namespace.createRelationship((RelationshipDescriptor)descriptor);
+        } else if(descriptor instanceof RelationshipIndexEntry) {
+            this.namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
+        }
+    }
+
+    public NS getNamespace() {
+        return this.namespace;
+    }
+
 }
