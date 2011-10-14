@@ -139,4 +139,35 @@ public class DescriptorTest {
 		Assert.assertEquals(relIndexEntry.getData().get("foo"), "bar");
 	}
 
+    @Test
+    public void testIfDescriptorFactoryUnderstandsCompositeDescriptors()
+    throws BadDescriptorException
+    {
+        String descString = "{\"(doc)\": {\"name\": \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
+            "\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"{People}->(doc)\": {\"name\": \"The Doctor\"} }";
+        Descriptor descriptor = Descriptor.from(descString);
+        Assert.assertTrue(descriptor instanceof CompositeDescriptor);
+        CompositeDescriptor desc = (CompositeDescriptor)descriptor;
+        Assert.assertEquals(desc.length(), 4);
+    }
+
+    @Test(expected = BadDescriptorException.class)
+    public void testIfDescriptorFactoryFailsOnCompositeDescriptorWithBadJSON()
+    throws BadDescriptorException
+    {
+        String descString = "{\"(doc)\": {\"name\"; \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
+            "\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"{People}->(doc)\": {\"name\": \"The Doctor\"} }";
+        Descriptor descriptor = Descriptor.from(descString);
+        Assert.assertTrue(descriptor instanceof CompositeDescriptor);
+        CompositeDescriptor desc = (CompositeDescriptor)descriptor;
+        Assert.assertEquals(desc.length(), 4);
+    }
+
+    @Test(expected = BadDescriptorException.class)
+    public void testIfDescriptorFactoryFailsOnUnrecognisableDescriptor()
+    throws BadDescriptorException
+    {
+        Descriptor descriptor = Descriptor.from("@!$#");
+    }
+
 }

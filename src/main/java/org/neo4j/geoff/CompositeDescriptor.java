@@ -29,7 +29,7 @@ import java.util.Set;
  * entities. It is a 100% JSON-compatible representation of descriptors and data held as key:value
  * pairs within a JSON object. For example:
  *
- * {"(doc)": {"name": "doctor"}, "(dal)": {"name": "dalek"}}, "(doc)-[:ENEMY_OF]->(dal)": {"since": "forever"}, "{People}->(doc)": {"name": "The Doctor"}}
+ * {"(doc)": {"name": "doctor"}, "(dal)": {"name": "dalek"}, "(doc)-[:ENEMY_OF]->(dal)": {"since": "forever"}, "{People}->(doc)": {"name": "The Doctor"}}
  *
  * Note that line breaks within the whitespace parts of the data are not allowed as they are
  * seen as separate lines by the GEOFF parser.
