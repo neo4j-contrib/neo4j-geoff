@@ -97,25 +97,19 @@ public class GEOFFLoader<NS extends Namespace> {
     throws UnknownNodeException, UnknownRelationshipException
     {
         if(descriptor instanceof CompositeDescriptor) {
-            // iterate multiple times to avoid dependency issues - nodes first
-            for(Descriptor d : (CompositeDescriptor)descriptor) {
-                if(d instanceof NodeDescriptor) {
-                    this.namespace.createNode((NodeDescriptor)d);
-                }
+            CompositeDescriptor composite = (CompositeDescriptor) descriptor;
+            // iterate multiple times to avoid dependency issues
+            for(NodeDescriptor d : composite.nodeDescriptors) {
+                this.namespace.createNode(d);
             }
-            // node index entries and relationships depend on nodes
-            for(Descriptor d : (CompositeDescriptor)descriptor) {
-                if(d instanceof NodeIndexEntry) {
-                    this.namespace.addNodeIndexEntry((NodeIndexEntry)d);
-                } else if(d instanceof RelationshipDescriptor) {
-                    this.namespace.createRelationship((RelationshipDescriptor)d);
-                }
+            for(NodeIndexEntry d : composite.nodeIndexEntries) {
+                this.namespace.addNodeIndexEntry(d);
             }
-            // relationship index entries depend on relationships
-            for(Descriptor d : (CompositeDescriptor)descriptor) {
-                if(d instanceof RelationshipIndexEntry) {
-                    this.namespace.addRelationshipIndexEntry((RelationshipIndexEntry)d);
-                }
+            for(RelationshipDescriptor d : composite.relationshipDescriptors) {
+                this.namespace.createRelationship(d);
+            }
+            for(RelationshipIndexEntry d : composite.relationshipIndexEntries) {
+                this.namespace.addRelationshipIndexEntry(d);
             }
         } else if(descriptor instanceof NodeDescriptor) {
             this.namespace.createNode((NodeDescriptor)descriptor);
@@ -125,6 +119,8 @@ public class GEOFFLoader<NS extends Namespace> {
             this.namespace.createRelationship((RelationshipDescriptor)descriptor);
         } else if(descriptor instanceof RelationshipIndexEntry) {
             this.namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
+        } else {
+            throw new UnsupportedOperationException();
         }
     }
 

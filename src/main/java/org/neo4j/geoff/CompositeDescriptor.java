@@ -35,28 +35,57 @@ import java.util.Set;
  * seen as separate lines by the GEOFF parser.
  *
  */
-public class CompositeDescriptor extends Descriptor implements Iterable<Descriptor> {
+public class CompositeDescriptor extends Descriptor {
 
-    protected final Set<Descriptor> descriptors;
+    protected final int count;
+    protected final Set<NodeDescriptor> nodeDescriptors;
+    protected final Set<NodeIndexEntry> nodeIndexEntries;
+    protected final Set<RelationshipDescriptor> relationshipDescriptors;
+    protected final Set<RelationshipIndexEntry> relationshipIndexEntries;
 
     protected CompositeDescriptor(Map<String,Map<String,Object>> descriptors)
     throws BadDescriptorException
     {
         super();
-        this.descriptors = new HashSet<Descriptor>(descriptors.size());
+        this.count = descriptors.size();
+        this.nodeDescriptors = new HashSet<NodeDescriptor>(this.count);
+        this.nodeIndexEntries = new HashSet<NodeIndexEntry>(this.count);
+        this.relationshipDescriptors = new HashSet<RelationshipDescriptor>(this.count);
+        this.relationshipIndexEntries = new HashSet<RelationshipIndexEntry>(this.count);
         for(Map.Entry<String,Map<String, Object>> descriptor : descriptors.entrySet()) {
-            this.descriptors.add(Descriptor.from(descriptor.getKey(), descriptor.getValue()));
+            Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
+            if(d instanceof NodeDescriptor) {
+                this.nodeDescriptors.add((NodeDescriptor) d);
+            } else if(d instanceof NodeIndexEntry) {
+                this.nodeIndexEntries.add((NodeIndexEntry) d);
+            } else if(d instanceof RelationshipDescriptor) {
+                this.relationshipDescriptors.add((RelationshipDescriptor) d);
+            } else if(d instanceof RelationshipIndexEntry) {
+                this.relationshipIndexEntries.add((RelationshipIndexEntry) d);
+            } else {
+                throw new UnsupportedOperationException();
+            }
         }
 	}
 
     public int length() {
-        return this.descriptors.size();
+        return this.count;
     }
 
-    @Override
-    public Iterator<Descriptor> iterator() {
-        // TODO: look at whether this iterator can return descriptors in an order which satisfies dependencies
-        return this.descriptors.iterator();
+    public Iterator<NodeDescriptor> nodeDescriptors() {
+        return this.nodeDescriptors.iterator();
     }
-    
+
+    public Iterator<NodeIndexEntry> nodeIndexEntries() {
+        return this.nodeIndexEntries.iterator();
+    }
+
+    public Iterator<RelationshipDescriptor> relationshipDescriptors() {
+        return this.relationshipDescriptors.iterator();
+    }
+
+    public Iterator<RelationshipIndexEntry> relationshipIndexEntries() {
+        return this.relationshipIndexEntries.iterator();
+    }
+
 }
