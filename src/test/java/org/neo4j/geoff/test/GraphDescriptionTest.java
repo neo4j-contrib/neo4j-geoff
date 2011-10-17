@@ -64,7 +64,22 @@ public class GraphDescriptionTest
         assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
         assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
     }
-    
+
+    @Test
+    public void canCreateGraphFromCompositeDescriptorInUnexpectedOrder() throws Exception
+    {
+        Reader reader = new StringReader( "{" +
+                "\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
+                "\"{People}->(doc)\":     {\"name\": \"The Doctor\"}," +
+        		"\"(doc)\": {\"name\": \"doctor\"}," +
+        		"\"(dal)\": {\"name\": \"dalek\"}" +
+                "}" );
+        GEOFFLoader.loadIntoNeo4j(reader, db);
+        assertTrue(db.index().existsForNodes( "People" ));
+        assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
+        assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+    }
+
     @Before
     public void setUp() throws Exception {
         db = new ImpermanentGraphDatabase();

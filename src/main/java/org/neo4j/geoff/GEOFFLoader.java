@@ -77,7 +77,7 @@ public class GEOFFLoader<NS extends Namespace> {
                         e.setLineNumber(lineNumber);
                         throw e;
                     }
-                    // and add the described data to the namespace
+                    // add the described data to the namespace
                     this.add(descriptor);
                 }
             } while(line != null);
