@@ -19,12 +19,13 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Transaction;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
 
 public class GEOFFLoader<NS extends Namespace> {
 
@@ -46,6 +47,32 @@ public class GEOFFLoader<NS extends Namespace> {
         Transaction tx = graphDB.beginTx();
         try {
     		GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB));
+            tx.success();
+            return loader.getNamespace();
+        } finally {
+            tx.finish();
+        }
+    }
+	
+	
+	/**
+     * Static method to kick off loading a GEOFF file into the specified
+     * GraphDatabaseService, taking data from the supplied Reader
+     * 
+     * @param reader the reader to grab data from
+     * @param graphDB the database to put stuff into
+     * @return the Namespace used to store all named entities
+     * @throws BadDescriptorException when a badly-formed descriptor is encountered
+     * @throws IOException
+     * @throws UnknownNodeException
+     * @throws UnknownRelationshipException
+     */
+    public static Neo4jNamespace loadIntoNeo4j(Map geoff, GraphDatabaseService graphDB)
+    throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+    {
+        Transaction tx = graphDB.beginTx();
+        try {
+            GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(geoff, new Neo4jNamespace(graphDB));
             tx.success();
             return loader.getNamespace();
         } finally {
@@ -85,6 +112,25 @@ public class GEOFFLoader<NS extends Namespace> {
             bufferedReader.close();
         }
     }
+    
+    /**
+     * Load a graph form a map for GEOFF statements.
+     * 
+     * @param geoff the map of GEOFF
+     * @param namespace
+     * @throws BadDescriptorException
+     * @throws IOException
+     * @throws UnknownNodeException
+     * @throws UnknownRelationshipException
+     */
+    private GEOFFLoader(Map<String, Map> geoff, NS namespace)
+            throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+            {
+                this.namespace = namespace;
+                Descriptor descriptor;
+                    for (String key : geoff.keySet())
+                            this.add(Descriptor.from(key, geoff.get( key )));
+            }
 
     /**
      * Add a descriptor to the namespace associated with this loader
