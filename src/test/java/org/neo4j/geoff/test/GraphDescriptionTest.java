@@ -26,6 +26,9 @@ import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -78,6 +81,63 @@ public class GraphDescriptionTest
         assertTrue(db.index().existsForNodes( "People" ));
         assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
         assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+    }
+
+    @Test
+    public void canCreateGraphFromOrderedMap() throws Exception
+    {
+        TreeMap<String,Object> props;
+        TreeMap<String,Map<String,Object>> map = new TreeMap<String,Map<String,Object>>();
+        props = new TreeMap<String, Object>();
+        props.put("name", "doctor");
+        map.put("(doc)", props);
+        props = new TreeMap<String, Object>();
+        props.put("name", "dalek");
+        map.put("(dal)", props);
+        props = new TreeMap<String, Object>();
+        props.put("since", "forever");
+        map.put("(doc)-[:ENEMY_OF]->(dal)", props);
+        props = new TreeMap<String, Object>();
+        props.put("name", "The Doctor");
+        map.put("{People}->(doc)", props);
+        GEOFFLoader.loadIntoNeo4j(map, db);
+        assertTrue(db.index().existsForNodes( "People" ));
+        assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
+        assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+    }
+
+    @Test
+    public void canCreateGraphFromUnorderedMap() throws Exception
+    {
+        HashMap<String,Object> props;
+        HashMap<String,Map<String,Object>> map = new HashMap<String,Map<String,Object>>();
+        props = new HashMap<String, Object>();
+        props.put("since", "forever");
+        map.put("(doc)-[:ENEMY_OF]->(dal)", props);
+        props = new HashMap<String, Object>();
+        props.put("name", "The Doctor");
+        map.put("{People}->(doc)", props);
+        props = new HashMap<String, Object>();
+        props.put("name", "doctor");
+        map.put("(doc)", props);
+        props = new HashMap<String, Object>();
+        props.put("name", "dalek");
+        map.put("(dal)", props);
+        GEOFFLoader.loadIntoNeo4j(map, db);
+        assertTrue(db.index().existsForNodes( "People" ));
+        assertTrue(db.index().forNodes("People" ).get( "name", "The Doctor" ).hasNext());
+        assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+    }
+
+    @Test(expected = ClassCastException.class)
+    public void shouldFailOnInappropriateMap() throws Exception
+    {
+        HashMap<Integer,String> map = new HashMap<Integer,String>();
+        map.put(12, "twelve");
+        map.put(7, "seven");
+        map.put(3, "three");
+        map.put(25, "twenty-five");
+        GEOFFLoader.loadIntoNeo4j(map, db);
     }
 
     @Before
