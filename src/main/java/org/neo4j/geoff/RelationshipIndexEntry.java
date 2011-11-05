@@ -29,8 +29,8 @@ public class RelationshipIndexEntry extends Descriptor {
 
     protected RelationshipIndexEntry(String indexName, String relationshipName, Map<String,Object> data) {
 		super();
-		this.indexName = indexName;
-		this.relationshipName = relationshipName;
+		this.indexName = indexName.intern();
+		this.relationshipName = relationshipName.intern();
         this.data = data;
 	}
 

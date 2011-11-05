@@ -28,7 +28,7 @@ public class NodeDescriptor extends Descriptor {
 
     protected NodeDescriptor(String nodeName, Map<String,Object> data) {
         super();
-		this.nodeName = nodeName;
+		this.nodeName = nodeName.intern();
         this.data = data;
 	}
 	

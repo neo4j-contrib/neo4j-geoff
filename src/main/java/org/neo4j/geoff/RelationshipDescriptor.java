@@ -31,10 +31,10 @@ public class RelationshipDescriptor extends Descriptor {
 
     protected RelationshipDescriptor(String startNodeName, String relationshipName, String relationshipType, String endNodeName, Map<String,Object> data) {
 		super();
-		this.startNodeName = startNodeName;
-		this.relationshipName = relationshipName;
-		this.relationshipType = relationshipType;
-		this.endNodeName = endNodeName;
+		this.startNodeName = startNodeName.intern();
+		this.relationshipName = relationshipName.intern();
+		this.relationshipType = relationshipType.intern();
+		this.endNodeName = endNodeName.intern();
         this.data = data;
 	}
 

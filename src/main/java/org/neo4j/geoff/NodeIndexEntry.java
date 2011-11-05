@@ -29,8 +29,8 @@ public class NodeIndexEntry extends Descriptor {
 
     protected NodeIndexEntry(String indexName, String nodeName, Map<String,Object> data) {
 		super();
-		this.indexName = indexName;
-		this.nodeName = nodeName;
+		this.indexName = indexName.intern();
+		this.nodeName = nodeName.intern();
         this.data = data;
 	}
 
