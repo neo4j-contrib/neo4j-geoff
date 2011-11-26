@@ -21,19 +21,19 @@ package org.neo4j.geoff;
 
 public class UnknownEntityException extends Exception {
 
-    public UnknownEntityException() {
-    }
+	public UnknownEntityException() {
+	}
 
-    public UnknownEntityException(String s) {
-        super(s);
-    }
+	public UnknownEntityException(String s) {
+		super(s);
+	}
 
-    public UnknownEntityException(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+	public UnknownEntityException(String s, Throwable throwable) {
+		super(s, throwable);
+	}
 
-    public UnknownEntityException(Throwable throwable) {
-        super(throwable);
-    }
-    
+	public UnknownEntityException(Throwable throwable) {
+		super(throwable);
+	}
+
 }

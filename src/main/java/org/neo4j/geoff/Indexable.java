@@ -21,6 +21,6 @@ package org.neo4j.geoff;
 
 public interface Indexable {
 
-    public String getName();
-    
+	public String getName();
+
 }

@@ -25,35 +25,35 @@ public class IndexEntry<T extends Indexable> extends Descriptor {
 
 	protected final IndexRef index;
 	protected final T entity;
-    protected final Map<String,Object> data;
+	protected final Map<String, Object> data;
 
-    protected IndexEntry(IndexRef index, T entity, Map<String, Object> data) {
+	protected IndexEntry(IndexRef index, T entity, Map<String, Object> data) {
 		super();
 		this.index = index;
 		this.entity = entity;
-        this.data = data;
+		this.data = data;
 	}
 
-    /**
-     * Return the name of the Index described
-     * 
-     * @return the Index name
-     */
-    public IndexRef getIndex() {
-        return this.index;
-    }
+	/**
+	 * Return the name of the Index described
+	 *
+	 * @return the Index name
+	 */
+	public IndexRef getIndex() {
+		return this.index;
+	}
 
-    public T getEntity() {
-        return this.entity;
-    }
+	public T getEntity() {
+		return this.entity;
+	}
 
-    /**
-     * Return the key:value pairs attached to this Descriptor
-     *
-     * @return Map of key:value pairs
-     */
-    public Map<String,Object> getData() {
-        return this.data;
-    }
-    
+	/**
+	 * Return the key:value pairs attached to this Descriptor
+	 *
+	 * @return Map of key:value pairs
+	 */
+	public Map<String, Object> getData() {
+		return this.data;
+	}
+
 }

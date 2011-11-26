@@ -21,19 +21,19 @@ package org.neo4j.geoff;
 
 public class DuplicateNameException extends Exception {
 
-    public DuplicateNameException() {
-    }
+	public DuplicateNameException() {
+	}
 
-    public DuplicateNameException(String s) {
-        super(s);
-    }
+	public DuplicateNameException(String s) {
+		super(s);
+	}
 
-    public DuplicateNameException(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+	public DuplicateNameException(String s, Throwable throwable) {
+		super(s, throwable);
+	}
 
-    public DuplicateNameException(Throwable throwable) {
-        super(throwable);
-    }
-    
+	public DuplicateNameException(Throwable throwable) {
+		super(throwable);
+	}
+
 }

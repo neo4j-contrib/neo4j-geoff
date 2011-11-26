@@ -23,58 +23,58 @@ import java.util.Map;
 
 public class RelationshipDescriptor<A extends Connectable, B extends Connectable> extends Descriptor {
 
-    protected final A startNode;
+	protected final A startNode;
 	protected final String name;
 	protected final String type;
-    protected final B endNode;
-    protected final Map<String,Object> data;
+	protected final B endNode;
+	protected final Map<String, Object> data;
 
-    protected RelationshipDescriptor(A startNode, String name, String type, B endNode, Map<String,Object> data) {
+	protected RelationshipDescriptor(A startNode, String name, String type, B endNode, Map<String, Object> data) {
 		super();
-        this.startNode = startNode;
+		this.startNode = startNode;
 		this.name = name.intern();
 		this.type = type.intern();
-        this.endNode = endNode;
-        this.data = data;
+		this.endNode = endNode;
+		this.data = data;
 	}
 
-    public A getStartNode() {
-        return this.startNode;
-    }
+	public A getStartNode() {
+		return this.startNode;
+	}
 
-    public boolean hasName() {
-        return !(this.name == null || this.name.isEmpty());
-    }
+	public boolean hasName() {
+		return !(this.name == null || this.name.isEmpty());
+	}
 
-    /**
-     * Return the name of the Relationship described
-     * 
-     * @return the Relationship name
-     */
-    public String getName() {
+	/**
+	 * Return the name of the Relationship described
+	 *
+	 * @return the Relationship name
+	 */
+	public String getName() {
 		return this.name;
 	}
 
-    /**
-     * Return the type of the Relationship described
-     * 
-     * @return the Relationship type
-     */
-    public String getType() {
+	/**
+	 * Return the type of the Relationship described
+	 *
+	 * @return the Relationship type
+	 */
+	public String getType() {
 		return this.type;
 	}
 
-    public B getEndNode() {
-        return this.endNode;
-    }
+	public B getEndNode() {
+		return this.endNode;
+	}
 
-    /**
-     * Return the key:value pairs attached to this Descriptor
-     *
-     * @return Map of key:value pairs
-     */
-    public Map<String,Object> getData() {
-        return this.data;
-    }
+	/**
+	 * Return the key:value pairs attached to this Descriptor
+	 *
+	 * @return Map of key:value pairs
+	 */
+	public Map<String, Object> getData() {
+		return this.data;
+	}
 
 }

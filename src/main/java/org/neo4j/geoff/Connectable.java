@@ -21,6 +21,6 @@ package org.neo4j.geoff;
 
 public interface Connectable {
 
-    public String getName();
+	public String getName();
 
 }

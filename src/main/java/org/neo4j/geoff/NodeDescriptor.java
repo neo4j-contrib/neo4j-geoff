@@ -23,26 +23,26 @@ import java.util.Map;
 
 public class NodeDescriptor extends Descriptor {
 
-    protected final NodeRef node;
-    protected final Map<String,Object> data;
+	protected final NodeRef node;
+	protected final Map<String, Object> data;
 
-    protected NodeDescriptor(NodeRef node, Map<String,Object> data) {
-        this.node = node;
-        this.data = data;
+	protected NodeDescriptor(NodeRef node, Map<String, Object> data) {
+		this.node = node;
+		this.data = data;
 
 	}
 
-    public NodeRef getNode() {
-        return this.node;
-    }
+	public NodeRef getNode() {
+		return this.node;
+	}
 
-    /**
-     * Return the key:value pairs attached to this Descriptor
-     *
-     * @return Map of key:value pairs
-     */
-    public Map<String,Object> getData() {
-        return this.data;
-    }
+	/**
+	 * Return the key:value pairs attached to this Descriptor
+	 *
+	 * @return Map of key:value pairs
+	 */
+	public Map<String, Object> getData() {
+		return this.data;
+	}
 
 }

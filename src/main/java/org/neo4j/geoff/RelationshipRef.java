@@ -21,13 +21,13 @@ package org.neo4j.geoff;
 
 public class RelationshipRef extends EntityRef implements Indexable {
 
-    public RelationshipRef(String name) {
-        super(name);
-    }
+	public RelationshipRef(String name) {
+		super(name);
+	}
 
-    @Override
-    public String toString() {
-        return String.format("[%s]", this.name);
-    }
-    
+	@Override
+	public String toString() {
+		return String.format("[%s]", this.name);
+	}
+
 }

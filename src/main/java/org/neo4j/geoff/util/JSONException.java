@@ -21,8 +21,8 @@ package org.neo4j.geoff.util;
 
 public class JSONException extends Exception {
 
-    public JSONException(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+	public JSONException(String s, Throwable throwable) {
+		super(s, throwable);
+	}
 
 }

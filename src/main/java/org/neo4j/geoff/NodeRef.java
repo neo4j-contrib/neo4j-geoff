@@ -21,13 +21,13 @@ package org.neo4j.geoff;
 
 public class NodeRef extends EntityRef implements Connectable, Indexable {
 
-    public NodeRef(String name) {
-        super(name);
-    }
+	public NodeRef(String name) {
+		super(name);
+	}
 
-    @Override
-    public String toString() {
-        return String.format("(%s)", this.name);
-    }
-    
+	@Override
+	public String toString() {
+		return String.format("(%s)", this.name);
+	}
+
 }

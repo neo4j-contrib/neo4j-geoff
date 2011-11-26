@@ -23,26 +23,26 @@ import java.util.Map;
 
 public class HookDescriptor extends Descriptor {
 
-    protected final HookRef hook;
-    protected final Map<String,Object> data;
+	protected final HookRef hook;
+	protected final Map<String, Object> data;
 
-    protected HookDescriptor(HookRef hook, Map<String,Object> data) {
-        this.hook = hook;
-        this.data = data;
+	protected HookDescriptor(HookRef hook, Map<String, Object> data) {
+		this.hook = hook;
+		this.data = data;
 
 	}
 
-    public HookRef getHook() {
-        return this.hook;
-    }
+	public HookRef getHook() {
+		return this.hook;
+	}
 
-    /**
-     * Return the key:value pairs attached to this Descriptor
-     *
-     * @return Map of key:value pairs
-     */
-    public Map<String,Object> getData() {
-        return this.data;
-    }
+	/**
+	 * Return the key:value pairs attached to this Descriptor
+	 *
+	 * @return Map of key:value pairs
+	 */
+	public Map<String, Object> getData() {
+		return this.data;
+	}
 
 }

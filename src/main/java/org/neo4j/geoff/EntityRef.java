@@ -21,13 +21,13 @@ package org.neo4j.geoff;
 
 public abstract class EntityRef {
 
-    protected final String name;
+	protected final String name;
 
-    public EntityRef(String name) {
-        this.name = name.intern();
-    }
+	public EntityRef(String name) {
+		this.name = name.intern();
+	}
 
-    public String getName() {
-        return this.name;
-    }
+	public String getName() {
+		return this.name;
+	}
 }

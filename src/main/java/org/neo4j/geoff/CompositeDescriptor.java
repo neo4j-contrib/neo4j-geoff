@@ -28,64 +28,62 @@ import java.util.Set;
  * A composite descriptor is a single line within a GEOFF file which can represent multiple
  * entities. It is a 100% JSON-compatible representation of descriptors and data held as key:value
  * pairs within a JSON object. For example:
- *
+ * <p/>
  * {"(doc)": {"name": "doctor"}, "(dal)": {"name": "dalek"}, "(doc)-[:ENEMY_OF]->(dal)": {"since": "forever"}, "{People}->(doc)": {"name": "The Doctor"}}
- *
+ * <p/>
  * Note that line breaks within the whitespace parts of the data are not allowed as they are
  * seen as separate lines by the GEOFF parser.
- *
  */
 public class CompositeDescriptor extends Descriptor {
 
-    protected final int count;
-    protected final Set<HookDescriptor> hooks;
-    protected final Set<NodeDescriptor> nodes;
-    protected final Set<RelationshipDescriptor> relationships;
-    protected final Set<IndexEntry> indexEntries;
+	protected final int count;
+	protected final Set<HookDescriptor> hooks;
+	protected final Set<NodeDescriptor> nodes;
+	protected final Set<RelationshipDescriptor> relationships;
+	protected final Set<IndexEntry> indexEntries;
 
-    protected CompositeDescriptor(Map<String,Map<String,Object>> descriptors)
-    throws BadDescriptorException
-    {
-        super();
-        this.count = descriptors.size();
-        this.hooks = new HashSet<HookDescriptor>(this.count);
-        this.nodes = new HashSet<NodeDescriptor>(this.count);
-        this.relationships = new HashSet<RelationshipDescriptor>(this.count);
-        this.indexEntries = new HashSet<IndexEntry>(this.count);
-        for(Map.Entry<String,Map<String, Object>> descriptor : descriptors.entrySet()) {
-            Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
-            if(d instanceof HookDescriptor) {
-                this.hooks.add((HookDescriptor) d);
-            } else if(d instanceof NodeDescriptor) {
-                this.nodes.add((NodeDescriptor) d);
-            } else if(d instanceof RelationshipDescriptor) {
-                this.relationships.add((RelationshipDescriptor) d);
-            } else if(d instanceof IndexEntry) {
-                this.indexEntries.add((IndexEntry) d);
-            } else {
-                throw new UnsupportedOperationException();
-            }
-        }
+	protected CompositeDescriptor(Map<String, Map<String, Object>> descriptors)
+			throws BadDescriptorException {
+		super();
+		this.count = descriptors.size();
+		this.hooks = new HashSet<HookDescriptor>(this.count);
+		this.nodes = new HashSet<NodeDescriptor>(this.count);
+		this.relationships = new HashSet<RelationshipDescriptor>(this.count);
+		this.indexEntries = new HashSet<IndexEntry>(this.count);
+		for (Map.Entry<String, Map<String, Object>> descriptor : descriptors.entrySet()) {
+			Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
+			if (d instanceof HookDescriptor) {
+				this.hooks.add((HookDescriptor) d);
+			} else if (d instanceof NodeDescriptor) {
+				this.nodes.add((NodeDescriptor) d);
+			} else if (d instanceof RelationshipDescriptor) {
+				this.relationships.add((RelationshipDescriptor) d);
+			} else if (d instanceof IndexEntry) {
+				this.indexEntries.add((IndexEntry) d);
+			} else {
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
-    public int length() {
-        return this.count;
-    }
+	public int length() {
+		return this.count;
+	}
 
-    public Iterator<HookDescriptor> hooks() {
-        return this.hooks.iterator();
-    }
+	public Iterator<HookDescriptor> hooks() {
+		return this.hooks.iterator();
+	}
 
-    public Iterator<NodeDescriptor> nodes() {
-        return this.nodes.iterator();
-    }
+	public Iterator<NodeDescriptor> nodes() {
+		return this.nodes.iterator();
+	}
 
-    public Iterator<RelationshipDescriptor> relationshipDescriptors() {
-        return this.relationships.iterator();
-    }
+	public Iterator<RelationshipDescriptor> relationshipDescriptors() {
+		return this.relationships.iterator();
+	}
 
-    public Iterator<IndexEntry> indexEntries() {
-        return this.indexEntries.iterator();
-    }
+	public Iterator<IndexEntry> indexEntries() {
+		return this.indexEntries.iterator();
+	}
 
 }

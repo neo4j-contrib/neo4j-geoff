@@ -21,13 +21,13 @@ package org.neo4j.geoff;
 
 public class IndexRef extends EntityRef {
 
-    public IndexRef(String name) {
-        super(name);
-    }
+	public IndexRef(String name) {
+		super(name);
+	}
 
-    @Override
-    public String toString() {
-        return String.format("|%s|", this.name);
-    }
-    
+	@Override
+	public String toString() {
+		return String.format("|%s|", this.name);
+	}
+
 }
