@@ -19,17 +19,15 @@
  */
 package org.neo4j.geoff;
 
-public class UnknownRelationshipException extends Exception {
+public class HookRef extends EntityRef implements Connectable, Indexable {
 
-    private final String relationshipName;
-
-    public UnknownRelationshipException(String relationshipName) {
-        super();
-        this.relationshipName = relationshipName;
+    public HookRef(String name) {
+        super(name);
     }
 
-    public String getRelationshipName() {
-        return this.relationshipName;
+    @Override
+    public String toString() {
+        return String.format("{%s}", this.name);
     }
-
+    
 }

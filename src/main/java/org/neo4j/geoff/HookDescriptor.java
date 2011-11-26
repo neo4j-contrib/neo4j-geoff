@@ -21,43 +21,19 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
-public class NodeIndexEntry extends Descriptor {
+public class HookDescriptor extends Descriptor {
 
-	protected final String indexName;
-	protected final String nodeName;
+    protected final HookRef hook;
     protected final Map<String,Object> data;
 
-    protected NodeIndexEntry(String indexName, String nodeName, Map<String,Object> data) {
-		super();
-		this.indexName = indexName.intern();
-		this.nodeName = nodeName.intern();
+    protected HookDescriptor(HookRef hook, Map<String,Object> data) {
+        this.hook = hook;
         this.data = data;
+
 	}
 
-    /**
-     * Return the name of the Index described
-     * 
-     * @return the Index name
-     */
-    public String getIndexName() {
-        return this.indexName;
-    }
-
-    /**
-     * Return the name of the Node described
-     * 
-     * @return the Node name
-     */
-    public String getNodeName() {
-        return this.nodeName;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("{%s}->(%s)",
-            this.indexName,
-            this.nodeName
-        );
+    public HookRef getHook() {
+        return this.hook;
     }
 
     /**
@@ -68,4 +44,5 @@ public class NodeIndexEntry extends Descriptor {
     public Map<String,Object> getData() {
         return this.data;
     }
+
 }

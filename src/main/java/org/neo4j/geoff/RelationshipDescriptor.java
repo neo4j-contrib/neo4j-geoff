@@ -21,39 +21,38 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
-public class RelationshipDescriptor extends Descriptor {
+public class RelationshipDescriptor<A extends Connectable, B extends Connectable> extends Descriptor {
 
-	protected final String startNodeName;
-	protected final String relationshipName;
-	protected final String relationshipType;
-	protected final String endNodeName;
+    protected final A startNode;
+	protected final String name;
+	protected final String type;
+    protected final B endNode;
     protected final Map<String,Object> data;
 
-    protected RelationshipDescriptor(String startNodeName, String relationshipName, String relationshipType, String endNodeName, Map<String,Object> data) {
+    protected RelationshipDescriptor(A startNode, String name, String type, B endNode, Map<String,Object> data) {
 		super();
-		this.startNodeName = startNodeName.intern();
-		this.relationshipName = relationshipName.intern();
-		this.relationshipType = relationshipType.intern();
-		this.endNodeName = endNodeName.intern();
+        this.startNode = startNode;
+		this.name = name.intern();
+		this.type = type.intern();
+        this.endNode = endNode;
         this.data = data;
 	}
 
-	/**
-     * Return the name of the Node at the start of the Relationship described
-     * 
-     * @return the start Node name
-     */
-    public String getStartNodeName() {
-		return this.startNodeName;
-	}
+    public A getStartNode() {
+        return this.startNode;
+    }
 
-	/**
+    public boolean hasName() {
+        return !(this.name == null || this.name.isEmpty());
+    }
+
+    /**
      * Return the name of the Relationship described
      * 
      * @return the Relationship name
      */
-    public String getRelationshipName() {
-		return this.relationshipName;
+    public String getName() {
+		return this.name;
 	}
 
     /**
@@ -61,28 +60,13 @@ public class RelationshipDescriptor extends Descriptor {
      * 
      * @return the Relationship type
      */
-    public String getRelationshipType() {
-		return this.relationshipType;
+    public String getType() {
+		return this.type;
 	}
 
-	/**
-     * Return the name of the Node at the end of the Relationship described
-     * 
-     * @return the end Node name
-     */
-    public String getEndNodeName() {
-		return this.endNodeName;
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("(%s)-[%s:%s]->(%s)",
-			this.startNodeName,
-			this.relationshipName,
-			this.relationshipType,
-			this.endNodeName
-		);
-	}
+    public B getEndNode() {
+        return this.endNode;
+    }
 
     /**
      * Return the key:value pairs attached to this Descriptor
@@ -92,4 +76,5 @@ public class RelationshipDescriptor extends Descriptor {
     public Map<String,Object> getData() {
         return this.data;
     }
+
 }

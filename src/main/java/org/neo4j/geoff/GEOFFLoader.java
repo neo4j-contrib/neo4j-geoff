@@ -25,9 +25,8 @@ import java.io.Reader;
 import java.util.Map;
 
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Transaction;
-
-import javax.activation.CommandObject;
 
 public class GEOFFLoader<NS extends Namespace> {
 
@@ -40,15 +39,15 @@ public class GEOFFLoader<NS extends Namespace> {
 	 * @return the Namespace used to store all named entities
 	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
-	 * @throws UnknownNodeException
-	 * @throws UnknownRelationshipException
+	 * @throws DuplicateNameException
+	 * @throws UnknownEntityException
 	 */
-	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB)
-	throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String,PropertyContainer> hooks)
+	throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException
 	{
         Transaction tx = graphDB.beginTx();
         try {
-    		GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB));
+    		GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB, hooks));
             tx.success();
             return loader.getNamespace();
         } finally {
@@ -66,15 +65,15 @@ public class GEOFFLoader<NS extends Namespace> {
      * @return the Namespace used to store all named entities
      * @throws BadDescriptorException when a badly-formed descriptor is encountered
      * @throws IOException
-     * @throws UnknownNodeException
-     * @throws UnknownRelationshipException
+     * @throws DuplicateNameException
+     * @throws UnknownEntityException
      */
-    public static Neo4jNamespace loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB)
-    throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+    public static Neo4jNamespace loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String,PropertyContainer> hooks)
+    throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException
     {
         Transaction tx = graphDB.beginTx();
         try {
-            GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(descriptors, new Neo4jNamespace(graphDB));
+            GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(descriptors, new Neo4jNamespace(graphDB, hooks));
             tx.success();
             return loader.getNamespace();
         } finally {
@@ -85,7 +84,7 @@ public class GEOFFLoader<NS extends Namespace> {
     private final NS namespace;
 
     private GEOFFLoader(Reader reader, NS namespace)
-	throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+	throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException
 	{
         BufferedReader bufferedReader = new BufferedReader(reader);
         this.namespace = namespace;
@@ -122,11 +121,11 @@ public class GEOFFLoader<NS extends Namespace> {
      * @param namespace the Namespace in which to load the descriptors
      * @throws BadDescriptorException
      * @throws IOException
-     * @throws UnknownNodeException
-     * @throws UnknownRelationshipException
+     * @throws DuplicateNameException
+     * @throws UnknownEntityException
      */
     private GEOFFLoader(Map<String,Map<String,Object>> descriptors, NS namespace)
-    throws BadDescriptorException, IOException, UnknownNodeException, UnknownRelationshipException
+    throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException
     {
         this.namespace = namespace;
         this.add(new CompositeDescriptor(descriptors));
@@ -136,35 +135,35 @@ public class GEOFFLoader<NS extends Namespace> {
      * Add a descriptor to the namespace associated with this loader
      *
      * @param descriptor the descriptor to add
-     * @throws UnknownNodeException when an unknown node is referenced
-     * @throws UnknownRelationshipException when an unknown relationship is referenced
+     * @throws DuplicateNameException
+     * @throws UnknownEntityException
      */
     private void add(Descriptor descriptor)
-    throws UnknownNodeException, UnknownRelationshipException
+    throws DuplicateNameException, UnknownEntityException
     {
         if(descriptor instanceof CompositeDescriptor) {
             CompositeDescriptor composite = (CompositeDescriptor) descriptor;
             // iterate multiple times to avoid dependency issues
-            for(NodeDescriptor d : composite.nodeDescriptors) {
+            for(HookDescriptor d : composite.hooks) {
+                this.namespace.updateEntity(d);
+            }
+            for(NodeDescriptor d : composite.nodes) {
                 this.namespace.createNode(d);
             }
-            for(NodeIndexEntry d : composite.nodeIndexEntries) {
-                this.namespace.addNodeIndexEntry(d);
-            }
-            for(RelationshipDescriptor d : composite.relationshipDescriptors) {
+            for(RelationshipDescriptor d : composite.relationships) {
                 this.namespace.createRelationship(d);
             }
-            for(RelationshipIndexEntry d : composite.relationshipIndexEntries) {
-                this.namespace.addRelationshipIndexEntry(d);
+            for(IndexEntry d : composite.indexEntries) {
+                this.namespace.addIndexEntry(d);
             }
+        } else if(descriptor instanceof HookDescriptor) {
+            this.namespace.updateEntity((HookDescriptor) descriptor);
         } else if(descriptor instanceof NodeDescriptor) {
-            this.namespace.createNode((NodeDescriptor)descriptor);
-        } else if(descriptor instanceof NodeIndexEntry) {
-            this.namespace.addNodeIndexEntry((NodeIndexEntry)descriptor);
+            this.namespace.createNode((NodeDescriptor) descriptor);
         } else if(descriptor instanceof RelationshipDescriptor) {
-            this.namespace.createRelationship((RelationshipDescriptor)descriptor);
-        } else if(descriptor instanceof RelationshipIndexEntry) {
-            this.namespace.addRelationshipIndexEntry((RelationshipIndexEntry)descriptor);
+            this.namespace.createRelationship((RelationshipDescriptor) descriptor);
+        } else if(descriptor instanceof IndexEntry) {
+            this.namespace.addIndexEntry((IndexEntry) descriptor);
         } else {
             throw new UnsupportedOperationException();
         }

@@ -21,43 +21,30 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
-public class RelationshipIndexEntry extends Descriptor {
+public class IndexEntry<T extends Indexable> extends Descriptor {
 
-	protected final String indexName;
-	protected final String relationshipName;
+	protected final IndexRef index;
+	protected final T entity;
     protected final Map<String,Object> data;
 
-    protected RelationshipIndexEntry(String indexName, String relationshipName, Map<String,Object> data) {
+    protected IndexEntry(IndexRef index, T entity, Map<String, Object> data) {
 		super();
-		this.indexName = indexName.intern();
-		this.relationshipName = relationshipName.intern();
+		this.index = index;
+		this.entity = entity;
         this.data = data;
 	}
 
-	/**
+    /**
      * Return the name of the Index described
      * 
      * @return the Index name
      */
-    public String getIndexName() {
-		return this.indexName;
-	}
+    public IndexRef getIndex() {
+        return this.index;
+    }
 
-    /**
-     * Return the name of the Relationship described
-     * 
-     * @return the Relationship name
-     */
-    public String getRelationshipName() {
-		return this.relationshipName;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("{%s}->[%s]",
-			this.indexName,
-		    this.relationshipName
-        );
+    public T getEntity() {
+        return this.entity;
     }
 
     /**
@@ -68,4 +55,5 @@ public class RelationshipIndexEntry extends Descriptor {
     public Map<String,Object> getData() {
         return this.data;
     }
+    
 }

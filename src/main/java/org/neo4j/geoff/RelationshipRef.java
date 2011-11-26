@@ -19,17 +19,15 @@
  */
 package org.neo4j.geoff;
 
-public class UnknownNodeException extends Exception {
+public class RelationshipRef extends EntityRef implements Indexable {
 
-    private final String nodeName;
-
-    public UnknownNodeException(String nodeName) {
-        super();
-        this.nodeName = nodeName;
+    public RelationshipRef(String name) {
+        super(name);
     }
 
-    public String getNodeName() {
-        return this.nodeName;
+    @Override
+    public String toString() {
+        return String.format("[%s]", this.name);
     }
-
+    
 }

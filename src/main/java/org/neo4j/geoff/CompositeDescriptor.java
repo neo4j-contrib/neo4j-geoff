@@ -38,30 +38,30 @@ import java.util.Set;
 public class CompositeDescriptor extends Descriptor {
 
     protected final int count;
-    protected final Set<NodeDescriptor> nodeDescriptors;
-    protected final Set<NodeIndexEntry> nodeIndexEntries;
-    protected final Set<RelationshipDescriptor> relationshipDescriptors;
-    protected final Set<RelationshipIndexEntry> relationshipIndexEntries;
+    protected final Set<HookDescriptor> hooks;
+    protected final Set<NodeDescriptor> nodes;
+    protected final Set<RelationshipDescriptor> relationships;
+    protected final Set<IndexEntry> indexEntries;
 
     protected CompositeDescriptor(Map<String,Map<String,Object>> descriptors)
     throws BadDescriptorException
     {
         super();
         this.count = descriptors.size();
-        this.nodeDescriptors = new HashSet<NodeDescriptor>(this.count);
-        this.nodeIndexEntries = new HashSet<NodeIndexEntry>(this.count);
-        this.relationshipDescriptors = new HashSet<RelationshipDescriptor>(this.count);
-        this.relationshipIndexEntries = new HashSet<RelationshipIndexEntry>(this.count);
+        this.hooks = new HashSet<HookDescriptor>(this.count);
+        this.nodes = new HashSet<NodeDescriptor>(this.count);
+        this.relationships = new HashSet<RelationshipDescriptor>(this.count);
+        this.indexEntries = new HashSet<IndexEntry>(this.count);
         for(Map.Entry<String,Map<String, Object>> descriptor : descriptors.entrySet()) {
             Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
-            if(d instanceof NodeDescriptor) {
-                this.nodeDescriptors.add((NodeDescriptor) d);
-            } else if(d instanceof NodeIndexEntry) {
-                this.nodeIndexEntries.add((NodeIndexEntry) d);
+            if(d instanceof HookDescriptor) {
+                this.hooks.add((HookDescriptor) d);
+            } else if(d instanceof NodeDescriptor) {
+                this.nodes.add((NodeDescriptor) d);
             } else if(d instanceof RelationshipDescriptor) {
-                this.relationshipDescriptors.add((RelationshipDescriptor) d);
-            } else if(d instanceof RelationshipIndexEntry) {
-                this.relationshipIndexEntries.add((RelationshipIndexEntry) d);
+                this.relationships.add((RelationshipDescriptor) d);
+            } else if(d instanceof IndexEntry) {
+                this.indexEntries.add((IndexEntry) d);
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -72,20 +72,20 @@ public class CompositeDescriptor extends Descriptor {
         return this.count;
     }
 
-    public Iterator<NodeDescriptor> nodeDescriptors() {
-        return this.nodeDescriptors.iterator();
+    public Iterator<HookDescriptor> hooks() {
+        return this.hooks.iterator();
     }
 
-    public Iterator<NodeIndexEntry> nodeIndexEntries() {
-        return this.nodeIndexEntries.iterator();
+    public Iterator<NodeDescriptor> nodes() {
+        return this.nodes.iterator();
     }
 
     public Iterator<RelationshipDescriptor> relationshipDescriptors() {
-        return this.relationshipDescriptors.iterator();
+        return this.relationships.iterator();
     }
 
-    public Iterator<RelationshipIndexEntry> relationshipIndexEntries() {
-        return this.relationshipIndexEntries.iterator();
+    public Iterator<IndexEntry> indexEntries() {
+        return this.indexEntries.iterator();
     }
 
 }

@@ -19,30 +19,21 @@
  */
 package org.neo4j.geoff;
 
-import java.util.Map;
+public class DuplicateNameException extends Exception {
 
-public class NodeDescriptor extends Descriptor {
-
-    protected final NodeRef node;
-    protected final Map<String,Object> data;
-
-    protected NodeDescriptor(NodeRef node, Map<String,Object> data) {
-        this.node = node;
-        this.data = data;
-
-	}
-
-    public NodeRef getNode() {
-        return this.node;
+    public DuplicateNameException() {
     }
 
-    /**
-     * Return the key:value pairs attached to this Descriptor
-     *
-     * @return Map of key:value pairs
-     */
-    public Map<String,Object> getData() {
-        return this.data;
+    public DuplicateNameException(String s) {
+        super(s);
     }
 
+    public DuplicateNameException(String s, Throwable throwable) {
+        super(s, throwable);
+    }
+
+    public DuplicateNameException(Throwable throwable) {
+        super(throwable);
+    }
+    
 }
