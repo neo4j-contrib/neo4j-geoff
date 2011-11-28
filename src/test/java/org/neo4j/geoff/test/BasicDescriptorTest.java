@@ -21,62 +21,79 @@ package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.neo4j.geoff.*;
+import org.neo4j.geoff.BadDescriptorException;
+import org.neo4j.geoff.Descriptor;
+import org.neo4j.geoff.HookDescriptor;
+import org.neo4j.geoff.NodeDescriptor;
 
 
 public class BasicDescriptorTest {
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsBlankLines()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("");
 		Assert.assertNull(descriptor);
 	}
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsLinesOfWhitespace()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("\t    ");
 		Assert.assertNull(descriptor);
 	}
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsComments()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("# this is a comment");
 		Assert.assertNull(descriptor);
 	}
 
 	@Test
+	public void testIfDescriptorFactoryUnderstandsHookDescriptors()
+			throws BadDescriptorException {
+		Descriptor descriptor = Descriptor.from("{foo}");
+		Assert.assertTrue(descriptor instanceof HookDescriptor);
+		HookDescriptor hookDescriptor = (HookDescriptor) descriptor;
+		Assert.assertEquals(hookDescriptor.getHook().getName(), "foo");
+	}
+
+	@Test
+	public void testIfDescriptorFactoryUnderstandsHookDescriptorsWithData()
+			throws BadDescriptorException {
+		Descriptor descriptor = Descriptor.from("{foo} {\"pi\":3.1415}");
+		Assert.assertTrue(descriptor instanceof HookDescriptor);
+		HookDescriptor hookDescriptor = (HookDescriptor) descriptor;
+		Assert.assertEquals(hookDescriptor.getHook().getName(), "foo");
+		Assert.assertTrue(hookDescriptor.getData().containsKey("pi"));
+		Assert.assertEquals(hookDescriptor.getData().get("pi"), 3.1415);
+	}
+
+	@Test
 	public void testIfDescriptorFactoryUnderstandsNodeDescriptors()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("(foo)");
 		Assert.assertTrue(descriptor instanceof NodeDescriptor);
-		NodeDescriptor nodeDescriptor = (NodeDescriptor)descriptor;
+		NodeDescriptor nodeDescriptor = (NodeDescriptor) descriptor;
 		Assert.assertEquals(nodeDescriptor.getNode().getName(), "foo");
 	}
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsNodeDescriptorsWithData()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("(foo) {\"pi\":3.1415}");
 		Assert.assertTrue(descriptor instanceof NodeDescriptor);
-		NodeDescriptor nodeDescriptor = (NodeDescriptor)descriptor;
+		NodeDescriptor nodeDescriptor = (NodeDescriptor) descriptor;
 		Assert.assertEquals(nodeDescriptor.getNode().getName(), "foo");
 		Assert.assertTrue(nodeDescriptor.getData().containsKey("pi"));
 		Assert.assertEquals(nodeDescriptor.getData().get("pi"), 3.1415);
 	}
 
-    @Test(expected = BadDescriptorException.class)
-    public void testIfDescriptorFactoryFailsOnUnrecognisableDescriptor()
-    throws BadDescriptorException
-    {
-        Descriptor descriptor = Descriptor.from("@!$#");
-    }
+	@Test(expected = BadDescriptorException.class)
+	public void testIfDescriptorFactoryFailsOnUnrecognisableDescriptor()
+			throws BadDescriptorException {
+		Descriptor descriptor = Descriptor.from("@!$#");
+	}
 
 }

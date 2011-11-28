@@ -10,7 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j:1.5-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:1.5-SNAPSHOT" level="project" />

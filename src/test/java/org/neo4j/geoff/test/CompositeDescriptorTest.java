@@ -21,33 +21,33 @@ package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.neo4j.geoff.*;
+import org.neo4j.geoff.BadDescriptorException;
+import org.neo4j.geoff.CompositeDescriptor;
+import org.neo4j.geoff.Descriptor;
 
 
 public class CompositeDescriptorTest {
 
-    @Test
-    public void testIfDescriptorFactoryUnderstandsCompositeDescriptors()
-    throws BadDescriptorException
-    {
-        String descString = "{\"(doc)\": {\"name\": \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
-            "\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
-        Descriptor descriptor = Descriptor.from(descString);
-        Assert.assertTrue(descriptor instanceof CompositeDescriptor);
-        CompositeDescriptor desc = (CompositeDescriptor)descriptor;
-        Assert.assertEquals(desc.length(), 4);
-    }
+	@Test
+	public void testIfDescriptorFactoryUnderstandsCompositeDescriptors()
+			throws BadDescriptorException {
+		String descString = "{\"(doc)\": {\"name\": \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
+				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
+		Descriptor descriptor = Descriptor.from(descString);
+		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
+		CompositeDescriptor desc = (CompositeDescriptor) descriptor;
+		Assert.assertEquals(desc.length(), 4);
+	}
 
-    @Test(expected = BadDescriptorException.class)
-    public void testIfDescriptorFactoryFailsOnCompositeDescriptorWithBadJSON()
-    throws BadDescriptorException
-    {
-        String descString = "{\"(doc)\": {\"name\"; \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
-            "\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
-        Descriptor descriptor = Descriptor.from(descString);
-        Assert.assertTrue(descriptor instanceof CompositeDescriptor);
-        CompositeDescriptor desc = (CompositeDescriptor)descriptor;
-        Assert.assertEquals(desc.length(), 4);
-    }
+	@Test(expected = BadDescriptorException.class)
+	public void testIfDescriptorFactoryFailsOnCompositeDescriptorWithBadJSON()
+			throws BadDescriptorException {
+		String descString = "{\"(doc)\": {\"name\"; \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
+				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
+		Descriptor descriptor = Descriptor.from(descString);
+		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
+		CompositeDescriptor desc = (CompositeDescriptor) descriptor;
+		Assert.assertEquals(desc.length(), 4);
+	}
 
 }

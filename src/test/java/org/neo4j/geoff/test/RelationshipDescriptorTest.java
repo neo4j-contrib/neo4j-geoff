@@ -21,53 +21,110 @@ package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.neo4j.geoff.BadDescriptorException;
-import org.neo4j.geoff.Descriptor;
-import org.neo4j.geoff.NodeDescriptor;
-import org.neo4j.geoff.RelationshipDescriptor;
+import org.neo4j.geoff.*;
 
 
 public class RelationshipDescriptorTest {
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsUnnamedRelationshipDescriptors()
-	throws BadDescriptorException
-	{
-		Descriptor descriptor = Descriptor.from("(foo)-[:KNOWS]->(bar)");
-		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
-		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
-		Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
-		Assert.assertEquals(relDescriptor.getName(), "");
-		Assert.assertEquals(relDescriptor.getType(), "KNOWS");
-		Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
+			throws BadDescriptorException {
+		String[] starts = new String[]{"{foo}", "(foo)"};
+		String[] ends = new String[]{"{bar}", "(bar)"};
+		for (String start : starts) {
+			for (String end : ends) {
+				String dstring = start + "-[:KNOWS]->" + end;
+				System.out.println("Testing relationship descriptor: " + dstring);
+				Descriptor descriptor = Descriptor.from(dstring);
+				Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
+				RelationshipDescriptor relDescriptor = (RelationshipDescriptor) descriptor;
+				if (start.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof HookRef);
+				}
+				if (start.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof NodeRef);
+				}
+				if (end.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof HookRef);
+				}
+				if (end.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof NodeRef);
+				}
+				Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
+				Assert.assertEquals(relDescriptor.hasName(), false);
+				Assert.assertEquals(relDescriptor.getName(), "");
+				Assert.assertEquals(relDescriptor.getType(), "KNOWS");
+				Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
+			}
+		}
 	}
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsNamedRelationshipDescriptors()
-	throws BadDescriptorException
-	{
-		Descriptor descriptor = Descriptor.from("(foo)-[bob:KNOWS]->(bar)");
-		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
-		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
-		Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
-		Assert.assertEquals(relDescriptor.getName(), "bob");
-		Assert.assertEquals(relDescriptor.getType(), "KNOWS");
-		Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
+			throws BadDescriptorException {
+		String[] starts = new String[]{"{foo}", "(foo)"};
+		String[] ends = new String[]{"{bar}", "(bar)"};
+		for (String start : starts) {
+			for (String end : ends) {
+				String dstring = start + "-[bob:KNOWS]->" + end;
+				System.out.println("Testing relationship descriptor: " + dstring);
+				Descriptor descriptor = Descriptor.from(dstring);
+				Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
+				RelationshipDescriptor relDescriptor = (RelationshipDescriptor) descriptor;
+				if (start.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof HookRef);
+				}
+				if (start.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof NodeRef);
+				}
+				if (end.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof HookRef);
+				}
+				if (end.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof NodeRef);
+				}
+				Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
+				Assert.assertEquals(relDescriptor.hasName(), true);
+				Assert.assertEquals(relDescriptor.getName(), "bob");
+				Assert.assertEquals(relDescriptor.getType(), "KNOWS");
+				Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
+			}
+		}
 	}
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsRelationshipDescriptorsWithData()
-	throws BadDescriptorException
-	{
-		Descriptor descriptor = Descriptor.from("(foo)-[bob:KNOWS]->(bar) {\"pi\":3.1415}");
-		Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
-		RelationshipDescriptor relDescriptor = (RelationshipDescriptor)descriptor;
-		Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
-		Assert.assertEquals(relDescriptor.getName(), "bob");
-		Assert.assertEquals(relDescriptor.getType(), "KNOWS");
-		Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
-		Assert.assertTrue(relDescriptor.getData().containsKey("pi"));
-		Assert.assertEquals(relDescriptor.getData().get("pi"), 3.1415);
+			throws BadDescriptorException {
+		String[] starts = new String[]{"{foo}", "(foo)"};
+		String[] ends = new String[]{"{bar}", "(bar)"};
+		for (String start : starts) {
+			for (String end : ends) {
+				String dstring = start + "-[bob:KNOWS]->" + end + " {\"pi\":3.1415}";
+				System.out.println("Testing relationship descriptor: " + dstring);
+				Descriptor descriptor = Descriptor.from(dstring);
+				Assert.assertTrue(descriptor instanceof RelationshipDescriptor);
+				RelationshipDescriptor relDescriptor = (RelationshipDescriptor) descriptor;
+				if (start.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof HookRef);
+				}
+				if (start.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getStartNode() instanceof NodeRef);
+				}
+				if (end.startsWith("{")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof HookRef);
+				}
+				if (end.startsWith("(")) {
+					Assert.assertTrue(relDescriptor.getEndNode() instanceof NodeRef);
+				}
+				Assert.assertEquals(relDescriptor.getStartNode().getName(), "foo");
+				Assert.assertEquals(relDescriptor.hasName(), true);
+				Assert.assertEquals(relDescriptor.getName(), "bob");
+				Assert.assertEquals(relDescriptor.getType(), "KNOWS");
+				Assert.assertEquals(relDescriptor.getEndNode().getName(), "bar");
+				Assert.assertTrue(relDescriptor.getData().containsKey("pi"));
+				Assert.assertEquals(relDescriptor.getData().get("pi"), 3.1415);
+			}
+		}
 	}
 
 }

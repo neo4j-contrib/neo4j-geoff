@@ -27,12 +27,23 @@ import org.neo4j.geoff.*;
 public class IndexEntryTest {
 
 	@Test
+	public void testIfDescriptorFactoryUnderstandsHookIndexEntries()
+			throws BadDescriptorException {
+		Descriptor descriptor = Descriptor.from("|index1|->{bob} {\"foo\":\"bar\"}");
+		Assert.assertTrue(descriptor instanceof IndexEntry);
+		IndexEntry<HookRef> hookIndexEntry = (IndexEntry<HookRef>) descriptor;
+		Assert.assertEquals(hookIndexEntry.getIndex().getName(), "index1");
+		Assert.assertEquals(hookIndexEntry.getEntity().getName(), "bob");
+		Assert.assertTrue(hookIndexEntry.getData().containsKey("foo"));
+		Assert.assertEquals(hookIndexEntry.getData().get("foo"), "bar");
+	}
+
+	@Test
 	public void testIfDescriptorFactoryUnderstandsNodeIndexEntries()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("|index1|->(bob) {\"foo\":\"bar\"}");
 		Assert.assertTrue(descriptor instanceof IndexEntry);
-		IndexEntry<NodeRef> nodeIndexEntry = (IndexEntry<NodeRef>)descriptor;
+		IndexEntry<NodeRef> nodeIndexEntry = (IndexEntry<NodeRef>) descriptor;
 		Assert.assertEquals(nodeIndexEntry.getIndex().getName(), "index1");
 		Assert.assertEquals(nodeIndexEntry.getEntity().getName(), "bob");
 		Assert.assertTrue(nodeIndexEntry.getData().containsKey("foo"));
@@ -41,11 +52,10 @@ public class IndexEntryTest {
 
 	@Test
 	public void testIfDescriptorFactoryUnderstandsRelationshipIndexEntries()
-	throws BadDescriptorException
-	{
+			throws BadDescriptorException {
 		Descriptor descriptor = Descriptor.from("|index1|->[bob] {\"foo\":\"bar\"}");
 		Assert.assertTrue(descriptor instanceof IndexEntry);
-		IndexEntry relIndexEntry = (IndexEntry<RelationshipRef>)descriptor;
+		IndexEntry relIndexEntry = (IndexEntry<RelationshipRef>) descriptor;
 		Assert.assertEquals(relIndexEntry.getIndex().getName(), "index1");
 		Assert.assertEquals(relIndexEntry.getEntity().getName(), "bob");
 		Assert.assertTrue(relIndexEntry.getData().containsKey("foo"));
