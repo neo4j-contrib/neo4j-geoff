@@ -42,7 +42,7 @@ public class GEOFFLoader<NS extends Namespace> {
 	 * @throws DuplicateNameException
 	 * @throws UnknownEntityException
 	 */
-	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String, PropertyContainer> hooks)
+	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
 			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
 		Transaction tx = graphDB.beginTx();
 		try {
@@ -67,7 +67,7 @@ public class GEOFFLoader<NS extends Namespace> {
 	 * @throws DuplicateNameException
 	 * @throws UnknownEntityException
 	 */
-	public static Neo4jNamespace loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String, PropertyContainer> hooks)
+	public static Neo4jNamespace loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
 			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
 		Transaction tx = graphDB.beginTx();
 		try {

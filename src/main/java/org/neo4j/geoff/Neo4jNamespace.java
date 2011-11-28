@@ -50,18 +50,18 @@ public class Neo4jNamespace implements Namespace {
 	 * @param graphDB the database in which to store items
 	 * @param hooks   set of pre-existing Nodes and Relationships accessible within this namespace
 	 */
-	public Neo4jNamespace(GraphDatabaseService graphDB, Map<String, PropertyContainer> hooks) {
+	public Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks) {
 		this.graphDB = graphDB;
 		if (hooks != null) {
 			// separate hooks into nodes and relationships
-			for (Map.Entry<String, PropertyContainer> hook : hooks.entrySet()) {
-				if (hook instanceof Node) {
+			for (Map.Entry<String, ? extends PropertyContainer> hook : hooks.entrySet()) {
+				if (hook.getValue() instanceof Node) {
 					this.oldNodes.put(hook.getKey(), (Node) hook.getValue());
-				} else if (hook instanceof Relationship) {
+				} else if (hook.getValue() instanceof Relationship) {
 					this.oldRels.put(hook.getKey(), (Relationship) hook.getValue());
 				} else {
 					// unexpected hook type! should never happen :-)
-					throw new IllegalArgumentException("Unexpected hook type");
+					throw new IllegalArgumentException("Unexpected hook " + hook.getClass());
 				}
 			}
 		}

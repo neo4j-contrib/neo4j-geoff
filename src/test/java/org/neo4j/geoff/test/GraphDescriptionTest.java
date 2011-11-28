@@ -22,6 +22,10 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFFLoader;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.Reader;
@@ -131,6 +135,24 @@ public class GraphDescriptionTest {
 		map.put(3, "three");
 		map.put(25, "twenty-five");
 		GEOFFLoader.loadIntoNeo4j(map, db, null);
+	}
+
+	@Test
+	public void canCreateGraphWithHookToReferenceNode() throws Exception {
+		Reader reader = new StringReader("{" +
+				"\"(doc)\": {\"name\": \"doctor\"}," +
+				"\"(dal)\": {\"name\": \"dalek\"}," +
+				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
+				"\"|People|->(doc)\":     {\"name\": \"The Doctor\"}," +
+				"\"{ref}-[:TIMELORD]->(doc)\":     null" +
+				"}");
+		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);
+		hooks.put("ref", db.getReferenceNode());
+		GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		assertTrue(db.index().existsForNodes("People"));
+		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
+		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+		assertTrue(db.getReferenceNode().hasRelationship(DynamicRelationshipType.withName("TIMELORD")));
 	}
 
 	@Before
