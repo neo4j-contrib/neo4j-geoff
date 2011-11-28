@@ -78,6 +78,14 @@ public abstract class Descriptor {
 		}
 	}
 
+	/**
+	 * Convert a serialised descriptor into a Descriptor object
+	 *
+	 * @param descriptor the string from the GEOFF file
+	 * @param data a collection of properties
+	 * @return an appropriate Descriptor object
+	 * @throws BadDescriptorException when the string cannot be deciphered
+	 */
 	public static Descriptor from(String descriptor, Map<String, Object> data)
 			throws BadDescriptorException {
 		Matcher m = HOOK_DESCRIPTOR.matcher(descriptor);

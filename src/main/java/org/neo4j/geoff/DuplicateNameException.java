@@ -19,6 +19,9 @@
  */
 package org.neo4j.geoff;
 
+/**
+ * Thrown when a request is made to generate an entity with a duplicate local name
+ */
 public class DuplicateNameException extends Exception {
 
 	public DuplicateNameException() {

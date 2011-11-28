@@ -19,6 +19,9 @@
  */
 package org.neo4j.geoff;
 
+/**
+ * Abstract class from which HookRef, NodeRef and RelationshipRef inherit
+ */
 public abstract class EntityRef {
 
 	protected final String name;

@@ -19,6 +19,9 @@
  */
 package org.neo4j.geoff;
 
+/**
+ * Interface implemented by Hooks and Nodes to indicate validity for Relationship end points
+ */
 public interface Connectable {
 
 	public String getName();

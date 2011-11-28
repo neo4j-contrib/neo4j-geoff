@@ -21,6 +21,12 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
+/**
+ * Represents a Hook reference plus associated data, e.g.:
+ *
+ * {foo} {"bar": 42}
+ *
+ */
 public class HookDescriptor extends Descriptor {
 
 	protected final HookRef hook;

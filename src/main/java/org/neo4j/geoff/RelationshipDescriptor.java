@@ -21,6 +21,14 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
+/**
+ * Represents a Relationship reference plus associated data, e.g.:
+ *
+ * (stuff)-[foo:BETTER_THAN]->(things) {"bar": 42}
+ *
+ * @param <A> the type of the start node (Hook or Node)
+ * @param <B> the type of the end node (Hook or Node)
+ */
 public class RelationshipDescriptor<A extends Connectable, B extends Connectable> extends Descriptor {
 
 	protected final A startNode;

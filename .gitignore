@@ -3,5 +3,6 @@
 .project
 .settings
 bin
-Neo4j-geoff-plugin.iml
+*.iml
 target
+*~

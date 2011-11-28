@@ -22,10 +22,7 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFFLoader;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.Reader;
@@ -153,6 +150,51 @@ public class GraphDescriptionTest {
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 		assertTrue(db.getReferenceNode().hasRelationship(DynamicRelationshipType.withName("TIMELORD")));
+	}
+
+	@Test
+	public void canCreateGraphWithAllRelationshipTypes() throws Exception {
+		/*
+		 * Creates a graph with the following shape:
+		 *
+		 *   {one}-[:EAST]->(foo)
+		 *     ^              |
+		 *     |              |
+		 * [:NORTH]        [:SOUTH]
+		 *     |              |
+		 *     |              v
+		 *   {two}<-[:WEST]-(bar)
+		 */
+		Reader reader = new StringReader(
+				"(foo) {\"position\": \"north-east\"}\r\n" +
+				"(bar) {\"position\": \"south-east\"}\r\n" +
+				"{one} {\"position\": \"north-west\"}\r\n" +
+				"{two} {\"position\": \"south-west\"}\r\n" +
+				"{\"(foo)-[:SOUTH]->(bar)\": null, \"(bar)-[:WEST]->{two}\": null, \"{two}-[:NORTH]->{one}\": null, \"{one}-[:EAST]->(foo)\": null}\r\n"
+		);
+		Transaction tx = db.beginTx();
+		Node nodeOne = db.createNode();
+		Node nodeTwo = db.createNode();
+		tx.success();
+		tx.finish();
+		HashMap<String,Node> hooks = new HashMap<String,Node>(1);
+		hooks.put("one", nodeOne);
+		hooks.put("two", nodeTwo);
+		GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING));
+		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.INCOMING));
+		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.OUTGOING));
+		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.INCOMING));
+		Node nodeFoo = nodeOne.getSingleRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING).getEndNode();
+		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.OUTGOING));
+		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.INCOMING));
+		Node nodeBar = nodeFoo.getSingleRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.OUTGOING).getEndNode();
+		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.OUTGOING));
+		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.INCOMING));
+		assertEquals(nodeOne.getProperty("position"), "north-west");
+		assertEquals(nodeTwo.getProperty("position"), "south-west");
+		assertEquals(nodeFoo.getProperty("position"), "north-east");
+		assertEquals(nodeBar.getProperty("position"), "south-east");
 	}
 
 	@Before

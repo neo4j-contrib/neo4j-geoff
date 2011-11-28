@@ -19,6 +19,9 @@
  */
 package org.neo4j.geoff;
 
+/**
+ * Thrown when unable to parse a descriptor
+ */
 public class BadDescriptorException extends Exception {
 
 	protected final String source;
