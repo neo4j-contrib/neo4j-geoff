@@ -36,19 +36,19 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param reader  the reader to grab data from
 	 * @param graphDB the database to put stuff into
-	 * @return the Namespace used to store all named entities
+	 * @return a map of all named entities
 	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
 	 * @throws DuplicateNameException
 	 * @throws UnknownEntityException
 	 */
-	public static Neo4jNamespace loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
+	public static Map<String, PropertyContainer> loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
 			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
 		Transaction tx = graphDB.beginTx();
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB, hooks));
 			tx.success();
-			return loader.getNamespace();
+			return loader.getNamespace().getEntities();
 		} finally {
 			tx.finish();
 		}
@@ -61,19 +61,19 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param descriptors the GEOFF descriptors
 	 * @param graphDB     the database to put stuff into
-	 * @return the Namespace used to store all named entities
+	 * @return a map of all named entities
 	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
 	 * @throws DuplicateNameException
 	 * @throws UnknownEntityException
 	 */
-	public static Neo4jNamespace loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
+	public static Map<String, PropertyContainer> loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
 			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
 		Transaction tx = graphDB.beginTx();
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(descriptors, new Neo4jNamespace(graphDB, hooks));
 			tx.success();
-			return loader.getNamespace();
+			return loader.getNamespace().getEntities();
 		} finally {
 			tx.finish();
 		}

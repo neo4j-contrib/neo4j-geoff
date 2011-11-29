@@ -42,6 +42,8 @@ public class Neo4jNamespace implements Namespace {
 	private final HashMap<String, Relationship> oldRelationships = new HashMap<String, Relationship>();
 	private final HashMap<String, Relationship> newRelationships = new HashMap<String, Relationship>();
 
+	private final HashMap<String, PropertyContainer> entities = new HashMap<String, PropertyContainer>();
+
 	/**
 	 * Set up a new Namespace attached to the supplied GraphDatabaseService
 	 *
@@ -53,6 +55,7 @@ public class Neo4jNamespace implements Namespace {
 		if (hooks != null) {
 			// separate hooks into nodes and relationships
 			for (Map.Entry<String, ? extends PropertyContainer> hook : hooks.entrySet()) {
+				this.entities.put("{" + hook.getKey() + "}", hook.getValue());
 				if (hook.getValue() instanceof Node) {
 					this.oldNodes.put(hook.getKey(), (Node) hook.getValue());
 				} else if (hook.getValue() instanceof Relationship) {
@@ -119,8 +122,10 @@ public class Neo4jNamespace implements Namespace {
 			}
 		}
 		// assuming this Node has a name, hold onto it
-		if (!descriptor.getNode().getName().isEmpty()) {
-			this.newNodes.put(descriptor.getNode().getName(), node);
+		String name = descriptor.getNode().getName();
+		if (!name.isEmpty()) {
+			this.newNodes.put(name, node);
+			this.entities.put("(" + name + ")", node);
 		}
 	}
 
@@ -170,8 +175,10 @@ public class Neo4jNamespace implements Namespace {
 			}
 		}
 		// assuming this Relationship has a name, hold onto it
-		if (descriptor.hasName()) {
-			this.newRelationships.put(descriptor.getName(), rel);
+		String name = descriptor.getName();
+		if (!name.isEmpty()) {
+			this.newRelationships.put(name, rel);
+			this.entities.put("[" + name + "]", rel);
 		}
 	}
 
@@ -217,77 +224,8 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	/**
-	 * Return the graph database to which this namespace is attached
-	 *
-	 * @return a graph database
-	 */
-	public GraphDatabaseService getGraphDB() {
-		return this.graphDB;
-	}
-
-	public Node getPreexistingNode(String name) throws UnknownEntityException {
-		if(this.oldNodes.containsKey(name)) {
-			return this.oldNodes.get(name);
-		} else {
-			throw new UnknownEntityException(String.format("Cannot identify pre-existing node {%s}", name));
-		}
-	}
-
-	public Map<String, Node> getPreexistingNodes(String... names) throws UnknownEntityException {
-		HashMap<String, Node> nodes = new HashMap<String, Node>(names.length);
-		for(String name : names) {
-			nodes.put(name, this.getPreexistingNode(name));
-		}
-		return nodes;
-	}
-
-	public Node getNewlyCreatedNode(String name) throws UnknownEntityException {
-		if(this.newNodes.containsKey(name)) {
-			return this.newNodes.get(name);
-		} else {
-			throw new UnknownEntityException(String.format("Cannot identify newly created node (%s)", name));
-		}
-	}
-
-	public Map<String, Node> getNewlyCreatedNodes(String... names) throws UnknownEntityException {
-		HashMap<String, Node> nodes = new HashMap<String, Node>(names.length);
-		for(String name : names) {
-			nodes.put(name, this.getNewlyCreatedNode(name));
-		}
-		return nodes;
-	}
-
-	public Relationship getPreexistingRelationship(String name) throws UnknownEntityException {
-		if(this.oldRelationships.containsKey(name)) {
-			return this.oldRelationships.get(name);
-		} else {
-			throw new UnknownEntityException(String.format("Cannot identify pre-existing relationship {%s}", name));
-		}
-	}
-
-	public Map<String, Relationship> getPreexistingRelationships(String... names) throws UnknownEntityException {
-		HashMap<String, Relationship> rels = new HashMap<String, Relationship>(names.length);
-		for(String name : names) {
-			rels.put(name, this.getPreexistingRelationship(name));
-		}
-		return rels;
-	}
-
-	public Relationship getNewlyCreatedRelationship(String name) throws UnknownEntityException {
-		if(this.newRelationships.containsKey(name)) {
-			return this.newRelationships.get(name);
-		} else {
-			throw new UnknownEntityException(String.format("Cannot identify newly created relationship [%s]", name));
-		}
-	}
-
-	public Map<String, Relationship> getNewlyCreatedRelationships(String... names) throws UnknownEntityException {
-		HashMap<String, Relationship> rels = new HashMap<String, Relationship>(names.length);
-		for(String name : names) {
-			rels.put(name, this.getNewlyCreatedRelationship(name));
-		}
-		return rels;
+	public Map<String, PropertyContainer> getEntities() {
+		return this.entities;
 	}
 
 }

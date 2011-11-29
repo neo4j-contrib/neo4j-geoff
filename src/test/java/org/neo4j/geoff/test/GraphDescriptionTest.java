@@ -181,9 +181,9 @@ public class GraphDescriptionTest {
 		HashMap<String,Node> hooks = new HashMap<String,Node>(1);
 		hooks.put("one", nodeOne);
 		hooks.put("two", nodeTwo);
-		Neo4jNamespace ns = GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
-		Node nodeFoo = ns.getNewlyCreatedNode("foo");
-		Node nodeBar = ns.getNewlyCreatedNode("bar");
+		Map<String,PropertyContainer> entities = GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		Node nodeFoo = (Node) entities.get("(foo)");
+		Node nodeBar = (Node) entities.get("(bar)");
 		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING));
 		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.INCOMING));
 		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.OUTGOING));
