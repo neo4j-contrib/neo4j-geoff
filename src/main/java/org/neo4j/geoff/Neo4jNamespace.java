@@ -37,12 +37,10 @@ public class Neo4jNamespace implements Namespace {
 	private final GraphDatabaseService graphDB;
 
 	private final HashMap<String, Node> oldNodes = new HashMap<String, Node>();
-	private final HashMap<String, Relationship> oldRels = new HashMap<String, Relationship>();
-
 	private final HashMap<String, Node> newNodes = new HashMap<String, Node>();
-	private final HashMap<String, Relationship> newRels = new HashMap<String, Relationship>();
 
-	private Node firstNode = null;
+	private final HashMap<String, Relationship> oldRelationships = new HashMap<String, Relationship>();
+	private final HashMap<String, Relationship> newRelationships = new HashMap<String, Relationship>();
 
 	/**
 	 * Set up a new Namespace attached to the supplied GraphDatabaseService
@@ -50,7 +48,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param graphDB the database in which to store items
 	 * @param hooks   set of pre-existing Nodes and Relationships accessible within this namespace
 	 */
-	public Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks) {
+	Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks) {
 		this.graphDB = graphDB;
 		if (hooks != null) {
 			// separate hooks into nodes and relationships
@@ -58,7 +56,7 @@ public class Neo4jNamespace implements Namespace {
 				if (hook.getValue() instanceof Node) {
 					this.oldNodes.put(hook.getKey(), (Node) hook.getValue());
 				} else if (hook.getValue() instanceof Relationship) {
-					this.oldRels.put(hook.getKey(), (Relationship) hook.getValue());
+					this.oldRelationships.put(hook.getKey(), (Relationship) hook.getValue());
 				} else {
 					// unexpected hook type! should never happen :-)
 					throw new IllegalArgumentException("Unexpected hook " + hook.getClass());
@@ -86,9 +84,9 @@ public class Neo4jNamespace implements Namespace {
 					node.setProperty(e.getKey(), e.getValue());
 				}
 			}
-		} else if (this.oldRels.containsKey(hookName)) {
+		} else if (this.oldRelationships.containsKey(hookName)) {
 			// 'tis a relationship...
-			Relationship rel = this.oldRels.get(hookName);
+			Relationship rel = this.oldRelationships.get(hookName);
 			// update properties
 			if (descriptor.getData() != null) {
 				for (Map.Entry<String, Object> e : descriptor.getData().entrySet()) {
@@ -121,12 +119,8 @@ public class Neo4jNamespace implements Namespace {
 			}
 		}
 		// assuming this Node has a name, hold onto it
-		if (descriptor.getNode().getName().length() > 0) {
+		if (!descriptor.getNode().getName().isEmpty()) {
 			this.newNodes.put(descriptor.getNode().getName(), node);
-		}
-		// and if this is the first Node to be added, make this the handle
-		if (this.firstNode == null) {
-			this.firstNode = node;
 		}
 	}
 
@@ -161,7 +155,7 @@ public class Neo4jNamespace implements Namespace {
 	@Override
 	public void createRelationship(RelationshipDescriptor<Connectable, Connectable> descriptor)
 			throws DuplicateNameException, UnknownEntityException {
-		if (descriptor.hasName() && this.newRels.containsKey(descriptor.getName())) {
+		if (descriptor.hasName() && this.newRelationships.containsKey(descriptor.getName())) {
 			throw new DuplicateNameException(String.format("Duplicate relationship name [%s]", descriptor.getName()));
 		}
 		// create the Relationship using the supplied criteria
@@ -177,7 +171,7 @@ public class Neo4jNamespace implements Namespace {
 		}
 		// assuming this Relationship has a name, hold onto it
 		if (descriptor.hasName()) {
-			this.newRels.put(descriptor.getName(), rel);
+			this.newRelationships.put(descriptor.getName(), rel);
 		}
 	}
 
@@ -193,9 +187,9 @@ public class Neo4jNamespace implements Namespace {
 		Indexable entity = indexEntry.getEntity();
 		String entityName = entity.getName();
 		boolean forOldNode = entity instanceof HookRef && this.oldNodes.containsKey(entityName);
-		boolean forOldRel = entity instanceof HookRef && this.oldRels.containsKey(entityName);
+		boolean forOldRel = entity instanceof HookRef && this.oldRelationships.containsKey(entityName);
 		boolean forNewNode = entity instanceof NodeRef && this.newNodes.containsKey(entityName);
-		boolean forNewRel = entity instanceof RelationshipRef && this.oldRels.containsKey(entityName);
+		boolean forNewRel = entity instanceof RelationshipRef && this.oldRelationships.containsKey(entityName);
 		if (forOldNode || forNewNode) {
 			// locate the required Index
 			Index<Node> index = this.graphDB.index().forNodes(indexEntry.getIndex().getName());
@@ -211,7 +205,7 @@ public class Neo4jNamespace implements Namespace {
 			// locate the required Index
 			Index<Relationship> index = this.graphDB.index().forRelationships(indexEntry.getIndex().getName());
 			// look up the Node we need to index
-			Relationship rel = forOldRel ? this.oldRels.get(entityName) : this.newRels.get(entityName);
+			Relationship rel = forOldRel ? this.oldRelationships.get(entityName) : this.newRelationships.get(entityName);
 			// add entries under all the supplied key:value pairs
 			if (indexEntry.getData() != null) {
 				for (Map.Entry<String, Object> entry : indexEntry.getData().entrySet()) {
@@ -221,6 +215,79 @@ public class Neo4jNamespace implements Namespace {
 		} else {
 			throw new UnknownEntityException(String.format("Unresolvable indexable entity"));
 		}
+	}
+
+	/**
+	 * Return the graph database to which this namespace is attached
+	 *
+	 * @return a graph database
+	 */
+	public GraphDatabaseService getGraphDB() {
+		return this.graphDB;
+	}
+
+	public Node getPreexistingNode(String name) throws UnknownEntityException {
+		if(this.oldNodes.containsKey(name)) {
+			return this.oldNodes.get(name);
+		} else {
+			throw new UnknownEntityException(String.format("Cannot identify pre-existing node {%s}", name));
+		}
+	}
+
+	public Map<String, Node> getPreexistingNodes(String... names) throws UnknownEntityException {
+		HashMap<String, Node> nodes = new HashMap<String, Node>(names.length);
+		for(String name : names) {
+			nodes.put(name, this.getPreexistingNode(name));
+		}
+		return nodes;
+	}
+
+	public Node getNewlyCreatedNode(String name) throws UnknownEntityException {
+		if(this.newNodes.containsKey(name)) {
+			return this.newNodes.get(name);
+		} else {
+			throw new UnknownEntityException(String.format("Cannot identify newly created node (%s)", name));
+		}
+	}
+
+	public Map<String, Node> getNewlyCreatedNodes(String... names) throws UnknownEntityException {
+		HashMap<String, Node> nodes = new HashMap<String, Node>(names.length);
+		for(String name : names) {
+			nodes.put(name, this.getNewlyCreatedNode(name));
+		}
+		return nodes;
+	}
+
+	public Relationship getPreexistingRelationship(String name) throws UnknownEntityException {
+		if(this.oldRelationships.containsKey(name)) {
+			return this.oldRelationships.get(name);
+		} else {
+			throw new UnknownEntityException(String.format("Cannot identify pre-existing relationship {%s}", name));
+		}
+	}
+
+	public Map<String, Relationship> getPreexistingRelationships(String... names) throws UnknownEntityException {
+		HashMap<String, Relationship> rels = new HashMap<String, Relationship>(names.length);
+		for(String name : names) {
+			rels.put(name, this.getPreexistingRelationship(name));
+		}
+		return rels;
+	}
+
+	public Relationship getNewlyCreatedRelationship(String name) throws UnknownEntityException {
+		if(this.newRelationships.containsKey(name)) {
+			return this.newRelationships.get(name);
+		} else {
+			throw new UnknownEntityException(String.format("Cannot identify newly created relationship [%s]", name));
+		}
+	}
+
+	public Map<String, Relationship> getNewlyCreatedRelationships(String... names) throws UnknownEntityException {
+		HashMap<String, Relationship> rels = new HashMap<String, Relationship>(names.length);
+		for(String name : names) {
+			rels.put(name, this.getNewlyCreatedRelationship(name));
+		}
+		return rels;
 	}
 
 }

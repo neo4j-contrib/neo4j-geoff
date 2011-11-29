@@ -22,6 +22,7 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFFLoader;
+import org.neo4j.geoff.Neo4jNamespace;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -180,15 +181,15 @@ public class GraphDescriptionTest {
 		HashMap<String,Node> hooks = new HashMap<String,Node>(1);
 		hooks.put("one", nodeOne);
 		hooks.put("two", nodeTwo);
-		GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		Neo4jNamespace ns = GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		Node nodeFoo = ns.getNewlyCreatedNode("foo");
+		Node nodeBar = ns.getNewlyCreatedNode("bar");
 		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING));
 		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.INCOMING));
 		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.OUTGOING));
 		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.INCOMING));
-		Node nodeFoo = nodeOne.getSingleRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING).getEndNode();
 		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.OUTGOING));
 		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.INCOMING));
-		Node nodeBar = nodeFoo.getSingleRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.OUTGOING).getEndNode();
 		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.OUTGOING));
 		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.INCOMING));
 		assertEquals(nodeOne.getProperty("position"), "north-west");
