@@ -32,7 +32,7 @@ public class CompositeDescriptorTest {
 	public void testIfDescriptorFactoryUnderstandsCompositeDescriptors()
 			throws BadDescriptorException {
 		String descString = "{\"(doc)\": {\"name\": \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
+				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"(doc)<=|People|\": {\"name\": \"The Doctor\"} }";
 		Descriptor descriptor = Descriptor.from(descString);
 		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
 		CompositeDescriptor desc = (CompositeDescriptor) descriptor;
@@ -43,7 +43,7 @@ public class CompositeDescriptorTest {
 	public void testIfDescriptorFactoryFailsOnCompositeDescriptorWithBadJSON()
 			throws BadDescriptorException {
 		String descString = "{\"(doc)\": {\"name\"; \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"|People|->(doc)\": {\"name\": \"The Doctor\"} }";
+				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"(doc)<=|People|\": {\"name\": \"The Doctor\"} }";
 		Descriptor descriptor = Descriptor.from(descString);
 		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
 		CompositeDescriptor desc = (CompositeDescriptor) descriptor;

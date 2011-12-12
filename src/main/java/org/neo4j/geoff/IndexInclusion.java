@@ -21,13 +21,13 @@ package org.neo4j.geoff;
 
 import java.util.Map;
 
-public class IndexEntry<T extends Indexable> extends Descriptor {
+public class IndexInclusion<T extends Indexable> extends Descriptor {
 
 	protected final IndexRef index;
 	protected final T entity;
 	protected final Map<String, Object> data;
 
-	protected IndexEntry(IndexRef index, T entity, Map<String, Object> data) {
+	protected IndexInclusion(T entity, IndexRef index, Map<String, Object> data) {
 		super();
 		this.index = index;
 		this.entity = entity;

@@ -10,7 +10,7 @@ editable and, unlike a number of XML-based formats with a similar purpose, non-v
 
 At the most basic level, a GEOFF file consists of a collection of *descriptors*, often coupled with associated
 properties, each represented as a single line of text. A descriptor may represent a *node* (vertex), a *relationship*
-(edge) or an entry within a database index. In addition to these descriptors, blank lines and comments (lines
+(edge) or an inclusion within a database index. In addition to these descriptors, blank lines and comments (lines
 beginning with a `#` symbol) can also be included.
 
 ## Nodes
@@ -73,20 +73,20 @@ registered against that entity and could be used to update that entity's propert
 {sci}    {"last_updated": "13:45:09"}
 ```
 
-## Index Entries
+## Index Inclusions
 
-It is also possible to specify database index entries within a GEOFF file; this can apply to nodes, relationships or
-hooks and all use a similar syntax, which includes the index name between pipe `|` symbols. The data values supplied
-to these descriptors provide the values under which the entities are indexed and may be restricted by underlying
-database software. The following example shows one index entry for each allowed syntax:
+It is also possible to specify inclusions in database indexes within a GEOFF file; this can apply to nodes,
+relationships or hooks and all use a similar syntax, which includes the index name between pipe `|` symbols. The data
+values supplied to these descriptors provide the values under which the entities are indexed and may be restricted by
+underlying database software. The following example shows one index inclusion for each allowed syntax:
 
 ```
-# This indexes the "bert" node under "name=Einstein" within the "Scientists" index
-|Scientists|->(bert)    {"name": "Einstein"}
-# This indexes the "pub1" relationship under "year=1916" within the "Publications" index
-|Publications|->[pub1]  {"year": 1916}
-# This indexes the "foo" hook under "foo=bar" within the "Things" index
-|Things|->{foo}         {"foo": "bar"}
+# This indexes the node "bert" within the "Scientists" index under "name=Einstein"
+(bert)<=|Scientists|    {"name": "Einstein"}
+# This indexes the relationship "pub1" within the "Publications" index under "year=1916"
+[pub1]<=|Publications|  {"year": 1916}
+# This indexes the hook "foo" within the "Things" index under "foo=bar"
+{foo}<=|Things|         {"foo": "bar"}
 ```
 
 ## Composite Descriptors
@@ -129,7 +129,7 @@ comment                  = "#" CHAR
 descriptor               = hook-descriptor
                          / node-descriptor
                          / relationship-descriptor
-                         / index-entry
+                         / index-inclusion
 
 composite-descriptor     = "{" *LWSP descriptor-data-pair *LWSP *( "," descriptor-data-pair ) "}"
 descriptor-data-pair     = '"' descriptor '"' *LWSP ":" *LWSP data
@@ -144,7 +144,7 @@ node-descriptor          = node-ref
 connectable              = hook-ref / node-ref
 relationship-descriptor  = connectable "-[" [ entity-name ] ":" entity-type "]->" connectable
 indexable                = hook-ref / node-ref / relationship-ref
-index-entry              = index-ref "->" indexable
+index-inclusion          = indexable "<=" index-ref
 
 entity-name              = 1*( ALPHA / DIGIT / "_" )
 entity-type              = 1*( ALPHA / DIGIT / "_" )

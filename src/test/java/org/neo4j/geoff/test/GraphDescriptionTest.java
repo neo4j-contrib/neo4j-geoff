@@ -22,7 +22,6 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFFLoader;
-import org.neo4j.geoff.Neo4jNamespace;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -45,7 +44,7 @@ public class GraphDescriptionTest {
 				"(doc) {\"name\": \"doctor\"}\n" +
 				"(dal) {\"name\": \"dalek\"}\n" +
 				"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
-				"|People|->(doc)     {\"name\": \"The Doctor\"}\n" +
+				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
 		GEOFFLoader.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
@@ -59,7 +58,7 @@ public class GraphDescriptionTest {
 				"\"(doc)\": {\"name\": \"doctor\"}," +
 				"\"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"|People|->(doc)\":     {\"name\": \"The Doctor\"}" +
+				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
 				"}");
 		GEOFFLoader.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
@@ -71,7 +70,7 @@ public class GraphDescriptionTest {
 	public void canCreateGraphFromCompositeDescriptorInUnexpectedOrder() throws Exception {
 		Reader reader = new StringReader("{" +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"|People|->(doc)\":     {\"name\": \"The Doctor\"}," +
+				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
 				"\"(doc)\": {\"name\": \"doctor\"}," +
 				"\"(dal)\": {\"name\": \"dalek\"}" +
 				"}");
@@ -96,7 +95,7 @@ public class GraphDescriptionTest {
 		map.put("(doc)-[:ENEMY_OF]->(dal)", props);
 		props = new TreeMap<String, Object>();
 		props.put("name", "The Doctor");
-		map.put("|People|->(doc)", props);
+		map.put("(doc)<=|People|", props);
 		GEOFFLoader.loadIntoNeo4j(map, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
@@ -112,7 +111,7 @@ public class GraphDescriptionTest {
 		map.put("(doc)-[:ENEMY_OF]->(dal)", props);
 		props = new HashMap<String, Object>();
 		props.put("name", "The Doctor");
-		map.put("|People|->(doc)", props);
+		map.put("(doc)<=|People|", props);
 		props = new HashMap<String, Object>();
 		props.put("name", "doctor");
 		map.put("(doc)", props);
@@ -141,7 +140,7 @@ public class GraphDescriptionTest {
 				"\"(doc)\": {\"name\": \"doctor\"}," +
 				"\"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"|People|->(doc)\":     {\"name\": \"The Doctor\"}," +
+				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
 				"\"{ref}-[:TIMELORD]->(doc)\":     null" +
 				"}");
 		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);

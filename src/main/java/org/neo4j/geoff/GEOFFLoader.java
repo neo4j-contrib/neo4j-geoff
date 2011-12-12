@@ -36,6 +36,7 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param reader  the reader to grab data from
 	 * @param graphDB the database to put stuff into
+	 * @param hooks
 	 * @return a map of all named entities
 	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
@@ -61,6 +62,7 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param descriptors the GEOFF descriptors
 	 * @param graphDB     the database to put stuff into
+	 * @param hooks
 	 * @return a map of all named entities
 	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
 	 * @throws IOException
@@ -148,8 +150,8 @@ public class GEOFFLoader<NS extends Namespace> {
 			for (RelationshipDescriptor d : composite.relationships) {
 				this.namespace.createRelationship(d);
 			}
-			for (IndexEntry d : composite.indexEntries) {
-				this.namespace.addIndexEntry(d);
+			for (IndexInclusion d : composite.indexInclusions) {
+				this.namespace.includeInIndex(d);
 			}
 		} else if (descriptor instanceof HookDescriptor) {
 			this.namespace.updateEntity((HookDescriptor) descriptor);
@@ -157,8 +159,8 @@ public class GEOFFLoader<NS extends Namespace> {
 			this.namespace.createNode((NodeDescriptor) descriptor);
 		} else if (descriptor instanceof RelationshipDescriptor) {
 			this.namespace.createRelationship((RelationshipDescriptor) descriptor);
-		} else if (descriptor instanceof IndexEntry) {
-			this.namespace.addIndexEntry((IndexEntry) descriptor);
+		} else if (descriptor instanceof IndexInclusion) {
+			this.namespace.includeInIndex((IndexInclusion) descriptor);
 		} else {
 			throw new UnsupportedOperationException();
 		}

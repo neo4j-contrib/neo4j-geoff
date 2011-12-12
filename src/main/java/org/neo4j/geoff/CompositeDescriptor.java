@@ -40,7 +40,7 @@ public class CompositeDescriptor extends Descriptor {
 	protected final Set<HookDescriptor> hooks;
 	protected final Set<NodeDescriptor> nodes;
 	protected final Set<RelationshipDescriptor> relationships;
-	protected final Set<IndexEntry> indexEntries;
+	protected final Set<IndexInclusion> indexInclusions;
 
 	protected CompositeDescriptor(Map<String, Map<String, Object>> descriptors)
 			throws BadDescriptorException {
@@ -49,7 +49,7 @@ public class CompositeDescriptor extends Descriptor {
 		this.hooks = new HashSet<HookDescriptor>(this.count);
 		this.nodes = new HashSet<NodeDescriptor>(this.count);
 		this.relationships = new HashSet<RelationshipDescriptor>(this.count);
-		this.indexEntries = new HashSet<IndexEntry>(this.count);
+		this.indexInclusions = new HashSet<IndexInclusion>(this.count);
 		for (Map.Entry<String, Map<String, Object>> descriptor : descriptors.entrySet()) {
 			Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
 			if (d instanceof HookDescriptor) {
@@ -58,8 +58,8 @@ public class CompositeDescriptor extends Descriptor {
 				this.nodes.add((NodeDescriptor) d);
 			} else if (d instanceof RelationshipDescriptor) {
 				this.relationships.add((RelationshipDescriptor) d);
-			} else if (d instanceof IndexEntry) {
-				this.indexEntries.add((IndexEntry) d);
+			} else if (d instanceof IndexInclusion) {
+				this.indexInclusions.add((IndexInclusion) d);
 			} else {
 				throw new UnsupportedOperationException();
 			}
@@ -82,8 +82,8 @@ public class CompositeDescriptor extends Descriptor {
 		return this.relationships.iterator();
 	}
 
-	public Iterator<IndexEntry> indexEntries() {
-		return this.indexEntries.iterator();
+	public Iterator<IndexInclusion> indexEntries() {
+		return this.indexInclusions.iterator();
 	}
 
 }

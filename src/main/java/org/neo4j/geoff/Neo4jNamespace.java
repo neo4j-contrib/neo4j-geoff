@@ -183,15 +183,15 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Add an entry to an Index
+	 * Include a reference to an entity within an Index
 	 *
-	 * @param indexEntry details of the Index entry to be added
+	 * @param indexInclusion details of the inclusion within the Index
 	 * @throws UnknownEntityException when no Node exists with the name specified
 	 */
 	@Override
-	public void addIndexEntry(IndexEntry<Indexable> indexEntry)
+	public void includeInIndex(IndexInclusion<Indexable> indexInclusion)
 			throws UnknownEntityException {
-		Indexable entity = indexEntry.getEntity();
+		Indexable entity = indexInclusion.getEntity();
 		String entityName = entity.getName();
 		boolean forOldNode = entity instanceof HookRef && this.oldNodes.containsKey(entityName);
 		boolean forOldRel = entity instanceof HookRef && this.oldRelationships.containsKey(entityName);
@@ -199,23 +199,23 @@ public class Neo4jNamespace implements Namespace {
 		boolean forNewRel = entity instanceof RelationshipRef && this.oldRelationships.containsKey(entityName);
 		if (forOldNode || forNewNode) {
 			// locate the required Index
-			Index<Node> index = this.graphDB.index().forNodes(indexEntry.getIndex().getName());
+			Index<Node> index = this.graphDB.index().forNodes(indexInclusion.getIndex().getName());
 			// look up the Node we need to index
 			Node node = forOldNode ? this.oldNodes.get(entityName) : this.newNodes.get(entityName);
 			// add entries under all the supplied key:value pairs
-			if (indexEntry.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexEntry.getData().entrySet()) {
+			if (indexInclusion.getData() != null) {
+				for (Map.Entry<String, Object> entry : indexInclusion.getData().entrySet()) {
 					index.add(node, entry.getKey(), entry.getValue());
 				}
 			}
 		} else if (forOldRel || forNewRel) {
 			// locate the required Index
-			Index<Relationship> index = this.graphDB.index().forRelationships(indexEntry.getIndex().getName());
+			Index<Relationship> index = this.graphDB.index().forRelationships(indexInclusion.getIndex().getName());
 			// look up the Node we need to index
 			Relationship rel = forOldRel ? this.oldRelationships.get(entityName) : this.newRelationships.get(entityName);
 			// add entries under all the supplied key:value pairs
-			if (indexEntry.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexEntry.getData().entrySet()) {
+			if (indexInclusion.getData() != null) {
+				for (Map.Entry<String, Object> entry : indexInclusion.getData().entrySet()) {
 					index.add(rel, entry.getKey(), entry.getValue());
 				}
 			}

@@ -38,9 +38,9 @@ public abstract class Descriptor {
 	private static final Pattern NODE_TO_HOOK_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\((\\w+)\\)-\\[(\\w*):(\\w+)\\]->\\{(\\w+)\\}$");
 	private static final Pattern NODE_TO_NODE_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\((\\w+)\\)-\\[(\\w*):(\\w+)\\]->\\((\\w+)\\)$");
 
-	private static final Pattern HOOK_INDEX_ENTRY = Pattern.compile("^\\|(\\w+)\\|->\\{(\\w+)\\}$");
-	private static final Pattern NODE_INDEX_ENTRY = Pattern.compile("^\\|(\\w+)\\|->\\((\\w+)\\)$");
-	private static final Pattern RELATIONSHIP_INDEX_ENTRY = Pattern.compile("^\\|(\\w+)\\|->\\[(\\w+)\\]$");
+	private static final Pattern HOOK_INDEX_INCLUSION = Pattern.compile("^\\{(\\w+)\\}<=\\|(\\w+)\\|$");
+	private static final Pattern NODE_INDEX_INCLUSION = Pattern.compile("^\\((\\w+)\\)<=\\|(\\w+)\\|$");
+	private static final Pattern RELATIONSHIP_INDEX_INCLUSION = Pattern.compile("^\\[(\\w+)\\]<=\\|(\\w+)\\|$");
 
 	private static final Pattern COMPOSITE_DESCRIPTOR = Pattern.compile("^(\\{\\s*\".+\"\\s*:.*\\})");
 
@@ -112,17 +112,17 @@ public abstract class Descriptor {
 		if (m.find()) {
 			return new RelationshipDescriptor<NodeRef, NodeRef>(new NodeRef(m.group(1)), m.group(2), m.group(3), new NodeRef(m.group(4)), data);
 		}
-		m = HOOK_INDEX_ENTRY.matcher(descriptor);
+		m = HOOK_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexEntry<HookRef>(new IndexRef(m.group(1)), new HookRef(m.group(2)), data);
+			return new IndexInclusion<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
-		m = NODE_INDEX_ENTRY.matcher(descriptor);
+		m = NODE_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexEntry<NodeRef>(new IndexRef(m.group(1)), new NodeRef(m.group(2)), data);
+			return new IndexInclusion<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
-		m = RELATIONSHIP_INDEX_ENTRY.matcher(descriptor);
+		m = RELATIONSHIP_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexEntry<RelationshipRef>(new IndexRef(m.group(1)), new RelationshipRef(m.group(2)), data);
+			return new IndexInclusion<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		// nothing left to match against, must be invalid
 		throw new BadDescriptorException(descriptor);

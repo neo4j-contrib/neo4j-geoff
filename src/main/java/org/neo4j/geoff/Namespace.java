@@ -57,12 +57,12 @@ public interface Namespace {
 			throws DuplicateNameException, UnknownEntityException;
 
 	/**
-	 * Add an entry to an Index
+	 * Include a reference to an entity within an Index
 	 *
-	 * @param indexEntry details of the Index entry to be added
+	 * @param indexInclusion details of the inclusion within the Index
 	 * @throws UnknownEntityException when no Node exists with the name specified
 	 */
-	public void addIndexEntry(IndexEntry<Indexable> indexEntry)
+	public void includeInIndex(IndexInclusion<Indexable> indexInclusion)
 			throws UnknownEntityException;
 
 }
