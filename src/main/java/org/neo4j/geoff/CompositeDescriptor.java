@@ -94,7 +94,7 @@ public class CompositeDescriptor extends Descriptor {
 		return this.relationships.iterator();
 	}
 
-	public Iterator<IndexInclusion> indexEntries() {
+	public Iterator<IndexInclusion> indexInclusions() {
 		return this.indexInclusions.iterator();
 	}
 
