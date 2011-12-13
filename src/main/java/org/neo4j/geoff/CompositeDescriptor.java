@@ -36,21 +36,33 @@ import java.util.Set;
  */
 public class CompositeDescriptor extends Descriptor {
 
+	/**
+	 * Convert a Map of descriptor:data pairs into a single CompositeDescriptor
+	 *
+	 * @param descriptorMap
+	 * @return
+	 * @throws BadDescriptorException
+	 */
+	public static CompositeDescriptor from(Map<String, Map<String, Object>> descriptorMap)
+			throws BadDescriptorException {
+		return new CompositeDescriptor(descriptorMap);
+	}
+
 	protected final int count;
 	protected final Set<HookDescriptor> hooks;
 	protected final Set<NodeDescriptor> nodes;
 	protected final Set<RelationshipDescriptor> relationships;
 	protected final Set<IndexInclusion> indexInclusions;
 
-	protected CompositeDescriptor(Map<String, Map<String, Object>> descriptors)
+	protected CompositeDescriptor(Map<String, Map<String, Object>> descriptorMap)
 			throws BadDescriptorException {
 		super();
-		this.count = descriptors.size();
+		this.count = descriptorMap.size();
 		this.hooks = new HashSet<HookDescriptor>(this.count);
 		this.nodes = new HashSet<NodeDescriptor>(this.count);
 		this.relationships = new HashSet<RelationshipDescriptor>(this.count);
 		this.indexInclusions = new HashSet<IndexInclusion>(this.count);
-		for (Map.Entry<String, Map<String, Object>> descriptor : descriptors.entrySet()) {
+		for (Map.Entry<String, Map<String, Object>> descriptor : descriptorMap.entrySet()) {
 			Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
 			if (d instanceof HookDescriptor) {
 				this.hooks.add((HookDescriptor) d);
