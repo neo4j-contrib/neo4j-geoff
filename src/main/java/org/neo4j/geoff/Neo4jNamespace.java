@@ -230,7 +230,7 @@ public class Neo4jNamespace implements Namespace {
 			if (indexRule.getData() != null) {
 				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
 					index.remove(node, entry.getKey(), entry.getValue());
-					if(indexRule instanceof IndexIncludeRule) {
+					if(indexRule instanceof IndexInclusionRule) {
 						index.add(node, entry.getKey(), entry.getValue());
 					}
 				}
@@ -244,7 +244,7 @@ public class Neo4jNamespace implements Namespace {
 			if (indexRule.getData() != null) {
 				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
 					index.remove(rel, entry.getKey(), entry.getValue());
-					if(indexRule instanceof IndexIncludeRule) {
+					if(indexRule instanceof IndexInclusionRule) {
 						index.add(rel, entry.getKey(), entry.getValue());
 					}
 				}

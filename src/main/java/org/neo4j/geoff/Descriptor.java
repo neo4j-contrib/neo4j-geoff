@@ -121,27 +121,27 @@ public abstract class Descriptor {
 		}
 		m = HOOK_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexIncludeRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexInclusionRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = NODE_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexIncludeRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexInclusionRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = RELATIONSHIP_INDEX_INCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexIncludeRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexInclusionRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = HOOK_INDEX_EXCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexExcludeRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexExclusionRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = NODE_INDEX_EXCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexExcludeRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexExclusionRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = RELATIONSHIP_INDEX_EXCLUSION.matcher(descriptor);
 		if (m.find()) {
-			return new IndexExcludeRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
+			return new IndexExclusionRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
 		}
 		m = NODE_INDEX_REFLECTION.matcher(descriptor);
 		if (m.find()) {
