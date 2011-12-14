@@ -22,6 +22,7 @@ package org.neo4j.geoff;
 
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexHits;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -98,6 +99,29 @@ public class Neo4jNamespace implements Namespace {
 			}
 		} else {
 			throw new UnknownEntityException(String.format("Hook {%s} not found", descriptor.getHook().getName()));
+		}
+	}
+
+	@Override
+	public void reflectIndexEntry(IndexEntryReflection<Reflective> indexEntryReflection)
+			throws UnknownEntityException {
+		Reflective entity = indexEntryReflection.getEntity();
+		if(entity instanceof NodeRef) {
+			Index<Node> index = this.graphDB.index().forNodes(indexEntryReflection.getIndex().getName());
+			IndexHits<Node> hits = index.get(indexEntryReflection.getKey(), indexEntryReflection.getValue());
+			String name = indexEntryReflection.getEntity().getName();
+			Node node = hits.getSingle();
+			this.newNodes.put(name, node);
+			this.entities.put("(" + name + ")", node);
+		} else if(entity instanceof RelationshipRef) {
+			Index<Relationship> index = this.graphDB.index().forRelationships(indexEntryReflection.getIndex().getName());
+			IndexHits<Relationship> hits = index.get(indexEntryReflection.getKey(), indexEntryReflection.getValue());
+			String name = indexEntryReflection.getEntity().getName();
+			Relationship rel = hits.getSingle();
+			this.newRelationships.put(name, rel);
+			this.entities.put("[" + name + "]", rel);
+		} else {
+			throw new IllegalArgumentException("Unexpected entity type");
 		}
 	}
 
@@ -185,13 +209,13 @@ public class Neo4jNamespace implements Namespace {
 	/**
 	 * Include a reference to an entity within an Index
 	 *
-	 * @param indexInclusion details of the inclusion within the Index
+	 * @param indexRule details of the inclusion within the Index
 	 * @throws UnknownEntityException when no Node exists with the name specified
 	 */
 	@Override
-	public void includeInIndex(IndexInclusion<Indexable> indexInclusion)
+	public void updateIndex(IndexRule<Indexable> indexRule)
 			throws UnknownEntityException {
-		Indexable entity = indexInclusion.getEntity();
+		Indexable entity = indexRule.getEntity();
 		String entityName = entity.getName();
 		boolean forOldNode = entity instanceof HookRef && this.oldNodes.containsKey(entityName);
 		boolean forOldRel = entity instanceof HookRef && this.oldRelationships.containsKey(entityName);
@@ -199,24 +223,30 @@ public class Neo4jNamespace implements Namespace {
 		boolean forNewRel = entity instanceof RelationshipRef && this.oldRelationships.containsKey(entityName);
 		if (forOldNode || forNewNode) {
 			// locate the required Index
-			Index<Node> index = this.graphDB.index().forNodes(indexInclusion.getIndex().getName());
-			// look up the Node we need to index
+			Index<Node> index = this.graphDB.index().forNodes(indexRule.getIndex().getName());
+			// look up the Node we need to work with
 			Node node = forOldNode ? this.oldNodes.get(entityName) : this.newNodes.get(entityName);
-			// add entries under all the supplied key:value pairs
-			if (indexInclusion.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexInclusion.getData().entrySet()) {
-					index.add(node, entry.getKey(), entry.getValue());
+			// update entries under all the supplied key:value pairs
+			if (indexRule.getData() != null) {
+				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
+					index.remove(node, entry.getKey(), entry.getValue());
+					if(indexRule instanceof IndexIncludeRule) {
+						index.add(node, entry.getKey(), entry.getValue());
+					}
 				}
 			}
 		} else if (forOldRel || forNewRel) {
 			// locate the required Index
-			Index<Relationship> index = this.graphDB.index().forRelationships(indexInclusion.getIndex().getName());
-			// look up the Node we need to index
+			Index<Relationship> index = this.graphDB.index().forRelationships(indexRule.getIndex().getName());
+			// look up the Relationship we need to work with
 			Relationship rel = forOldRel ? this.oldRelationships.get(entityName) : this.newRelationships.get(entityName);
-			// add entries under all the supplied key:value pairs
-			if (indexInclusion.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexInclusion.getData().entrySet()) {
-					index.add(rel, entry.getKey(), entry.getValue());
+			// update entries under all the supplied key:value pairs
+			if (indexRule.getData() != null) {
+				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
+					index.remove(rel, entry.getKey(), entry.getValue());
+					if(indexRule instanceof IndexIncludeRule) {
+						index.add(rel, entry.getKey(), entry.getValue());
+					}
 				}
 			}
 		} else {

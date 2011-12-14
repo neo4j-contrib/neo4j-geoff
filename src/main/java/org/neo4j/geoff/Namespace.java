@@ -37,6 +37,15 @@ public interface Namespace {
 			throws UnknownEntityException;
 
 	/**
+	 * Reflect an Index entry into an entity reference
+	 *
+	 * @param indexEntryReflection details of the Index entry to reflect
+	 * @throws UnknownEntityException when no Node exists with the name specified
+	 */
+	public void reflectIndexEntry(IndexEntryReflection<Reflective> indexEntryReflection)
+			throws UnknownEntityException;
+
+	/**
 	 * Add a Node to the database and keep a reference to it, indexed by name
 	 *
 	 * @param descriptor details of the Node to be created
@@ -59,10 +68,10 @@ public interface Namespace {
 	/**
 	 * Include a reference to an entity within an Index
 	 *
-	 * @param indexInclusion details of the inclusion within the Index
+	 * @param indexRule details of the inclusion within the Index
 	 * @throws UnknownEntityException when no Node exists with the name specified
 	 */
-	public void includeInIndex(IndexInclusion<Indexable> indexInclusion)
+	public void updateIndex(IndexRule<Indexable> indexRule)
 			throws UnknownEntityException;
 
 }

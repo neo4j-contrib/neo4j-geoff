@@ -19,7 +19,7 @@
  */
 package org.neo4j.geoff;
 
-public class NodeRef extends EntityRef implements Connectable, Indexable {
+public class NodeRef extends EntityRef implements Connectable, Indexable, Reflective {
 
 	public NodeRef(String name) {
 		super(name);

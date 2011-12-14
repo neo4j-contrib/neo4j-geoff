@@ -144,23 +144,28 @@ public class GEOFFLoader<NS extends Namespace> {
 			for (HookDescriptor d : composite.hooks) {
 				this.namespace.updateEntity(d);
 			}
+			for (IndexEntryReflection d : composite.indexEntryReflections) {
+				this.namespace.reflectIndexEntry(d);
+			}
 			for (NodeDescriptor d : composite.nodes) {
 				this.namespace.createNode(d);
 			}
 			for (RelationshipDescriptor d : composite.relationships) {
 				this.namespace.createRelationship(d);
 			}
-			for (IndexInclusion d : composite.indexInclusions) {
-				this.namespace.includeInIndex(d);
+			for (IndexRule d : composite.indexRules) {
+				this.namespace.updateIndex(d);
 			}
 		} else if (descriptor instanceof HookDescriptor) {
 			this.namespace.updateEntity((HookDescriptor) descriptor);
+		} else if (descriptor instanceof IndexEntryReflection) {
+			this.namespace.reflectIndexEntry((IndexEntryReflection) descriptor);
 		} else if (descriptor instanceof NodeDescriptor) {
 			this.namespace.createNode((NodeDescriptor) descriptor);
 		} else if (descriptor instanceof RelationshipDescriptor) {
 			this.namespace.createRelationship((RelationshipDescriptor) descriptor);
-		} else if (descriptor instanceof IndexInclusion) {
-			this.namespace.includeInIndex((IndexInclusion) descriptor);
+		} else if (descriptor instanceof IndexRule) {
+			this.namespace.updateIndex((IndexRule) descriptor);
 		} else {
 			throw new UnsupportedOperationException();
 		}

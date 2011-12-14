@@ -19,15 +19,8 @@
  */
 package org.neo4j.geoff;
 
-public class RelationshipRef extends EntityRef implements Indexable, Reflective {
+public interface Reflective {
 
-	public RelationshipRef(String name) {
-		super(name);
-	}
-
-	@Override
-	public String toString() {
-		return String.format("[%s]", this.name);
-	}
+	public String getName();
 
 }

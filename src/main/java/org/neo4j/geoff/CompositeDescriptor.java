@@ -50,28 +50,32 @@ public class CompositeDescriptor extends Descriptor {
 
 	protected final int count;
 	protected final Set<HookDescriptor> hooks;
+	protected final Set<IndexEntryReflection> indexEntryReflections;
 	protected final Set<NodeDescriptor> nodes;
 	protected final Set<RelationshipDescriptor> relationships;
-	protected final Set<IndexInclusion> indexInclusions;
+	protected final Set<IndexRule> indexRules;
 
 	protected CompositeDescriptor(Map<String, Map<String, Object>> descriptorMap)
 			throws BadDescriptorException {
 		super();
 		this.count = descriptorMap.size();
 		this.hooks = new HashSet<HookDescriptor>(this.count);
+		this.indexEntryReflections = new HashSet<IndexEntryReflection>(this.count);
 		this.nodes = new HashSet<NodeDescriptor>(this.count);
 		this.relationships = new HashSet<RelationshipDescriptor>(this.count);
-		this.indexInclusions = new HashSet<IndexInclusion>(this.count);
+		this.indexRules = new HashSet<IndexRule>(this.count);
 		for (Map.Entry<String, Map<String, Object>> descriptor : descriptorMap.entrySet()) {
 			Descriptor d = Descriptor.from(descriptor.getKey(), descriptor.getValue());
 			if (d instanceof HookDescriptor) {
 				this.hooks.add((HookDescriptor) d);
+			} else if (d instanceof IndexEntryReflection) {
+				this.indexEntryReflections.add((IndexEntryReflection) d);
 			} else if (d instanceof NodeDescriptor) {
 				this.nodes.add((NodeDescriptor) d);
 			} else if (d instanceof RelationshipDescriptor) {
 				this.relationships.add((RelationshipDescriptor) d);
-			} else if (d instanceof IndexInclusion) {
-				this.indexInclusions.add((IndexInclusion) d);
+			} else if (d instanceof IndexRule) {
+				this.indexRules.add((IndexRule) d);
 			} else {
 				throw new UnsupportedOperationException();
 			}
@@ -86,16 +90,20 @@ public class CompositeDescriptor extends Descriptor {
 		return this.hooks.iterator();
 	}
 
+	public Iterator<IndexEntryReflection> indexEntryReflections() {
+		return this.indexEntryReflections.iterator();
+	}
+
 	public Iterator<NodeDescriptor> nodes() {
 		return this.nodes.iterator();
 	}
 
-	public Iterator<RelationshipDescriptor> relationshipDescriptors() {
+	public Iterator<RelationshipDescriptor> relationships() {
 		return this.relationships.iterator();
 	}
 
-	public Iterator<IndexInclusion> indexInclusions() {
-		return this.indexInclusions.iterator();
+	public Iterator<IndexRule> indexRules() {
+		return this.indexRules.iterator();
 	}
 
 }
