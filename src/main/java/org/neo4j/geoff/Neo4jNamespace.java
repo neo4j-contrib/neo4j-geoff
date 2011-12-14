@@ -207,10 +207,10 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Include a reference to an entity within an Index
+	 * Include or exclude a reference to an entity within an Index
 	 *
-	 * @param indexRule details of the inclusion within the Index
-	 * @throws UnknownEntityException when no Node exists with the name specified
+	 * @param indexRule details of the Index rule to enforce
+	 * @throws UnknownEntityException when no Entity exists with the name specified
 	 */
 	@Override
 	public void updateIndex(IndexRule<Indexable> indexRule)
