@@ -23,9 +23,9 @@ package org.neo4j.geoff;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides context for items to be added to a Neo4j database and retained by name
@@ -36,226 +36,496 @@ import java.util.Map;
 public class Neo4jNamespace implements Namespace {
 
 	private final GraphDatabaseService graphDB;
-
-	private final HashMap<String, Node> oldNodes = new HashMap<String, Node>();
 	private final HashMap<String, Node> newNodes = new HashMap<String, Node>();
-
-	private final HashMap<String, Relationship> oldRelationships = new HashMap<String, Relationship>();
 	private final HashMap<String, Relationship> newRelationships = new HashMap<String, Relationship>();
-
 	private final HashMap<String, PropertyContainer> entities = new HashMap<String, PropertyContainer>();
 
 	/**
 	 * Set up a new Namespace attached to the supplied GraphDatabaseService
 	 *
 	 * @param graphDB the database in which to store items
-	 * @param hooks   set of pre-existing Nodes and Relationships accessible within this namespace
+	 * @param params   set of pre-existing Nodes and Relationships accessible within this namespace
 	 */
-	Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks) {
+	Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> params) {
 		this.graphDB = graphDB;
-		if (hooks != null) {
-			// separate hooks into nodes and relationships
-			for (Map.Entry<String, ? extends PropertyContainer> hook : hooks.entrySet()) {
-				this.entities.put("{" + hook.getKey() + "}", hook.getValue());
-				if (hook.getValue() instanceof Node) {
-					this.oldNodes.put(hook.getKey(), (Node) hook.getValue());
-				} else if (hook.getValue() instanceof Relationship) {
-					this.oldRelationships.put(hook.getKey(), (Relationship) hook.getValue());
+		if (params != null) {
+			// separate params into nodes and relationships
+			for (Map.Entry<String, ? extends PropertyContainer> param : params.entrySet()) {
+				if (param.getValue() instanceof Node) {
+					register(param.getKey(), (Node) param.getValue());
+				} else if (param.getValue() instanceof Relationship) {
+					register(param.getKey(), (Relationship) param.getValue());
 				} else {
-					// unexpected hook type! should never happen :-)
-					throw new IllegalArgumentException("Unexpected hook " + hook.getClass());
+					// unexpected param type! should never happen :-)
+					throw new IllegalArgumentException("Unexpected parameter type: " + param.getClass());
 				}
 			}
-		}
-	}
-
-	/**
-	 * Update the properties on a pre-existing Node or Relationship
-	 *
-	 * @param descriptor a pointer to the entity to update
-	 * @throws UnknownEntityException when the referenced entity cannot be found
-	 */
-	@Override
-	public void updateEntity(HookDescriptor descriptor)
-			throws UnknownEntityException {
-		String hookName = descriptor.getHook().getName();
-		if (this.oldNodes.containsKey(hookName)) {
-			// 'tis a node...
-			Node node = this.oldNodes.get(hookName);
-			// update properties
-			if (descriptor.getData() != null) {
-				for (Map.Entry<String, Object> e : descriptor.getData().entrySet()) {
-					node.setProperty(e.getKey(), e.getValue());
-				}
-			}
-		} else if (this.oldRelationships.containsKey(hookName)) {
-			// 'tis a relationship...
-			Relationship rel = this.oldRelationships.get(hookName);
-			// update properties
-			if (descriptor.getData() != null) {
-				for (Map.Entry<String, Object> e : descriptor.getData().entrySet()) {
-					rel.setProperty(e.getKey(), e.getValue());
-				}
-			}
-		} else {
-			throw new UnknownEntityException(String.format("Hook {%s} not found", descriptor.getHook().getName()));
-		}
-	}
-
-	@Override
-	public void reflectIndexEntry(IndexEntryReflection<Reflective> indexEntryReflection)
-			throws UnknownEntityException {
-		Reflective entity = indexEntryReflection.getEntity();
-		if(entity instanceof NodeRef) {
-			Index<Node> index = this.graphDB.index().forNodes(indexEntryReflection.getIndex().getName());
-			IndexHits<Node> hits = index.get(indexEntryReflection.getKey(), indexEntryReflection.getValue());
-			String name = indexEntryReflection.getEntity().getName();
-			Node node = hits.getSingle();
-			this.newNodes.put(name, node);
-			this.entities.put("(" + name + ")", node);
-		} else if(entity instanceof RelationshipRef) {
-			Index<Relationship> index = this.graphDB.index().forRelationships(indexEntryReflection.getIndex().getName());
-			IndexHits<Relationship> hits = index.get(indexEntryReflection.getKey(), indexEntryReflection.getValue());
-			String name = indexEntryReflection.getEntity().getName();
-			Relationship rel = hits.getSingle();
-			this.newRelationships.put(name, rel);
-			this.entities.put("[" + name + "]", rel);
-		} else {
-			throw new IllegalArgumentException("Unexpected entity type");
-		}
-	}
-
-	/**
-	 * Add a Node to the database and keep a reference to it, indexed by name
-	 *
-	 * @param descriptor details of the Node to be created
-	 * @throws DuplicateNameException when the supplied Node name already exists
-	 */
-	@Override
-	public void createNode(NodeDescriptor descriptor)
-			throws DuplicateNameException {
-		if (this.newNodes.containsKey(descriptor.getNode().getName())) {
-			throw new DuplicateNameException(String.format("Duplicate node name (%s)", descriptor.getNode().getName()));
-		}
-		// first, create the actual node
-		Node node = this.graphDB.createNode();
-		// then add any supplied properties
-		if (descriptor.getData() != null) {
-			for (Map.Entry<String, Object> e : descriptor.getData().entrySet()) {
-				node.setProperty(e.getKey(), e.getValue());
-			}
-		}
-		// assuming this Node has a name, hold onto it
-		String name = descriptor.getNode().getName();
-		if (!name.isEmpty()) {
-			this.newNodes.put(name, node);
-			this.entities.put("(" + name + ")", node);
-		}
-	}
-
-	private Node getNode(Connectable connectable) throws UnknownEntityException {
-		String name = connectable.getName();
-		if (connectable instanceof HookRef) {
-			if (this.oldNodes.containsKey(name)) {
-				return this.oldNodes.get(name);
-			} else {
-				throw new UnknownEntityException(String.format("Node hook {%s} not found", name));
-			}
-		} else if (connectable instanceof NodeRef) {
-			if (this.newNodes.containsKey(name)) {
-				return this.newNodes.get(name);
-			} else {
-				throw new UnknownEntityException(String.format("Node (%s) not found", name));
-			}
-		} else {
-			// should only happen if someone has made something else Connectable!
-			throw new IllegalArgumentException("Unexpected connector type");
-		}
-	}
-
-	/**
-	 * Add a Relationship to the database and keep a reference to it, indexed
-	 * by name, if it has a name
-	 *
-	 * @param descriptor details of the Relationship to be created
-	 * @throws DuplicateNameException when the supplied Relationship name already exists
-	 * @throws UnknownEntityException when an end point Node cannot be identified
-	 */
-	@Override
-	public void createRelationship(RelationshipDescriptor<Connectable, Connectable> descriptor)
-			throws DuplicateNameException, UnknownEntityException {
-		if (descriptor.hasName() && this.newRelationships.containsKey(descriptor.getName())) {
-			throw new DuplicateNameException(String.format("Duplicate relationship name [%s]", descriptor.getName()));
-		}
-		// create the Relationship using the supplied criteria
-		Relationship rel = this.getNode(descriptor.getStartNode()).createRelationshipTo(
-				this.getNode(descriptor.getEndNode()),
-				DynamicRelationshipType.withName(descriptor.getType())
-		);
-		// then add any supplied properties
-		if (descriptor.getData() != null) {
-			for (Map.Entry<String, Object> e : descriptor.getData().entrySet()) {
-				rel.setProperty(e.getKey(), e.getValue());
-			}
-		}
-		// assuming this Relationship has a name, hold onto it
-		String name = descriptor.getName();
-		if (!name.isEmpty()) {
-			this.newRelationships.put(name, rel);
-			this.entities.put("[" + name + "]", rel);
-		}
-	}
-
-	/**
-	 * Include or exclude a reference to an entity within an Index
-	 *
-	 * @param indexRule details of the Index rule to enforce
-	 * @throws UnknownEntityException when no Entity exists with the name specified
-	 */
-	@Override
-	public void updateIndex(IndexRule<Indexable> indexRule)
-			throws UnknownEntityException {
-		Indexable entity = indexRule.getEntity();
-		String entityName = entity.getName();
-		boolean forOldNode = entity instanceof HookRef && this.oldNodes.containsKey(entityName);
-		boolean forOldRel = entity instanceof HookRef && this.oldRelationships.containsKey(entityName);
-		boolean forNewNode = entity instanceof NodeRef && this.newNodes.containsKey(entityName);
-		boolean forNewRel = entity instanceof RelationshipRef && this.oldRelationships.containsKey(entityName);
-		if (forOldNode || forNewNode) {
-			// locate the required Index
-			Index<Node> index = this.graphDB.index().forNodes(indexRule.getIndex().getName());
-			// look up the Node we need to work with
-			Node node = forOldNode ? this.oldNodes.get(entityName) : this.newNodes.get(entityName);
-			// update entries under all the supplied key:value pairs
-			if (indexRule.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
-					index.remove(node, entry.getKey(), entry.getValue());
-					if(indexRule instanceof IndexInclusionRule) {
-						index.add(node, entry.getKey(), entry.getValue());
-					}
-				}
-			}
-		} else if (forOldRel || forNewRel) {
-			// locate the required Index
-			Index<Relationship> index = this.graphDB.index().forRelationships(indexRule.getIndex().getName());
-			// look up the Relationship we need to work with
-			Relationship rel = forOldRel ? this.oldRelationships.get(entityName) : this.newRelationships.get(entityName);
-			// update entries under all the supplied key:value pairs
-			if (indexRule.getData() != null) {
-				for (Map.Entry<String, Object> entry : indexRule.getData().entrySet()) {
-					index.remove(rel, entry.getKey(), entry.getValue());
-					if(indexRule instanceof IndexInclusionRule) {
-						index.add(rel, entry.getKey(), entry.getValue());
-					}
-				}
-			}
-		} else {
-			throw new UnknownEntityException(String.format("Unresolvable indexable entity"));
 		}
 	}
 
 	public Map<String, PropertyContainer> getEntities() {
 		return this.entities;
+	}
+
+	@Override
+	public void apply(Rule rule) throws DependencyException, IllegalRuleException {
+		if (GEOFF.DEBUG) {
+			System.out.println("Applying rule: " + rule.toString());
+		}
+		String pattern = rule.getDescriptor().getPattern();
+		if ("N".equals(pattern)) {
+			includeNode(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					rule.getData()
+			);
+		} else if ("R".equals(pattern)) {
+			includeRelationshipByName(
+					(RelToken) rule.getDescriptor().getToken(0),
+					rule.getData()
+			);
+		} else if ("N-R->N".equals(pattern)) {
+			includeRelationshipByType(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(RelToken) rule.getDescriptor().getToken(2),
+					(NodeToken) rule.getDescriptor().getToken(5),
+					rule.getData()
+			);
+		} else if ("N^I".equals(pattern)) {
+			includeNodeIndexEntry(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else if ("R^I".equals(pattern)) {
+			includeRelationshipIndexEntry(
+					(RelToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else if ("!N".equals(pattern)) {
+			excludeNode(
+					(NodeToken) rule.getDescriptor().getToken(1),
+					rule.getData()
+			);
+		} else if ("!R".equals(pattern)) {
+			excludeRelationshipByName(
+					(RelToken) rule.getDescriptor().getToken(1),
+					rule.getData()
+			);
+		} else if ("N-R-!N".equals(pattern)) {
+			excludeRelationshipByType(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(RelToken) rule.getDescriptor().getToken(2),
+					(NodeToken) rule.getDescriptor().getToken(5),
+					rule.getData()
+			);
+		} else if ("N'I".equals(pattern)) {
+			excludeNodeIndexEntry(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else if ("R'I".equals(pattern)) {
+			excludeRelationshipIndexEntry(
+					(RelToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else if ("N=N-R->N".equals(pattern)) {
+			reflectNodeFromRelationship(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(NodeToken) rule.getDescriptor().getToken(2),
+					(RelToken) rule.getDescriptor().getToken(4),
+					(NodeToken) rule.getDescriptor().getToken(7),
+					rule.getData()
+			);
+		} else if ("R=N-R->N".equals(pattern)) {
+			reflectRelationshipFromRelationship(
+					(RelToken) rule.getDescriptor().getToken(0),
+					(NodeToken) rule.getDescriptor().getToken(2),
+					(RelToken) rule.getDescriptor().getToken(4),
+					(NodeToken) rule.getDescriptor().getToken(7),
+					rule.getData()
+			);
+		} else if ("N=I".equals(pattern)) {
+			reflectNodeFromIndexEntry(
+					(NodeToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else if ("R=I".equals(pattern)) {
+			reflectRelationshipFromIndexEntry(
+					(RelToken) rule.getDescriptor().getToken(0),
+					(IndexToken) rule.getDescriptor().getToken(2),
+					rule.getData()
+			);
+		} else {
+			throw new IllegalRuleException("Rule cannot be identified: " + rule.toString());
+		}
+	}
+
+	public void apply(RuleSet rules) throws DependencyException, IllegalRuleException {
+		if (GEOFF.DEBUG) {
+			System.out.println("Applying set of " + rules.length() + " rules");
+		}
+		ArrayList<Rule> rulesToApply = new ArrayList<Rule>(
+				Arrays.asList(rules.getRules().toArray(new Rule[rules.length()]))
+		);
+		int numberOfRulesToApply = rulesToApply.size();
+		// cycle through remaining rules until all are applied (if possible)
+		while(numberOfRulesToApply > 0) {
+			Iterator<Rule> iterator = rulesToApply.iterator();
+			while(iterator.hasNext()) {
+				try {
+					apply(iterator.next());
+					iterator.remove();
+				} catch(DependencyException e) {
+					// continue, leaving this rule for next cycle
+				}
+			}
+			if (numberOfRulesToApply == rulesToApply.size()) {
+				// admit defeat: dependencies cannot be satisfied
+				throw new DependencyException("Unresolvable dependencies in rule set");
+			} else {
+				numberOfRulesToApply = rulesToApply.size();
+			}
+		}
+	}
+
+
+	/* START OF INCLUSION RULE HANDLERS */
+
+	// N
+	void includeNode(NodeToken node, Map<String, Object> data)
+			throws IllegalRuleException {
+		assertNamed(node);
+		if (this.newNodes.containsKey(node.getName())) {
+			Node n = this.newNodes.get(node.getName());
+			removeProperties(n);
+			addProperties(n, data);
+		} else {
+			Node n = this.graphDB.createNode();
+			register(node.getName(), n);
+			addProperties(n, data);
+		}
+	}
+
+	// R
+	void includeRelationshipByName(RelToken rel, Map<String, Object> data) throws DependencyException, IllegalRuleException {
+		assertNamed(rel);
+		assertNotTyped(rel);
+		assertRegistered(rel);
+		Relationship r = this.newRelationships.get(rel.getName());
+		removeProperties(r);
+		addProperties(r, data);
+	}
+
+	// N-R->N
+	void includeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		if (GEOFF.DEBUG) {
+			System.out.println("Including relationship by type \"N-R->N\"");
+		}
+		assertNamed(startNode, endNode);
+		assertRegistered(startNode, endNode);
+		if (rel.hasName()) {
+			assertNotRegistered(rel);
+		}
+		assertTyped(rel);
+		Relationship r = this.newNodes.get(startNode.getName()).createRelationshipTo(
+				this.newNodes.get(endNode.getName()),
+				DynamicRelationshipType.withName(rel.getType())
+		);
+		if (rel.hasName()) {
+			register(rel.getName(), r);
+		}
+		addProperties(r, data);
+	}
+
+	// N^I
+	void includeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(node, index);
+		assertRegistered(node);
+		Node n = this.newNodes.get(node.getName());
+		Index<Node> i = this.graphDB.index().forNodes(index.getName());
+		for(Map.Entry<String, Object> entry : data.entrySet()) {
+			i.add(n, entry.getKey(), entry.getValue());
+		}
+	}
+
+	// R^I
+	void includeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(rel, index);
+		assertNotTyped(rel);
+		assertRegistered(rel);
+		Relationship r = this.newRelationships.get(rel.getName());
+		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
+		for(Map.Entry<String, Object> entry : data.entrySet()) {
+			i.add(r, entry.getKey(), entry.getValue());
+		}
+	}
+
+	/* END OF INCLUSION RULE HANDLERS */
+
+
+	/* START OF EXCLUSION RULE HANDLERS */
+
+	// !N
+	void excludeNode(NodeToken node, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(node);
+		assertRegistered(node);
+		assertIsEmpty(data);
+		unregisterNode(node.getName()).delete();
+	}
+
+	// !R
+	void excludeRelationshipByName(RelToken rel, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(rel);
+		assertNotTyped(rel);
+		assertRegistered(rel);
+		assertIsEmpty(data);
+		unregisterRelationship(rel.getName()).delete();
+	}
+
+	// N-R-!N
+	void excludeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertAtLeastOneNamed(startNode, endNode);
+		if (startNode.hasName()) {
+			assertRegistered(startNode);
+		}
+		if (endNode.hasName()) {
+			assertRegistered(endNode);
+		}
+		assertNotNamed(rel);
+		assertTyped(rel);
+		assertIsEmpty(data);
+		DynamicRelationshipType t = DynamicRelationshipType.withName(rel.getType());
+		if (startNode.hasName() && endNode.hasName()) {
+			// (A)-[:T]-!(B)
+			Node s = this.newNodes.get(startNode.getName());
+			Node e = this.newNodes.get(endNode.getName());
+			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
+				if (r.getEndNode().getId() == e.getId()) {
+					r.delete();
+				}
+			}
+		} else if (startNode.hasName()) {
+			// (A)-[:T]-!()
+			Node s = this.newNodes.get(startNode.getName());
+			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
+				r.delete();
+			}
+		} else {
+			// ()-[:T]-!(B)
+			Node e = this.newNodes.get(endNode.getName());
+			for (Relationship r : e.getRelationships(Direction.INCOMING, t)) {
+				r.delete();
+			}
+		}
+	}
+
+	// N'I
+	void excludeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(node, index);
+		assertRegistered(node);
+		Node n = this.newNodes.get(node.getName());
+		Index<Node> i = this.graphDB.index().forNodes(index.getName());
+		for(Map.Entry<String, Object> entry : data.entrySet()) {
+			i.remove(n, entry.getKey(), entry.getValue());
+		}
+	}
+
+	// R'I
+	void excludeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(rel, index);
+		assertNotTyped(rel);
+		assertRegistered(rel);
+		Relationship r = this.newRelationships.get(rel.getName());
+		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
+		for(Map.Entry<String, Object> entry : data.entrySet()) {
+			i.remove(r, entry.getKey(), entry.getValue());
+		}
+	}
+
+	/* END OF EXCLUSION RULE HANDLERS */
+
+
+	/* START OF REFLECTION RULE HANDLERS */
+
+	// N=N-R->N
+	void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data) throws IllegalRuleException {
+		// TODO
+		throw new NotImplementedException();
+	}
+
+	// R=N-R->N
+	void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data) throws IllegalRuleException {
+		// TODO
+		throw new NotImplementedException();
+	}
+
+	// N=I
+	void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(node, index);
+		assertNotRegistered(node);
+		assertHasExactlyOneEntry(data);
+		Index<Node> i = this.graphDB.index().forNodes(index.getName());
+		IndexHits<Node> hits = null;
+		for (Map.Entry<String, Object> entry : data.entrySet()) {
+			hits = i.get(entry.getKey(), entry.getValue());
+		}
+		register(node.getName(), hits == null ? null : hits.getSingle());
+	}
+
+	// R=I
+	void reflectRelationshipFromIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(rel, index);
+		assertNotTyped(rel);
+		assertNotRegistered(rel);
+		assertHasExactlyOneEntry(data);
+		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
+		IndexHits<Relationship> hits = null;
+		for (Map.Entry<String, Object> entry : data.entrySet()) {
+			hits = i.get(entry.getKey(), entry.getValue());
+		}
+		register(rel.getName(), hits == null ? null : hits.getSingle());
+	}
+
+	/* END OF REFLECTION RULE HANDLERS */
+
+
+	/* START OF RULE FORMAT VALIDATORS */
+
+	private void assertNamed(NameableToken... tokens) throws IllegalRuleException {
+		for (NameableToken token : tokens) {
+			if (!token.hasName()) {
+				throw new IllegalRuleException("All entities must have a name");
+			}
+		}
+	}
+
+	private void assertNotNamed(NameableToken token) throws IllegalRuleException {
+		if (token.hasName()) {
+			throw new IllegalRuleException("Entities cannot have a name");
+		}
+	}
+
+	private void assertAtLeastOneNamed(NameableToken... tokens) throws IllegalRuleException {
+		for (NameableToken nameable : tokens) {
+			if (nameable.hasName()) {
+				return;
+			}
+		}
+		throw new IllegalRuleException("At least one entity must have a name");
+	}
+
+	private void assertTyped(RelToken relToken) throws IllegalRuleException {
+		if (!relToken.hasType()) {
+			throw new IllegalRuleException("Relationship must have a type: " + relToken.toString());
+		}
+	}
+
+	private void assertNotTyped(RelToken relToken) throws IllegalRuleException {
+		if (relToken.hasType()) {
+			throw new IllegalRuleException("Relationship cannot have a type: " + relToken.toString());
+		}
+	}
+
+	private void assertIsEmpty(Map map) throws IllegalRuleException {
+		if (!map.isEmpty()) {
+			throw new IllegalRuleException("Data cannot be supplied with this rule");
+		}
+	}
+
+	private void assertHasExactlyOneEntry(Map map) throws IllegalRuleException {
+		if (map.size() != 1) {
+			throw new IllegalRuleException("Map must contain exactly one key:value pair");
+		}
+	}
+
+	/* END OF RULE FORMAT VALIDATORS */
+
+
+	/* START OF DEPENDENCY VALIDATORS */
+
+	private void assertRegistered(NodeToken... nodes) throws DependencyException {
+		for (NodeToken node : nodes) {
+			if (!this.newNodes.containsKey(node.getName())) {
+				throw new DependencyException("Node not found: " + node.toString());
+			}
+		}
+	}
+
+	private void assertNotRegistered(NodeToken node) throws DependencyException {
+		if (this.newNodes.containsKey(node.getName())) {
+			throw new DependencyException("Node already exists: " + node.toString());
+		}
+	}
+
+	private void assertRegistered(RelToken rel) throws DependencyException {
+		if (!this.newRelationships.containsKey(rel.getName())) {
+			throw new DependencyException("Relationship not found: " + rel.toString());
+		}
+	}
+
+	private void assertNotRegistered(RelToken rel) throws DependencyException {
+		if (this.newRelationships.containsKey(rel.getName())) {
+			throw new DependencyException("Relationship already exists: " + rel.toString());
+		}
+	}
+
+	/* END OF DEPENDENCY VALIDATORS */
+
+
+	private void register(String name, Node node) {
+		if (GEOFF.DEBUG) {
+			System.out.println("Registering node " + node.getId() + " as (" + name + ")");
+		}
+		this.newNodes.put(name, node);
+		this.entities.put("(" + name + ")", node);
+	}
+
+	private Node unregisterNode(String name) {
+		Node node = this.newNodes.get(name);
+		this.newNodes.remove(name);
+		this.entities.remove("(" + name + ")");
+		return node;
+	}
+
+	private void register(String name, Relationship relationship) {
+		if (GEOFF.DEBUG) {
+			System.out.println("Registering relationship " + relationship.getId() + " as [" + name + "]");
+		}
+		this.newRelationships.put(name, relationship);
+		this.entities.put("[" + name + "]", relationship);
+	}
+
+	private Relationship unregisterRelationship(String name) {
+		Relationship rel = this.newRelationships.get(name);
+		this.newRelationships.remove(name);
+		this.entities.remove("[" + name + "]");
+		return rel;
+	}
+
+	private void addProperties(PropertyContainer entity, Map<String, Object> data) {
+		for(Map.Entry<String, Object> entry : data.entrySet()) {
+			entity.setProperty(entry.getKey(), entry.getValue());
+		}
+	}
+
+	private void removeProperties(PropertyContainer entity) {
+		for(String key : entity.getPropertyKeys()) {
+			entity.removeProperty(key);
+		}
 	}
 
 }

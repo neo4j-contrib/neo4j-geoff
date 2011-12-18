@@ -19,36 +19,15 @@
  */
 package org.neo4j.geoff;
 
-import java.util.Map;
+public class IndexToken extends NameableToken {
 
-/**
- * Represents a Node reference plus associated data, e.g.:
- *
- * (foo) {"bar": 42}
- *
- */
-public class NodeDescriptor extends Descriptor {
-
-	protected final NodeRef node;
-	protected final Map<String, Object> data;
-
-	protected NodeDescriptor(NodeRef node, Map<String, Object> data) {
-		this.node = node;
-		this.data = data;
-
+	public IndexToken(String name) {
+		super(Type.INDEX, name);
 	}
 
-	public NodeRef getNode() {
-		return this.node;
-	}
-
-	/**
-	 * Return the key:value pairs attached to this Descriptor
-	 *
-	 * @return Map of key:value pairs
-	 */
-	public Map<String, Object> getData() {
-		return this.data;
+	@Override
+	public String toString() {
+		return String.format("|%s|", this.name);
 	}
 
 }

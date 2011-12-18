@@ -19,140 +19,49 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.util.JSON;
-import org.neo4j.geoff.util.JSONException;
+import java.io.IOException;
+import java.io.StringReader;
 
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public class Descriptor {
 
-public abstract class Descriptor {
+	private final String text;
+	private final Token[] tokens;
+	private final String pattern;
 
-	private static final Pattern IGNORABLE_LINE = Pattern.compile("^(\\s*|(#.*))$");
-
-	private static final Pattern HOOK_DESCRIPTOR = Pattern.compile("^\\{(\\w*)\\}$");
-	private static final Pattern NODE_DESCRIPTOR = Pattern.compile("^\\((\\w*)\\)$");
-
-	private static final Pattern HOOK_TO_HOOK_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\{(\\w+)\\}-\\[(\\w*):(\\w+)\\]->\\{(\\w+)\\}$");
-	private static final Pattern HOOK_TO_NODE_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\{(\\w+)\\}-\\[(\\w*):(\\w+)\\]->\\((\\w+)\\)$");
-	private static final Pattern NODE_TO_HOOK_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\((\\w+)\\)-\\[(\\w*):(\\w+)\\]->\\{(\\w+)\\}$");
-	private static final Pattern NODE_TO_NODE_RELATIONSHIP_DESCRIPTOR = Pattern.compile("^\\((\\w+)\\)-\\[(\\w*):(\\w+)\\]->\\((\\w+)\\)$");
-
-	private static final Pattern HOOK_INDEX_INCLUSION = Pattern.compile("^\\{(\\w+)\\}<=\\|(\\w+)\\|$");
-	private static final Pattern NODE_INDEX_INCLUSION = Pattern.compile("^\\((\\w+)\\)<=\\|(\\w+)\\|$");
-	private static final Pattern RELATIONSHIP_INDEX_INCLUSION = Pattern.compile("^\\[(\\w+)\\]<=\\|(\\w+)\\|$");
-
-	private static final Pattern HOOK_INDEX_EXCLUSION = Pattern.compile("^\\{(\\w+)\\}!=\\|(\\w+)\\|$");
-	private static final Pattern NODE_INDEX_EXCLUSION = Pattern.compile("^\\((\\w+)\\)!=\\|(\\w+)\\|$");
-	private static final Pattern RELATIONSHIP_INDEX_EXCLUSION = Pattern.compile("^\\[(\\w+)\\]!=\\|(\\w+)\\|$");
-
-	private static final Pattern NODE_INDEX_REFLECTION = Pattern.compile("^\\((\\w+)\\):=\\|(\\w+)\\|$");
-	private static final Pattern RELATIONSHIP_INDEX_REFLECTION = Pattern.compile("^\\[(\\w+)\\]:=\\|(\\w+)\\|$");
-
-	private static final Pattern COMPOSITE_DESCRIPTOR = Pattern.compile("^(\\{\\s*\".+\"\\s*:.*\\})");
-
-	/**
-	 * Factory method to produce a Descriptor object from a given line of
-	 * GEOFF source
-	 *
-	 * @param source the line of source to be parsed
-	 * @return a Descriptor of an appropriate type
-	 * @throws BadDescriptorException if this line doesn't match any known pattern
-	 */
-	public static Descriptor from(String source)
-			throws BadDescriptorException {
-		Matcher m = IGNORABLE_LINE.matcher(source);
-		if (m.find()) {
-			return null;
+	public Descriptor(String text) throws SyntaxError {
+		this.text = text;
+		TokenReader reader = new TokenReader(new StringReader(text));
+		try {
+			this.tokens = reader.readTokens();
+		} catch(IOException e) {
+			throw new SyntaxError();
 		}
-		m = COMPOSITE_DESCRIPTOR.matcher(source);
-		if (m.find()) {
-			try {
-				return new CompositeDescriptor(JSON.toObjectOfObjects(m.group(1)));
-			} catch (JSONException e) {
-				throw new BadDescriptorException(source, e);
-			}
+		StringBuilder str = new StringBuilder(tokens.length);
+		for(Token token : tokens) {
+			str.append(token.getTokenType().getSymbol());
 		}
-		String[] bits = source.split("\\s+", 2);
-		if (bits.length == 1) {
-			return Descriptor.from(bits[0], null);
-		} else {
-			try {
-				return Descriptor.from(bits[0], JSON.toObject(bits[1]));
-			} catch (JSONException e) {
-				throw new BadDescriptorException(source, e);
-			}
-		}
+		this.pattern = str.toString();
 	}
 
-	/**
-	 * Convert a serialised descriptor into a Descriptor object
-	 *
-	 * @param descriptor the string from the GEOFF file
-	 * @param data a collection of properties
-	 * @return an appropriate Descriptor object
-	 * @throws BadDescriptorException when the string cannot be deciphered
-	 */
-	public static Descriptor from(String descriptor, Map<String, Object> data)
-			throws BadDescriptorException {
-		Matcher m = HOOK_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new HookDescriptor(new HookRef(m.group(1)), data);
-		}
-		m = NODE_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new NodeDescriptor(new NodeRef(m.group(1)), data);
-		}
-		m = HOOK_TO_HOOK_RELATIONSHIP_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new RelationshipDescriptor<HookRef, HookRef>(new HookRef(m.group(1)), m.group(2), m.group(3), new HookRef(m.group(4)), data);
-		}
-		m = HOOK_TO_NODE_RELATIONSHIP_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new RelationshipDescriptor<HookRef, NodeRef>(new HookRef(m.group(1)), m.group(2), m.group(3), new NodeRef(m.group(4)), data);
-		}
-		m = NODE_TO_HOOK_RELATIONSHIP_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new RelationshipDescriptor<NodeRef, HookRef>(new NodeRef(m.group(1)), m.group(2), m.group(3), new HookRef(m.group(4)), data);
-		}
-		m = NODE_TO_NODE_RELATIONSHIP_DESCRIPTOR.matcher(descriptor);
-		if (m.find()) {
-			return new RelationshipDescriptor<NodeRef, NodeRef>(new NodeRef(m.group(1)), m.group(2), m.group(3), new NodeRef(m.group(4)), data);
-		}
-		m = HOOK_INDEX_INCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexInclusionRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = NODE_INDEX_INCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexInclusionRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = RELATIONSHIP_INDEX_INCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexInclusionRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = HOOK_INDEX_EXCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexExclusionRule<HookRef>(new HookRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = NODE_INDEX_EXCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexExclusionRule<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = RELATIONSHIP_INDEX_EXCLUSION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexExclusionRule<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = NODE_INDEX_REFLECTION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexEntryReflection<NodeRef>(new NodeRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		m = RELATIONSHIP_INDEX_REFLECTION.matcher(descriptor);
-		if (m.find()) {
-			return new IndexEntryReflection<RelationshipRef>(new RelationshipRef(m.group(1)), new IndexRef(m.group(2)), data);
-		}
-		// nothing left to match against, must be invalid
-		throw new BadDescriptorException(descriptor);
+	public String getText() {
+		return this.text;
+	}
+
+	public Token[] getTokens() {
+		return this.tokens;
+	}
+
+	public Token getToken(int index) {
+		return this.tokens[index];
+	}
+
+	public String getPattern() {
+		return this.pattern;
+	}
+
+	@Override
+	public String toString() {
+		return this.text;
 	}
 
 }

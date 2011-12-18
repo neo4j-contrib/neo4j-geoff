@@ -19,15 +19,25 @@
  */
 package org.neo4j.geoff;
 
-public class HookRef extends EntityRef implements Connectable, Indexable {
+public abstract class NameableToken extends Token {
 
-	public HookRef(String name) {
-		super(name);
+	public static boolean isValidNameChar(char ch) {
+		return Character.isLetterOrDigit(ch) || ch == '_';
 	}
 
-	@Override
-	public String toString() {
-		return String.format("{%s}", this.name);
+	protected final String name;
+
+	public NameableToken(Type tokenType, String name) {
+		super(tokenType);
+		this.name = name;
+	}
+
+	public boolean hasName() {
+		return !(this.name == null || this.name.isEmpty() || "*".equals(this.name));
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 }

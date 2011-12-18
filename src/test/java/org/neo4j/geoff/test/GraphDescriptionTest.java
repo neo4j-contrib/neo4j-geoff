@@ -21,7 +21,7 @@ package org.neo4j.geoff.test;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.geoff.GEOFFLoader;
+import org.neo4j.geoff.GEOFF;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -34,8 +34,8 @@ import java.util.TreeMap;
 import static org.junit.Assert.*;
 
 public class GraphDescriptionTest {
-	private ImpermanentGraphDatabase db;
 
+	private ImpermanentGraphDatabase db;
 
 	@Test
 	public void canCreateGraphFromSingleString() throws Exception {
@@ -45,35 +45,35 @@ public class GraphDescriptionTest {
 				"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
 				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
-		GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 	}
 
 	@Test
-	public void canCreateGraphFromSingleCompositeDescriptor() throws Exception {
+	public void canCreateGraphFromSingleRuleSet() throws Exception {
 		Reader reader = new StringReader("{" +
 				"\"(doc)\": {\"name\": \"doctor\"}," +
 				"\"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
 				"}");
-		GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 	}
 
 	@Test
-	public void canCreateGraphFromCompositeDescriptorInUnexpectedOrder() throws Exception {
+	public void canCreateGraphFromRuleSetInUnexpectedOrder() throws Exception {
 		Reader reader = new StringReader("{" +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
 				"\"(doc)\": {\"name\": \"doctor\"}," +
 				"\"(dal)\": {\"name\": \"dalek\"}" +
 				"}");
-		GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -95,7 +95,7 @@ public class GraphDescriptionTest {
 		props = new TreeMap<String, Object>();
 		props.put("name", "The Doctor");
 		map.put("(doc)<=|People|", props);
-		GEOFFLoader.loadIntoNeo4j(map, db, null);
+		GEOFF.loadIntoNeo4j(map, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -117,20 +117,10 @@ public class GraphDescriptionTest {
 		props = new HashMap<String, Object>();
 		props.put("name", "dalek");
 		map.put("(dal)", props);
-		GEOFFLoader.loadIntoNeo4j(map, db, null);
+		GEOFF.loadIntoNeo4j(map, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test(expected = ClassCastException.class)
-	public void shouldFailOnInappropriateMap() throws Exception {
-		HashMap<Integer, String> map = new HashMap<Integer, String>();
-		map.put(12, "twelve");
-		map.put(7, "seven");
-		map.put(3, "three");
-		map.put(25, "twenty-five");
-		GEOFFLoader.loadIntoNeo4j(map, db, null);
 	}
 
 	@Test
@@ -140,11 +130,11 @@ public class GraphDescriptionTest {
 				"\"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
-				"\"{ref}-[:TIMELORD]->(doc)\":     null" +
+				"\"(ref)-[:TIMELORD]->(doc)\":     null" +
 				"}");
 		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);
 		hooks.put("ref", db.getReferenceNode());
-		GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		GEOFF.loadIntoNeo4j(reader, db, hooks);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -154,32 +144,32 @@ public class GraphDescriptionTest {
 	@Test
 	public void canCreateGraphWithAllRelationshipTypes() throws Exception {
 		/*
-		 * Creates a graph with the following shape:
+		 * Creates a graph with the following shape where (one) and (two) already exist:
 		 *
-		 *   {one}-[:EAST]->(foo)
+		 *   (one)-[:EAST]->(foo)
 		 *     ^              |
 		 *     |              |
 		 * [:NORTH]        [:SOUTH]
 		 *     |              |
 		 *     |              v
-		 *   {two}<-[:WEST]-(bar)
+		 *   (two)<-[:WEST]-(bar)
 		 */
 		Reader reader = new StringReader(
 				"(foo) {\"position\": \"north-east\"}\r\n" +
 				"(bar) {\"position\": \"south-east\"}\r\n" +
-				"{one} {\"position\": \"north-west\"}\r\n" +
-				"{two} {\"position\": \"south-west\"}\r\n" +
-				"{\"(foo)-[:SOUTH]->(bar)\": null, \"(bar)-[:WEST]->{two}\": null, \"{two}-[:NORTH]->{one}\": null, \"{one}-[:EAST]->(foo)\": null}\r\n"
+				"(one) {\"position\": \"north-west\"}\r\n" +
+				"(two) {\"position\": \"south-west\"}\r\n" +
+				"{\"(foo)-[:SOUTH]->(bar)\": null, \"(bar)-[:WEST]->(two)\": null, \"(two)-[:NORTH]->(one)\": null, \"(one)-[:EAST]->(foo)\": null}\r\n"
 		);
 		Transaction tx = db.beginTx();
 		Node nodeOne = db.createNode();
 		Node nodeTwo = db.createNode();
 		tx.success();
 		tx.finish();
-		HashMap<String,Node> hooks = new HashMap<String,Node>(1);
-		hooks.put("one", nodeOne);
-		hooks.put("two", nodeTwo);
-		Map<String,PropertyContainer> entities = GEOFFLoader.loadIntoNeo4j(reader, db, hooks);
+		HashMap<String,Node> params = new HashMap<String,Node>(1);
+		params.put("one", nodeOne);
+		params.put("two", nodeTwo);
+		Map<String,PropertyContainer> entities = GEOFF.loadIntoNeo4j(reader, db, params);
 		Node nodeFoo = (Node) entities.get("(foo)");
 		Node nodeBar = (Node) entities.get("(bar)");
 		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING));
@@ -204,7 +194,7 @@ public class GraphDescriptionTest {
 				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"(dal)<=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
 				"");
-		GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -216,8 +206,9 @@ public class GraphDescriptionTest {
 				"(dal):=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
 				"(doc)-[enemy:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
 				"");
-		Map<String, PropertyContainer> stuff = GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		Map<String, PropertyContainer> stuff = GEOFF.loadIntoNeo4j(reader, db, null);
 		Relationship enemy = (Relationship) stuff.get("[enemy]");
+		assertNotNull(enemy);
 		assertEquals("doctor", enemy.getStartNode().getProperty("name"));
 		assertEquals("dalek", enemy.getEndNode().getProperty("name"));
 	}
@@ -228,21 +219,16 @@ public class GraphDescriptionTest {
 				"(doc) {\"name\": \"doctor\"}\n" +
 				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
-		GEOFFLoader.loadIntoNeo4j(reader, db, null);
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-		assertTrue(db.index().existsForNodes("Baddies"));
-		assertTrue(db.index().forNodes("Baddies").get("name", "Dalek Sec").hasNext());
-		assertEquals("dalek", db.index().forNodes("Baddies").get("name", "Dalek Sec").getSingle().getProperty("name"));
 		reader = new StringReader("" +
 				"(doc):=|People|     {\"name\": \"The Doctor\"}\n" +
 				"(doc)!=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
-		Map<String, PropertyContainer> stuff = GEOFFLoader.loadIntoNeo4j(reader, db, null);
-		Relationship enemy = (Relationship) stuff.get("[enemy]");
+		GEOFF.loadIntoNeo4j(reader, db, null);
 		assertFalse(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertFalse(db.index().forNodes("Baddies").get("name", "Dalek Sec").hasNext());
 	}
 
 	@Before

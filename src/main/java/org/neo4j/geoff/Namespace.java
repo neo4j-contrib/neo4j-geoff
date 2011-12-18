@@ -28,50 +28,22 @@ package org.neo4j.geoff;
 public interface Namespace {
 
 	/**
-	 * Update the properties on a pre-existing Node or Relationship
+	 * Apply a single rule to this namespace.
 	 *
-	 * @param descriptor a pointer to the entity to update
-	 * @throws UnknownEntityException when the referenced entity cannot be found
+	 * @param rule the rule to apply
+	 * @throws DependencyException if the rule contains an unsatisfied dependency
+	 * @throws IllegalRuleException if the rule content is deemed illegal
 	 */
-	public void updateEntity(HookDescriptor descriptor)
-			throws UnknownEntityException;
+	public void apply(Rule rule) throws DependencyException, IllegalRuleException;
 
 	/**
-	 * Reflect an Index entry into an entity reference
+	 * Apply a set of rules to this namespace. The order in which these rules are
+	 * applied should attempt to satisfy dependencies if possible.
 	 *
-	 * @param indexEntryReflection details of the Index entry to reflect
-	 * @throws UnknownEntityException when no Node exists with the name specified
+	 * @param rules the set of rules to apply
+	 * @throws DependencyException if dependencies cannot be resolved within the rule set
+	 * @throws IllegalRuleException if the content of any rule is deemed illegal
 	 */
-	public void reflectIndexEntry(IndexEntryReflection<Reflective> indexEntryReflection)
-			throws UnknownEntityException;
-
-	/**
-	 * Add a Node to the database and keep a reference to it, indexed by name
-	 *
-	 * @param descriptor details of the Node to be created
-	 * @throws DuplicateNameException when the supplied Node name already exists
-	 */
-	public void createNode(NodeDescriptor descriptor)
-			throws DuplicateNameException;
-
-	/**
-	 * Add a Relationship to the database and keep a reference to it, indexed
-	 * by name, if it has a name
-	 *
-	 * @param descriptor details of the Relationship to be created
-	 * @throws DuplicateNameException when the supplied Relationship name already exists
-	 * @throws UnknownEntityException when an end point Node cannot be identified
-	 */
-	public void createRelationship(RelationshipDescriptor<Connectable, Connectable> descriptor)
-			throws DuplicateNameException, UnknownEntityException;
-
-	/**
-	 * Include a reference to an entity within an Index
-	 *
-	 * @param indexRule details of the inclusion within the Index
-	 * @throws UnknownEntityException when no Node exists with the name specified
-	 */
-	public void updateIndex(IndexRule<Indexable> indexRule)
-			throws UnknownEntityException;
+	public void apply(RuleSet rules) throws DependencyException, IllegalRuleException;
 
 }

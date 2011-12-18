@@ -19,15 +19,17 @@
  */
 package org.neo4j.geoff;
 
-public class NodeRef extends EntityRef implements Connectable, Indexable, Reflective {
+class SyntaxError extends Exception {
 
-	public NodeRef(String name) {
-		super(name);
+	public SyntaxError() {
 	}
 
-	@Override
-	public String toString() {
-		return String.format("(%s)", this.name);
+	public SyntaxError(String s) {
+		super(s);
+	}
+
+	public SyntaxError(String s, Throwable throwable) {
+		super(s, throwable);
 	}
 
 }

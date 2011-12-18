@@ -19,9 +19,7 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.geoff.util.JSONException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,82 +28,39 @@ import java.util.Map;
 
 public class GEOFFLoader<NS extends Namespace> {
 
-	/**
-	 * Static method to kick off loading a GEOFF file into the specified
-	 * GraphDatabaseService, taking data from the supplied Reader
-	 *
-	 * @param reader  the reader to grab data from
-	 * @param graphDB the database to put stuff into
-	 * @param hooks
-	 * @return a map of all named entities
-	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
-	 * @throws IOException
-	 * @throws DuplicateNameException
-	 * @throws UnknownEntityException
-	 */
-	public static Map<String, PropertyContainer> loadIntoNeo4j(Reader reader, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
-			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
-		Transaction tx = graphDB.beginTx();
-		try {
-			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(reader, new Neo4jNamespace(graphDB, hooks));
-			tx.success();
-			return loader.getNamespace().getEntities();
-		} finally {
-			tx.finish();
-		}
-	}
-
-
-	/**
-	 * Static method to kick off loading a GEOFF file into the specified
-	 * GraphDatabaseService, taking data from the supplied Reader
-	 *
-	 * @param descriptors the GEOFF descriptors
-	 * @param graphDB     the database to put stuff into
-	 * @param hooks
-	 * @return a map of all named entities
-	 * @throws BadDescriptorException when a badly-formed descriptor is encountered
-	 * @throws IOException
-	 * @throws DuplicateNameException
-	 * @throws UnknownEntityException
-	 */
-	public static Map<String, PropertyContainer> loadIntoNeo4j(Map descriptors, GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> hooks)
-			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
-		Transaction tx = graphDB.beginTx();
-		try {
-			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(descriptors, new Neo4jNamespace(graphDB, hooks));
-			tx.success();
-			return loader.getNamespace().getEntities();
-		} finally {
-			tx.finish();
-		}
-	}
-
 	private final NS namespace;
 
-	private GEOFFLoader(Reader reader, NS namespace)
-			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
+	public GEOFFLoader(Reader reader, NS namespace)
+			throws IOException, SyntaxError, IllegalRuleException, DependencyException {
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		this.namespace = namespace;
 		int lineNumber = 0;
 		String line;
-		Descriptor descriptor;
+		Rule rule;
 		try {
 			// iterate through every line in the source data
 			do {
 				line = bufferedReader.readLine();
 				lineNumber++;
-				if (line != null) {
-					// turn the line of text into a Descriptor
+				if (line != null && !line.isEmpty()) {
+					// turn the line of text into a Rule
 					try {
-						descriptor = Descriptor.from(line);
-					} catch (BadDescriptorException e) {
-						// if something goes wrong, attach the line number and re-throw
-						e.setLineNumber(lineNumber);
+						if (line.charAt(0) == '{') {
+							// TODO: allow for multi-line JSON
+							RuleSet rules = RuleSet.from(line);
+							this.namespace.apply(rules);
+						} else {
+							rule = Rule.from(line);
+							// add the described data to the namespace
+							this.namespace.apply(rule);
+						}
+					} catch (JSONException e) {
+						//
+					} catch (SyntaxError e) {
+						// TODO: if something goes wrong, attach the line number and re-throw
+//						e.setLineNumber(lineNumber);
 						throw e;
 					}
-					// add the described data to the namespace
-					this.add(descriptor);
 				}
 			} while (line != null);
 		} finally {
@@ -116,59 +71,11 @@ public class GEOFFLoader<NS extends Namespace> {
 	/**
 	 * Load a graph from a Map of GEOFF descriptors
 	 *
-	 * @param descriptors the Map of GEOFF descriptors
-	 * @param namespace   the Namespace in which to load the descriptors
-	 * @throws BadDescriptorException
-	 * @throws IOException
-	 * @throws DuplicateNameException
-	 * @throws UnknownEntityException
 	 */
-	private GEOFFLoader(Map<String, Map<String, Object>> descriptors, NS namespace)
-			throws BadDescriptorException, IOException, DuplicateNameException, UnknownEntityException {
+	public GEOFFLoader(Map<String, Map<String, Object>> rules, NS namespace)
+			throws SyntaxError, IllegalRuleException, DependencyException {
 		this.namespace = namespace;
-		this.add(new CompositeDescriptor(descriptors));
-	}
-
-	/**
-	 * Add a descriptor to the namespace associated with this loader
-	 *
-	 * @param descriptor the descriptor to add
-	 * @throws DuplicateNameException
-	 * @throws UnknownEntityException
-	 */
-	private void add(Descriptor descriptor)
-			throws DuplicateNameException, UnknownEntityException {
-		if (descriptor instanceof CompositeDescriptor) {
-			CompositeDescriptor composite = (CompositeDescriptor) descriptor;
-			// iterate multiple times to avoid dependency issues
-			for (HookDescriptor d : composite.hooks) {
-				this.namespace.updateEntity(d);
-			}
-			for (IndexEntryReflection d : composite.indexEntryReflections) {
-				this.namespace.reflectIndexEntry(d);
-			}
-			for (NodeDescriptor d : composite.nodes) {
-				this.namespace.createNode(d);
-			}
-			for (RelationshipDescriptor d : composite.relationships) {
-				this.namespace.createRelationship(d);
-			}
-			for (IndexRule d : composite.indexRules) {
-				this.namespace.updateIndex(d);
-			}
-		} else if (descriptor instanceof HookDescriptor) {
-			this.namespace.updateEntity((HookDescriptor) descriptor);
-		} else if (descriptor instanceof IndexEntryReflection) {
-			this.namespace.reflectIndexEntry((IndexEntryReflection) descriptor);
-		} else if (descriptor instanceof NodeDescriptor) {
-			this.namespace.createNode((NodeDescriptor) descriptor);
-		} else if (descriptor instanceof RelationshipDescriptor) {
-			this.namespace.createRelationship((RelationshipDescriptor) descriptor);
-		} else if (descriptor instanceof IndexRule) {
-			this.namespace.updateIndex((IndexRule) descriptor);
-		} else {
-			throw new UnsupportedOperationException();
-		}
+		this.namespace.apply(RuleSet.from(rules));
 	}
 
 	public NS getNamespace() {

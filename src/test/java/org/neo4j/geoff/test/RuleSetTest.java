@@ -21,33 +21,30 @@ package org.neo4j.geoff.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.neo4j.geoff.BadDescriptorException;
-import org.neo4j.geoff.CompositeDescriptor;
-import org.neo4j.geoff.Descriptor;
+import org.neo4j.geoff.RuleSet;
+import org.neo4j.geoff.util.JSONException;
 
 
-public class CompositeDescriptorTest {
+public class RuleSetTest {
 
 	@Test
-	public void testIfDescriptorFactoryUnderstandsCompositeDescriptors()
-			throws BadDescriptorException {
+	public void testIfDescriptorFactoryUnderstandsRuleSets()
+			throws Exception {
 		String descString = "{\"(doc)\": {\"name\": \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"(doc)<=|People|\": {\"name\": \"The Doctor\"} }";
-		Descriptor descriptor = Descriptor.from(descString);
-		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
-		CompositeDescriptor desc = (CompositeDescriptor) descriptor;
-		Assert.assertEquals(desc.length(), 4);
+		RuleSet rules = RuleSet.from(descString);
+		Assert.assertTrue(rules instanceof RuleSet);
+		Assert.assertEquals(rules.length(), 4);
 	}
 
-	@Test(expected = BadDescriptorException.class)
-	public void testIfDescriptorFactoryFailsOnCompositeDescriptorWithBadJSON()
-			throws BadDescriptorException {
+	@Test(expected = JSONException.class)
+	public void testIfDescriptorFactoryFailsOnRuleSetWithBadJSON()
+			throws Exception {
 		String descString = "{\"(doc)\": {\"name\"; \"doctor\"}, \"(dal)\": {\"name\": \"dalek\"}," +
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\": \"forever\"}, \"(doc)<=|People|\": {\"name\": \"The Doctor\"} }";
-		Descriptor descriptor = Descriptor.from(descString);
-		Assert.assertTrue(descriptor instanceof CompositeDescriptor);
-		CompositeDescriptor desc = (CompositeDescriptor) descriptor;
-		Assert.assertEquals(desc.length(), 4);
+		RuleSet rules = RuleSet.from(descString);
+		Assert.assertTrue(rules instanceof RuleSet);
+		Assert.assertEquals(rules.length(), 4);
 	}
 
 }

@@ -19,41 +19,30 @@
  */
 package org.neo4j.geoff;
 
-import java.util.Map;
+public class RelToken extends NameableToken {
 
-public abstract class IndexRule<T extends Indexable> extends Descriptor {
+	protected final String type;
 
-	protected final IndexRef index;
-	protected final T entity;
-	protected final Map<String, Object> data;
-
-	protected IndexRule(T entity, IndexRef index, Map<String, Object> data) {
-		super();
-		this.index = index;
-		this.entity = entity;
-		this.data = data;
+	public RelToken(String name, String type) {
+		super(Type.REL, name);
+		this.type = type;
 	}
 
-	/**
-	 * Return the name of the Index described
-	 *
-	 * @return the Index name
-	 */
-	public IndexRef getIndex() {
-		return this.index;
+	public boolean hasType() {
+		return !(this.type == null || this.type.isEmpty() || "*".equals(this.type));
 	}
 
-	public T getEntity() {
-		return this.entity;
+	public String getType() {
+		return this.type;
 	}
 
-	/**
-	 * Return the key:value pairs attached to this Descriptor
-	 *
-	 * @return Map of key:value pairs
-	 */
-	public Map<String, Object> getData() {
-		return this.data;
+	@Override
+	public String toString() {
+		if(this.type == null || this.type.isEmpty()) {
+			return String.format("[%s]", this.name);
+		} else {
+			return String.format("[%s:%s]", this.name, this.type);
+		}
 	}
 
 }

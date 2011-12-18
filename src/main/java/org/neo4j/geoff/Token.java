@@ -19,21 +19,44 @@
  */
 package org.neo4j.geoff;
 
-public class UnknownEntityException extends Exception {
+public class Token {
 
-	public UnknownEntityException() {
+	public static enum Type {
+
+		NODE('N'),
+		REL('R'),
+		INDEX('I'),
+		DASH('-'),
+		ARROW('>'),
+		BANG('!'),
+		REFLECTS('='),
+		INCLUDED_IN('^'),
+		EXCLUDED_FROM('\'');
+
+		private final char symbol;
+
+		private Type(char symbol) {
+			this.symbol = symbol;
+		}
+
+		public char getSymbol() {
+			return this.symbol;
+		}
+
 	}
 
-	public UnknownEntityException(String s) {
-		super(s);
+	private final Type tokenType;
+
+	public Token(Type tokenType) {
+		this.tokenType = tokenType;
 	}
 
-	public UnknownEntityException(String s, Throwable throwable) {
-		super(s, throwable);
+	public Type getTokenType() {
+		return this.tokenType;
 	}
 
-	public UnknownEntityException(Throwable throwable) {
-		super(throwable);
+	@Override
+	public String toString() {
+		return this.tokenType.name();
 	}
-
 }

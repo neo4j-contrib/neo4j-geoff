@@ -19,15 +19,15 @@
  */
 package org.neo4j.geoff;
 
-public class RelationshipRef extends EntityRef implements Indexable, Reflective {
+public class NodeToken extends NameableToken {
 
-	public RelationshipRef(String name) {
-		super(name);
+	public NodeToken(String name) {
+		super(Type.NODE, name);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("[%s]", this.name);
+		return String.format("(%s)", this.name);
 	}
 
 }

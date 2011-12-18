@@ -19,24 +19,10 @@
  */
 package org.neo4j.geoff;
 
-/**
- * Thrown when a request is made to generate an entity with a duplicate local name
- */
-public class DuplicateNameException extends Exception {
+class IllegalRuleException extends Exception {
 
-	public DuplicateNameException() {
-	}
-
-	public DuplicateNameException(String s) {
+	public IllegalRuleException(String s) {
 		super(s);
-	}
-
-	public DuplicateNameException(String s, Throwable throwable) {
-		super(s, throwable);
-	}
-
-	public DuplicateNameException(Throwable throwable) {
-		super(throwable);
 	}
 
 }

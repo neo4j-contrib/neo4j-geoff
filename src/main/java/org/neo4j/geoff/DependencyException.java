@@ -19,18 +19,17 @@
  */
 package org.neo4j.geoff;
 
-/**
- * Abstract class from which HookRef, NodeRef and RelationshipRef inherit
- */
-public abstract class EntityRef {
+class DependencyException extends Exception {
 
-	protected final String name;
-
-	public EntityRef(String name) {
-		this.name = name.intern();
+	public DependencyException() {
 	}
 
-	public String getName() {
-		return this.name;
+	public DependencyException(String s) {
+		super(s);
 	}
+
+	public DependencyException(String s, Throwable throwable) {
+		super(s, throwable);
+	}
+
 }
