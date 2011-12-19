@@ -84,24 +84,66 @@ restricted by the underlying database software.
 
 ### Node Exclusion Rules
 
-*(coming soon)*
+```
+!(A)
+```
+
+*(more coming soon!)*
 
 ### Relationship Exclusion Rules
 
-*(coming soon)*
+```
+# remove rel R
+![R]
+# remove rels between A and B of type T
+(A)-[:T]-!(B)
+# remove rels outgoing from A of type T
+(A)-[:T]-!()
+# remove rels incoming into B of type T
+()-[:T]-!(B)
+```
+
+*(more coming soon!)*
 
 ### Index Exclusion Rules
 
-*(coming soon)*
+```
+# exclude node A from index I
+(A)!=|I|
+# exclude rel R from index I
+[R]!=|I|
+```
+
+*(more coming soon!)*
 
 ## Reflection Rules
 
 Reflection rules allow node and relationship references to be extracted from an existing database instance from within
 GEOFF source. These extractions may traverse known nodes and relationships or may look up values in an index.
 
+### Node Reflection Rules
+
+```
+# A reflects start node of rel R
+(A):=(*)-[R]->()
+# B reflects end node of rel R
+(B):=()-[R]->(*)
+```
+
+*(more coming soon!)*
+
 ### Relationship Reflection Rules
 
-*(coming soon)*
+```
+# R reflects rel of type T between A and B
+[R]:=(A)-[:T]->(B)
+# R reflects rel of type T starting at node A
+[R]:=(A)-[:T]->()
+# R reflects rel of type T ending at node B
+[R]:=()-[:T]->(B)
+```
+
+*(more coming soon!)*
 
 ### Index Reflection Rules
 
