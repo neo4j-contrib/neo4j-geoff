@@ -96,7 +96,8 @@ restricted by the underlying database software.
 
 ## Reflection Rules
 
-*(coming soon)*
+Reflection rules allow node and relationship references to be extracted from an existing database instance from within
+GEOFF source. These extractions may traverse known nodes and relationships or may look up values in an index.
 
 ### Relationship Reflection Rules
 
@@ -104,7 +105,15 @@ restricted by the underlying database software.
 
 ### Index Reflection Rules
 
-*(coming soon)*
+An index reflection rule looks up a value within a database index and assigns the entity discovered to a name within
+the current GEOFF namespace. The following example extracts the node `(bert)` from the `|Scientists|` index where the
+entry key and value equal "name" and "Einstein" respectively:
+
+```
+(bert):=|Scientists|    {"name": "Einstein"}
+```
+
+Such a rule must have *exactly one* key:value pair specified.
 
 ## Inputs and Outputs
 
@@ -130,7 +139,7 @@ Here, the node `(bert)` may already exist within the underlying graph and could 
 thereby allowing the first line to be omitted. The following excerpt shows possible usage from within the Java
 implementation:
 
-```
+```java
 HashMap<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 params.put("bert", albertEinsteinNode);
 GEOFF.loadIntoNeo4j(sourceReader, graphDB, params);
