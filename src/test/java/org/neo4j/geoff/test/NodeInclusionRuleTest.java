@@ -54,7 +54,7 @@ public class NodeInclusionRuleTest {
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
 		NodeToken token = (NodeToken) rule.getDescriptor().getToken(0);
 		assertEquals(Token.Type.NODE, token.getTokenType());
-		assertEquals(true, token.hasName());
+		assertTrue(token.hasName());
 		assertEquals("A", token.getName());
 		assertTrue(rule.getData().containsKey("name"));
 		assertEquals("Alice", rule.getData().get("name"));

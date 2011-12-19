@@ -74,11 +74,11 @@ public class RelationshipInclusionRuleTest {
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
 				"(B) {\"name\": \"Bob\"}\n" +
-				"(A)-[friends:KNOWS]->(B) {\"since\": 1977}\n" +
+				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
-		Relationship rel = (Relationship) out.get("[friends]");
+		Relationship rel = (Relationship) out.get("[R]");
 		assertNotNull(rel);
 		assertTrue(rel.hasProperty("since"));
 		assertEquals(1977, rel.getProperty("since"));
