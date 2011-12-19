@@ -19,7 +19,7 @@
  */
 package org.neo4j.geoff;
 
-class IllegalRuleException extends Exception {
+public class IllegalRuleException extends Exception {
 
 	public IllegalRuleException(String s) {
 		super(s);

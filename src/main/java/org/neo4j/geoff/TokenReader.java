@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 
-class TokenReader extends UeberReader {
+public class TokenReader extends UeberReader {
 
 	public TokenReader(Reader reader) {
 		super(reader);

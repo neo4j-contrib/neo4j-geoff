@@ -47,7 +47,7 @@ public class NodeInclusionRuleTest {
 
 	@Test
 	public void testNodeInclusionRule() throws Exception {
-		String source = "(A) {\"foo\": \"bar\"}";
+		String source = "(A) {\"name\": \"Alice\"}";
 		Rule rule = Rule.from(source);
 		assertNotNull(rule);
 		assertEquals("N", rule.getDescriptor().getPattern());
@@ -56,41 +56,48 @@ public class NodeInclusionRuleTest {
 		assertEquals(Token.Type.NODE, token.getTokenType());
 		assertEquals(true, token.hasName());
 		assertEquals("A", token.getName());
+		assertTrue(rule.getData().containsKey("name"));
+		assertEquals("Alice", rule.getData().get("name"));
+	}
+
+	@Test
+	public void testLoadingNodeInclusionRule() throws Exception {
+		String source = "(A) {\"name\": \"Alice\"}";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		Node node = (Node) out.get("(A)");
 		assertNotNull(node);
-		assertTrue(node.hasProperty("foo"));
-		assertEquals("bar", node.getProperty("foo"));
+		assertTrue(node.hasProperty("name"));
+		assertEquals("Alice", node.getProperty("name"));
 	}
 
 	@Test
-	public void testNodeInclusionRuleWithSelfUpdate() throws Exception {
+	public void testLoadingNodeInclusionRuleWithSelfUpdate() throws Exception {
 		String source =
 				"(A)\n" +
+				"(A) {\"name\": \"Alice\"}\n" +
 				"(A) {\"foo\": \"bar\"}\n" +
-				"(A) {\"wim\": \"wom\"}\n" +
 				"";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		Node node = (Node) out.get("(A)");
 		assertNotNull(node);
-		assertFalse(node.hasProperty("foo"));
-		assertTrue(node.hasProperty("wim"));
-		assertEquals("wom", node.getProperty("wim"));
+		assertFalse(node.hasProperty("name"));
+		assertTrue(node.hasProperty("foo"));
+		assertEquals("bar", node.getProperty("foo"));
 	}
 
 	@Test
-	public void testNodeInclusionRuleWithLoadParameter() throws Exception {
+	public void testLoadingNodeInclusionRuleWithLoadParameter() throws Exception {
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 		params.put("A", db.getReferenceNode());
-		String source = "(A) {\"foo\": \"bar\"}";
+		String source = "(A) {\"name\": \"Alice\"}";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		assertNotNull(out);
 		Node node = (Node) out.get("(A)");
 		assertNotNull(node);
-		assertTrue(node.hasProperty("foo"));
-		assertEquals("bar", node.getProperty("foo"));
+		assertTrue(node.hasProperty("name"));
+		assertEquals("Alice", node.getProperty("name"));
 		assertEquals(db.getReferenceNode().getId(), node.getId());
 	}
 

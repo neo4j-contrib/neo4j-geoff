@@ -19,17 +19,10 @@
  */
 package org.neo4j.geoff;
 
-class DependencyException extends Exception {
-
-	public DependencyException() {
-	}
+public class DependencyException extends Exception {
 
 	public DependencyException(String s) {
 		super(s);
-	}
-
-	public DependencyException(String s, Throwable throwable) {
-		super(s, throwable);
 	}
 
 }

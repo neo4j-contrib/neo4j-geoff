@@ -19,13 +19,9 @@
  */
 package org.neo4j.geoff;
 
-class SyntaxError extends Exception {
+public class SyntaxError extends Exception {
 
 	public SyntaxError() {
-	}
-
-	public SyntaxError(String s) {
-		super(s);
 	}
 
 	public SyntaxError(String s, Throwable throwable) {

@@ -38,9 +38,9 @@ public class GEOFF {
 	 * @param reader the Reader from which to read GEOFF rules
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
-	 * @return
-	 * @throws GEOFFLoadException
-	 * @throws IOException
+	 * @return set of named entities used during load
+	 * @throws GEOFFLoadException if a parsing error occurs
+	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
 			Reader reader,
@@ -67,9 +67,9 @@ public class GEOFF {
 	 * @param rules the set of GEOFF rules to load
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
-	 * @return
-	 * @throws GEOFFLoadException
-	 * @throws IOException
+	 * @return set of named entities used during load
+	 * @throws GEOFFLoadException if a parsing error occurs
+	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
 			Map<String, Map<String, Object>> rules,
