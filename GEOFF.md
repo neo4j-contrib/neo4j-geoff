@@ -1,37 +1,44 @@
 # GEOFF
 
-GEOFF (Graph Export Object File Format) is a file format designed to hold a simple serialisation of graph data within
-a text file. Although it has been drawn up with [Neo4j](http://neo4j.org/) in mind, it is intended to be flexible
-enough to represent a variety of graphic data, regardless of origin.
+GEOFF is a declarative notation for representing graph data within concise, human-readable text. It can be used to store
+snapshots within a flat file or to transmit data changes over a network stream. When used to represent changes, it
+can be seen as akin to the Unix tool *diff*.
 
-The format borrows a [Cypher](http://docs.neo4j.org/chunked/stable/cypher-query-lang.html)-like notation for entity
-labels and uses [JSON](http://json.org/) for associated data. Primarily, GEOFF aims to be human-readable, easily
-editable and, unlike a number of XML-based formats with a similar purpose, non-verbose.
+A GEOFF data set or file consists of a sequence of *rules*. Each rule comprises a *descriptor* and an optional set of
+data held as key:value pairs. The descriptor is a sequence of characters, somewhat similar to the notation used in the
+[Cypher](http://docs.neo4j.org/chunked/stable/cypher-query-lang.html) query language and forms the basis of an
+*inclusion rule*, an *exclusion rule* or a *reflection rule*.
 
-At the most basic level, a GEOFF file consists of a collection of *descriptors*, often coupled with associated
-properties, each represented as a single line of text. A descriptor may represent a *node* (vertex), a *relationship*
-(edge) or an inclusion within a database index. In addition to these descriptors, blank lines and comments (lines
-beginning with a `#` symbol) can also be included.
+## Inclusion Rules
 
-## Nodes
+Inclusion rules are the simplest rules within the GEOFF format and, at a basic level, can be seen to represent a simple
+serialisation of graph content. These rules are the building blocks of the format itself and hold information
+representing *nodes*, *relationships* and *index entries*.
 
-The simplest entity which can be represented within GEOFF is a node. Each node consists of a identifier surrounded by
-parentheses plus a set of properties applicable to that node. The identifier itself is used only as a local reference
-to that node within the same file. As an example, the following line describes a simple node:
+### Node Inclusion Rules
+
+A node is the simplest entity which can be represented within GEOFF. A node inclusion descriptor consists of a name
+surrounded by parentheses. Any attached data represents a set of properties applicable to that node. The name itself
+is used only as a local reference to that node within the same context and holds no relevance to the underlying graph
+database. If the name held within a node inclusion descriptor is new, a new node will be created. If the name is
+recognised from an earlier rule or from a *load parameter*, the node in question will be updated with the supplied
+properties.
+
+The following example describes a typical node:
 
 ```
 (bert) {"name": "Albert Einstein", "date_of_birth": "1879-03-14"}
 ```
 
-The line consists of two parts - the node descriptor and the property data belonging to that node - separated by
-linear white space. Here, the name `bert` defines a unique identifier for this node with the properties provided as
-key:value pairs in JSON format. While the GEOFF format makes no restrictions on the types of the data provided as
-properties, the underlying database may do so.
+The two parts of the rule - the descriptor and the property data - are separated by linear white space which may consist
+of any number of `TAB` or `SPACE` characters. While the GEOFF format makes no restrictions on the types of the data
+provided as properties, the underlying database may do so.
 
-## Relationships
+### Relationship Inclusion Rules
 
-A relationship is a typed connection between two nodes and is represented by two node descriptors connected by an
-ASCII art arrow and relationship metadata within square brackets, as per the following example:
+A relationship is a typed connection between two nodes and is represented by a name and/or a type name in square
+brackets, between two node tokens, all connected by an ASCII art arrow. The example below shows the definition of two
+nodes plus an unnamed relationship:
 
 ```
 (bert)                         {"name": "Albert Einstein", "date_of_birth": "1879-03-14"}
@@ -39,113 +46,116 @@ ASCII art arrow and relationship metadata within square brackets, as per the fol
 (bert)-[:PUBLISHED]->(genrel)  {"year_of_publication": 1916}
 ```
 
-This describes two nodes `(bert)` and `(genrel)` and describes an unnamed relationship between them, also with
-attached properties. Should an identifier be required for the relationship (as may be required for indexing) it can
-be inserted before the colon, thus:
+This describes two nodes `(bert)` and `(genrel)` as well as an unnamed relationship between them, of type
+`PUBLISHED`, also with attached properties. The values within square brackets can vary depending on the context but
+exhibit one of the forms `[<name>]`, `[:<type>]` or `[<name>:<type>]` depending on the context. For example, the
+relationship rule above may also be given a name, thus:
 
 ```
 (bert)-[pub1:PUBLISHED]->(genrel)  {"year_of_publication": 1916}
 ```
 
-## Hooks
-
-So far, the relationships defined have connected nodes which are defined within the same GEOFF file. Sometimes however
-it is necessary to refer to nodes which are defined externally, often within an existing database instance, and define
-relationships against those. A *hook* is such an externally-defined entity and may refer to either a node or a
-relationship.
-
-Hooks are supplied as parameters passed into a GEOFF parser and are designated within the file by enclosing the
-parameter name within braces. The following example illustrates a relationship between a node hook and a node defined
-within the GEOFF file:
+Once a relationship name has been defined, either via a definition such as the one above or by passing a *load
+parameter*, it may later be updated using a simpler version of the rule containing only the name:
 
 ```
-(bert)                      {"name": "Albert Einstein", "date_of_birth": "1879-03-14"}
-{sci}-[:SCIENTIST]->(bert)  {"year_of_publication": 1916}
+[pub1]  {"year_of_publication": 1916, "complicated": true}
 ```
 
-Here, `{sci}` could refer to a "SCIENTISTS" [subreference node](http://wiki.neo4j.org/content/Design_Guide#Subreferences),
-for example. A node hook may be supplied as either or both the start node or end node of a relationship.
+### Index Inclusion Rules
 
-Node and relationship hooks may also be referenced individually. The data values supplied list *all* properties
-registered against that entity and could be used to update that entity's property list.
-
-```
-{sci}    {"last_updated": "13:45:09"}
-```
-
-## Index Inclusions
-
-It is also possible to specify inclusions in database indexes within a GEOFF file; this can apply to nodes,
-relationships or hooks and all use a similar syntax, which includes the index name between pipe `|` symbols. The data
-values supplied to these descriptors provide the values under which the entities are indexed and may be restricted by
-underlying database software. The following example shows one index inclusion for each allowed syntax:
+It is further possible to specify inclusions in database indexes from within a GEOFF file; this can apply to nodes or
+relationships and both use a similar syntax. The index token itself it contained between pipe `|` symbols and is drawn
+connected to the relevant node or relationship token with a heavy, left-pointing arrow `<=`:
 
 ```
-# This indexes the node "bert" within the "Scientists" index under "name=Einstein"
+# Include the node "bert" within the "Scientists" index where name="Einstein"
 (bert)<=|Scientists|    {"name": "Einstein"}
-# This indexes the relationship "pub1" within the "Publications" index under "year=1916"
+# Include the relationship "pub1" within the "Publications" index where year=1916
 [pub1]<=|Publications|  {"year": 1916}
-# This indexes the hook "foo" within the "Things" index under "foo=bar"
-{foo}<=|Things|         {"foo": "bar"}
 ```
 
-## Composite Descriptors
+The data supplied to these descriptors provide the key:value pairs under which the entities are indexed and may be
+restricted by the underlying database software.
 
-A composite descriptor allows a number of individual descriptors to be specified within a single line of text.
-Rendered as a JSON object, each key:value pair holds a descriptor and its data respectively. The following example
-combines three descriptor:data pairs, the second of third of which have empty sets of properties.
+## Exclusion Rules
+
+*(coming soon)*
+
+### Node Exclusion Rules
+
+*(coming soon)*
+
+### Relationship Exclusion Rules
+
+*(coming soon)*
+
+### Index Exclusion Rules
+
+*(coming soon)*
+
+## Reflection Rules
+
+*(coming soon)*
+
+### Relationship Reflection Rules
+
+*(coming soon)*
+
+### Index Reflection Rules
+
+*(coming soon)*
+
+## Inputs and Outputs
+
+A GEOFF parser for loading data can allow further inputs and outputs, beside the rules themselves. For input,
+parameters may be supplied which reference existing graph nodes or relationships; for output, an iterator for all
+entity references is returned.
+
+### Load Parameters
+
+The rules described above all deal with entities which are defined within an earlier rule. Sometimes it is desirable to
+refer to pre-existing nodes and relationships however, and this can be achieved through use of *load parameters*. Such a
+parameter takes the form of a named entity passed into a GEOFF parser which may be referenced within the file by name.
+
+Consider the example from above:
 
 ```
-{"(bert)": {"name": "Albert Einstein"}, "(genrel)": {}, "(bert)-[:PUBLISHED]->(genrel)": null}
+(bert)                         {"name": "Albert Einstein", "date_of_birth": "1879-03-14"}
+(genrel)                       {"name": "General Theory of Relativity"}
+(bert)-[:PUBLISHED]->(genrel)  {"year_of_publication": 1916}
 ```
 
-The ordering of the items should be unimportant to a GEOFF parser as the items can be thought of as loading "in
-parallel". The *py2neo* loader implementation sorts all items within a composite descriptor set so that hooks and
-nodes are loaded first, followed by relationships and finally by index entries. To that end, the following composite
-descriptor can be seen as exactly equivalent to the one above:
+Here, the node `(bert)` may already exist within the underlying graph and could be specified as part of the load call
+thereby allowing the first line to be omitted. The following excerpt shows possible usage from within the Java
+implementation:
 
 ```
-{"(genrel)": {}, "(bert)-[:PUBLISHED]->(genrel)": null, "(bert)": {"name": "Albert Einstein"}}
+HashMap<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
+params.put("bert", albertEinsteinNode);
+GEOFF.loadIntoNeo4j(sourceReader, graphDB, params);
 ```
 
-## Specification
+### Return Values
 
-The following definitions describe the full GEOFF syntax using an augmented BNF [as defined within RFC822](http://www.w3.org/Protocols/rfc822/#z25).
+*(coming soon)*
 
-```
-EOL                      = CR / LF / ( CR LF )
-LWSP                     = SP / HT
+## Other Syntax
 
-geoff-file               = geoff-line *( EOL geoff-line )
-geoff-line               = blank-line
-                         / comment
-                         / descriptor [ 1*LWSP data ]
-                         / composite-descriptor
-data                     = <JSON object>
+*(coming soon)*
 
-blank-line               = *LWSP
-comment                  = "#" CHAR
+### Rule Sets
 
-descriptor               = hook-descriptor
-                         / node-descriptor
-                         / relationship-descriptor
-                         / index-inclusion
+*(coming soon)*
 
-composite-descriptor     = "{" *LWSP descriptor-data-pair *LWSP *( "," descriptor-data-pair ) "}"
-descriptor-data-pair     = '"' descriptor '"' *LWSP ":" *LWSP data
+### Comments and Spacing
 
-hook-ref                 = "{" entity-name "}"
-node-ref                 = "(" entity-name ")"
-relationship-ref         = "[" entity-name "]"
-index-ref                = "|" entity-name "|"
+*(coming soon)*
 
-hook-descriptor          = hook-ref
-node-descriptor          = node-ref
-connectable              = hook-ref / node-ref
-relationship-descriptor  = connectable "-[" [ entity-name ] ":" entity-type "]->" connectable
-indexable                = hook-ref / node-ref / relationship-ref
-index-inclusion          = indexable "<=" index-ref
+## Format Specification
 
-entity-name              = 1*( ALPHA / DIGIT / "_" )
-entity-type              = 1*( ALPHA / DIGIT / "_" )
-```
+*(coming soon)*
+
+## Example Code
+
+*(coming soon)*

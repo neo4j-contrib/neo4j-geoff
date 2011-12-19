@@ -29,15 +29,15 @@ import java.util.Map;
 
 public class GEOFF {
 
-	public static final boolean DEBUG = false;
+	// debug switch used for conditional compilation
+	static final boolean DEBUG = false;
 
 	/**
-	 * Static method to kick off loading a GEOFF file into the specified
-	 * GraphDatabaseService, taking data from the supplied Reader
+	 * Load a stream of GEOFF data from a Reader into a Neo4j GraphDatabaseService instance.
 	 *
-	 * @param reader
-	 * @param graphDB
-	 * @param params
+	 * @param reader the Reader from which to read GEOFF rules
+	 * @param graphDB the database instance to load into
+	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return
 	 * @throws IOException
 	 * @throws IllegalRuleException
@@ -63,6 +63,18 @@ public class GEOFF {
 		}
 	}
 
+	/**
+	 * Load GEOFF data from a Map of Rules (Descriptor:Data pairs) into a Neo4j GraphDatabaseService instance.
+	 *
+	 * @param rules the set of GEOFF rules to load
+	 * @param graphDB the database instance to load into
+	 * @param params named Nodes and Relationships which can be referenced by Rules
+	 * @return
+	 * @throws IOException
+	 * @throws IllegalRuleException
+	 * @throws SyntaxError
+	 * @throws DependencyException
+	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
 			Map<String, Map<String, Object>> rules,
 			GraphDatabaseService graphDB,

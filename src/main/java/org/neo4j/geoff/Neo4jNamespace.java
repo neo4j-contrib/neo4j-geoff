@@ -36,8 +36,8 @@ import java.util.*;
 public class Neo4jNamespace implements Namespace {
 
 	private final GraphDatabaseService graphDB;
-	private final HashMap<String, Node> newNodes = new HashMap<String, Node>();
-	private final HashMap<String, Relationship> newRelationships = new HashMap<String, Relationship>();
+	private final HashMap<String, Node> nodes = new HashMap<String, Node>();
+	private final HashMap<String, Relationship> relationships = new HashMap<String, Relationship>();
 	private final HashMap<String, PropertyContainer> entities = new HashMap<String, PropertyContainer>();
 
 	/**
@@ -199,8 +199,8 @@ public class Neo4jNamespace implements Namespace {
 	void includeNode(NodeToken node, Map<String, Object> data)
 			throws IllegalRuleException {
 		assertNamed(node);
-		if (this.newNodes.containsKey(node.getName())) {
-			Node n = this.newNodes.get(node.getName());
+		if (this.nodes.containsKey(node.getName())) {
+			Node n = this.nodes.get(node.getName());
 			removeProperties(n);
 			addProperties(n, data);
 		} else {
@@ -215,7 +215,7 @@ public class Neo4jNamespace implements Namespace {
 		assertNamed(rel);
 		assertNotTyped(rel);
 		assertRegistered(rel);
-		Relationship r = this.newRelationships.get(rel.getName());
+		Relationship r = this.relationships.get(rel.getName());
 		removeProperties(r);
 		addProperties(r, data);
 	}
@@ -232,8 +232,8 @@ public class Neo4jNamespace implements Namespace {
 			assertNotRegistered(rel);
 		}
 		assertTyped(rel);
-		Relationship r = this.newNodes.get(startNode.getName()).createRelationshipTo(
-				this.newNodes.get(endNode.getName()),
+		Relationship r = this.nodes.get(startNode.getName()).createRelationshipTo(
+				this.nodes.get(endNode.getName()),
 				DynamicRelationshipType.withName(rel.getType())
 		);
 		if (rel.hasName()) {
@@ -247,7 +247,7 @@ public class Neo4jNamespace implements Namespace {
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node, index);
 		assertRegistered(node);
-		Node n = this.newNodes.get(node.getName());
+		Node n = this.nodes.get(node.getName());
 		Index<Node> i = this.graphDB.index().forNodes(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
 			i.add(n, entry.getKey(), entry.getValue());
@@ -260,7 +260,7 @@ public class Neo4jNamespace implements Namespace {
 		assertNamed(rel, index);
 		assertNotTyped(rel);
 		assertRegistered(rel);
-		Relationship r = this.newRelationships.get(rel.getName());
+		Relationship r = this.relationships.get(rel.getName());
 		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
 			i.add(r, entry.getKey(), entry.getValue());
@@ -307,8 +307,8 @@ public class Neo4jNamespace implements Namespace {
 		DynamicRelationshipType t = DynamicRelationshipType.withName(rel.getType());
 		if (startNode.hasName() && endNode.hasName()) {
 			// (A)-[:T]-!(B)
-			Node s = this.newNodes.get(startNode.getName());
-			Node e = this.newNodes.get(endNode.getName());
+			Node s = this.nodes.get(startNode.getName());
+			Node e = this.nodes.get(endNode.getName());
 			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
 				if (r.getEndNode().getId() == e.getId()) {
 					r.delete();
@@ -316,13 +316,13 @@ public class Neo4jNamespace implements Namespace {
 			}
 		} else if (startNode.hasName()) {
 			// (A)-[:T]-!()
-			Node s = this.newNodes.get(startNode.getName());
+			Node s = this.nodes.get(startNode.getName());
 			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
 				r.delete();
 			}
 		} else {
 			// ()-[:T]-!(B)
-			Node e = this.newNodes.get(endNode.getName());
+			Node e = this.nodes.get(endNode.getName());
 			for (Relationship r : e.getRelationships(Direction.INCOMING, t)) {
 				r.delete();
 			}
@@ -334,7 +334,7 @@ public class Neo4jNamespace implements Namespace {
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node, index);
 		assertRegistered(node);
-		Node n = this.newNodes.get(node.getName());
+		Node n = this.nodes.get(node.getName());
 		Index<Node> i = this.graphDB.index().forNodes(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
 			i.remove(n, entry.getKey(), entry.getValue());
@@ -347,7 +347,7 @@ public class Neo4jNamespace implements Namespace {
 		assertNamed(rel, index);
 		assertNotTyped(rel);
 		assertRegistered(rel);
-		Relationship r = this.newRelationships.get(rel.getName());
+		Relationship r = this.relationships.get(rel.getName());
 		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
 			i.remove(r, entry.getKey(), entry.getValue());
@@ -459,26 +459,26 @@ public class Neo4jNamespace implements Namespace {
 
 	private void assertRegistered(NodeToken... nodes) throws DependencyException {
 		for (NodeToken node : nodes) {
-			if (!this.newNodes.containsKey(node.getName())) {
+			if (!this.nodes.containsKey(node.getName())) {
 				throw new DependencyException("Node not found: " + node.toString());
 			}
 		}
 	}
 
 	private void assertNotRegistered(NodeToken node) throws DependencyException {
-		if (this.newNodes.containsKey(node.getName())) {
+		if (this.nodes.containsKey(node.getName())) {
 			throw new DependencyException("Node already exists: " + node.toString());
 		}
 	}
 
 	private void assertRegistered(RelToken rel) throws DependencyException {
-		if (!this.newRelationships.containsKey(rel.getName())) {
+		if (!this.relationships.containsKey(rel.getName())) {
 			throw new DependencyException("Relationship not found: " + rel.toString());
 		}
 	}
 
 	private void assertNotRegistered(RelToken rel) throws DependencyException {
-		if (this.newRelationships.containsKey(rel.getName())) {
+		if (this.relationships.containsKey(rel.getName())) {
 			throw new DependencyException("Relationship already exists: " + rel.toString());
 		}
 	}
@@ -490,13 +490,13 @@ public class Neo4jNamespace implements Namespace {
 		if (GEOFF.DEBUG) {
 			System.out.println("Registering node " + node.getId() + " as (" + name + ")");
 		}
-		this.newNodes.put(name, node);
+		this.nodes.put(name, node);
 		this.entities.put("(" + name + ")", node);
 	}
 
 	private Node unregisterNode(String name) {
-		Node node = this.newNodes.get(name);
-		this.newNodes.remove(name);
+		Node node = this.nodes.get(name);
+		this.nodes.remove(name);
 		this.entities.remove("(" + name + ")");
 		return node;
 	}
@@ -505,13 +505,13 @@ public class Neo4jNamespace implements Namespace {
 		if (GEOFF.DEBUG) {
 			System.out.println("Registering relationship " + relationship.getId() + " as [" + name + "]");
 		}
-		this.newRelationships.put(name, relationship);
+		this.relationships.put(name, relationship);
 		this.entities.put("[" + name + "]", relationship);
 	}
 
 	private Relationship unregisterRelationship(String name) {
-		Relationship rel = this.newRelationships.get(name);
-		this.newRelationships.remove(name);
+		Relationship rel = this.relationships.get(name);
+		this.relationships.remove(name);
 		this.entities.remove("[" + name + "]");
 		return rel;
 	}

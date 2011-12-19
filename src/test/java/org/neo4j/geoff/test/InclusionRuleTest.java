@@ -37,7 +37,6 @@ public class InclusionRuleTest {
 
 	private ImpermanentGraphDatabase db;
 
-
 	@Before
 	public void setUp() throws Exception {
 		db = new ImpermanentGraphDatabase();
@@ -87,12 +86,49 @@ public class InclusionRuleTest {
 
 	@Test
 	public void testIncludeRelationshipByType() throws Exception {
-		testRule("(A)-[:T]->(B)");
+		Rule rule = Rule.from("(A)-[:T]->(B)");
+		assertNotNull(rule);
+		assertEquals("N-R->N", rule.getDescriptor().getPattern());
+		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
+		NodeToken start = (NodeToken) rule.getDescriptor().getToken(0);
+		RelToken rel = (RelToken) rule.getDescriptor().getToken(2);
+		NodeToken end = (NodeToken) rule.getDescriptor().getToken(5);
+		assertEquals(Token.Type.NODE, start.getTokenType());
+		assertEquals(Token.Type.REL, rel.getTokenType());
+		assertEquals(Token.Type.NODE, end.getTokenType());
+		assertEquals(true, start.hasName());
+		assertEquals("A", start.getName());
+		assertEquals(false, rel.hasName());
+		assertEquals(true, rel.hasType());
+		assertEquals("T", rel.getType());
+		assertEquals(true, end.hasName());
+		assertEquals("B", end.getName());
 	}
 
 	@Test
 	public void testIncludeRelationshipByTypeWithName() throws Exception {
-		testRule("(A)-[R:T]->(B)");
+		Rule rule = Rule.from("(A)-[R:T]->(B)");
+		assertNotNull(rule);
+		assertEquals("N-R->N", rule.getDescriptor().getPattern());
+		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
+		NodeToken start = (NodeToken) rule.getDescriptor().getToken(0);
+		RelToken rel = (RelToken) rule.getDescriptor().getToken(2);
+		NodeToken end = (NodeToken) rule.getDescriptor().getToken(5);
+		assertEquals(Token.Type.NODE, start.getTokenType());
+		assertEquals(Token.Type.REL, rel.getTokenType());
+		assertEquals(Token.Type.NODE, end.getTokenType());
+		assertEquals(true, start.hasName());
+		assertEquals("A", start.getName());
+		assertEquals(true, rel.hasName());
+		assertEquals("R", rel.getName());
+		assertEquals(true, rel.hasType());
+		assertEquals("T", rel.getType());
+		assertEquals(true, end.hasName());
+		assertEquals("B", end.getName());
 	}
 
 	@Test
