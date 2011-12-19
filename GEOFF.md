@@ -160,7 +160,7 @@ Such a rule must have *exactly one* key:value pair specified.
 ## Inputs and Outputs
 
 A GEOFF parser for loading data can allow further inputs and outputs, beside the rules themselves. For input,
-parameters may be supplied which reference existing graph nodes or relationships; for output, an iterator for all
+parameters may be supplied which reference existing graph nodes or relationships; for output, a collection of all
 entity references is returned.
 
 ### Load Parameters

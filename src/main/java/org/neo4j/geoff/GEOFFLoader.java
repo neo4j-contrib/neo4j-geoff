@@ -31,7 +31,7 @@ public class GEOFFLoader<NS extends Namespace> {
 	private final NS namespace;
 
 	public GEOFFLoader(Reader reader, NS namespace)
-			throws IOException, SyntaxError, IllegalRuleException, DependencyException {
+			throws IOException, GEOFFLoadException {
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		this.namespace = namespace;
 		int lineNumber = 0;
@@ -42,25 +42,28 @@ public class GEOFFLoader<NS extends Namespace> {
 			do {
 				line = bufferedReader.readLine();
 				lineNumber++;
-				if (line != null && !line.isEmpty()) {
-					// turn the line of text into a Rule
-					try {
-						if (line.charAt(0) == '{') {
-							// TODO: allow for multi-line JSON
-							RuleSet rules = RuleSet.from(line);
-							this.namespace.apply(rules);
-						} else {
-							rule = Rule.from(line);
-							// add the described data to the namespace
-							this.namespace.apply(rule);
-						}
-					} catch (JSONException e) {
-						//
-					} catch (SyntaxError e) {
-						// TODO: if something goes wrong, attach the line number and re-throw
-//						e.setLineNumber(lineNumber);
-						throw e;
+				try {
+					if (line == null || line.trim().isEmpty()) {
+						// blank line;
+					} else if (line.charAt(0) == '#') {
+						// comment
+					} else if (line.charAt(0) == '{') {
+						// TODO: allow for multi-line JSON
+						RuleSet rules = RuleSet.from(line);
+						this.namespace.apply(rules);
+					} else {
+						rule = Rule.from(line);
+						// add the described data to the namespace
+						this.namespace.apply(rule);
 					}
+				} catch (DependencyException e) {
+					throw new GEOFFLoadException("Failed dependency on line " + lineNumber, e);
+				} catch (IllegalRuleException e) {
+					throw new GEOFFLoadException("Illegal rule encountered on line " + lineNumber, e);
+				} catch (JSONException e) {
+					throw new GEOFFLoadException("JSON parsing error on line " + lineNumber, e);
+				} catch (SyntaxError e) {
+					throw new GEOFFLoadException("Syntax error on line " + lineNumber, e);
 				}
 			} while (line != null);
 		} finally {
@@ -73,9 +76,17 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 */
 	public GEOFFLoader(Map<String, Map<String, Object>> rules, NS namespace)
-			throws SyntaxError, IllegalRuleException, DependencyException {
+			throws GEOFFLoadException {
 		this.namespace = namespace;
-		this.namespace.apply(RuleSet.from(rules));
+		try {
+			this.namespace.apply(RuleSet.from(rules));
+		} catch (DependencyException e) {
+			throw new GEOFFLoadException("Failed dependency", e);
+		} catch (IllegalRuleException e) {
+			throw new GEOFFLoadException("Illegal rule", e);
+		} catch (SyntaxError e) {
+			throw new GEOFFLoadException("Syntax error", e);
+		}
 	}
 
 	public NS getNamespace() {

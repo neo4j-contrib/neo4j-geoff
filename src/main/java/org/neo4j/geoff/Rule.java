@@ -31,16 +31,15 @@ import java.util.Map;
  */
 public class Rule {
 
-	public static Rule from(String text) throws SyntaxError {
+	public static Rule from(String text) throws JSONException, SyntaxError {
+		if (GEOFF.DEBUG) {
+			System.out.println("Parsing rule: " + text);
+		}
 		String[] bits = text.split("\\s+", 2);
 		if (bits.length == 1) {
 			return new Rule(new Descriptor(bits[0]), null);
 		} else {
-			try {
-				return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
-			} catch (JSONException e) {
-				throw new SyntaxError("Data parsing error", e);
-			}
+			return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
 		}
 	}
 

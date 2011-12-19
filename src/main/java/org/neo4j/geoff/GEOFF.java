@@ -39,17 +39,15 @@ public class GEOFF {
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return
+	 * @throws GEOFFLoadException
 	 * @throws IOException
-	 * @throws IllegalRuleException
-	 * @throws SyntaxError
-	 * @throws DependencyException
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
 			Reader reader,
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)
-			throws IOException, IllegalRuleException, SyntaxError, DependencyException {
+			throws GEOFFLoadException, IOException {
 		Transaction tx = graphDB.beginTx();
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
@@ -70,17 +68,15 @@ public class GEOFF {
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return
+	 * @throws GEOFFLoadException
 	 * @throws IOException
-	 * @throws IllegalRuleException
-	 * @throws SyntaxError
-	 * @throws DependencyException
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
 			Map<String, Map<String, Object>> rules,
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)
-			throws IOException, IllegalRuleException, SyntaxError, DependencyException {
+			throws GEOFFLoadException, IOException {
 		Transaction tx = graphDB.beginTx();
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
