@@ -121,20 +121,13 @@ restricted by the underlying database software.
 Reflection rules allow node and relationship references to be extracted from an existing database instance from within
 GEOFF source. These extractions may traverse known nodes and relationships or may look up values in an index.
 
-### Node Reflection Rules
+### Relationship Reflection Rules
 
 ```
 # A reflects start node of rel R
 (A):=(*)-[R]->()
 # B reflects end node of rel R
 (B):=()-[R]->(*)
-```
-
-*(more coming soon!)*
-
-### Relationship Reflection Rules
-
-```
 # R reflects rel of type T between A and B
 [R]:=(A)-[:T]->(B)
 # R reflects rel of type T starting at node A
