@@ -40,4 +40,8 @@ public abstract class NameableToken extends Token {
 		return this.name;
 	}
 
+	public boolean isStarred() {
+		return "*".equals(this.name);
+	}
+
 }

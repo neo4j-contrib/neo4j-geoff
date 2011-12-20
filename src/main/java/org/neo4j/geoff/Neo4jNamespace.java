@@ -360,13 +360,31 @@ public class Neo4jNamespace implements Namespace {
 	/* START OF REFLECTION RULE HANDLERS */
 
 	// N=N-R->N
-	void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data) throws IllegalRuleException {
-		// TODO
-		throw new NotImplementedException();
+	// ========
+	// # A reflects start node of rel R
+	// (A):=(*)-[R]->()
+	// # B reflects end node of rel R
+	// (B):=()-[R]->(*)
+	//
+	void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
+		assertNamed(intoNode, rel);
+		assertExactlyOneStarred(startNode, endNode);
+		assertNotRegistered(intoNode);
+		assertNotNamed(startNode, endNode);
+		assertRegistered(rel);
+		assertIsEmpty(data);
+		Relationship r = this.relationships.get(rel.getName());
+		if (startNode.isStarred()) {
+			register(intoNode.getName(), r.getStartNode());
+		} else {
+			register(intoNode.getName(), r.getEndNode());
+		}
 	}
 
 	// R=N-R->N
-	void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data) throws IllegalRuleException {
+	void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+			throws DependencyException, IllegalRuleException {
 		// TODO
 		throw new NotImplementedException();
 	}
@@ -413,9 +431,11 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void assertNotNamed(NameableToken token) throws IllegalRuleException {
-		if (token.hasName()) {
-			throw new IllegalRuleException("Entities cannot have a name");
+	private void assertNotNamed(NameableToken... tokens) throws IllegalRuleException {
+		for (NameableToken token : tokens) {
+			if (token.hasName()) {
+				throw new IllegalRuleException("Entities cannot have a name");
+			}
 		}
 	}
 
@@ -426,6 +446,18 @@ public class Neo4jNamespace implements Namespace {
 			}
 		}
 		throw new IllegalRuleException("At least one entity must have a name");
+	}
+
+	private void assertExactlyOneStarred(NodeToken... tokens) throws IllegalRuleException {
+		int starCount = 0;
+		for (NameableToken nameable : tokens) {
+			if (nameable.isStarred()) {
+				starCount++;
+			}
+		}
+		if (starCount != 1) {
+			throw new IllegalRuleException("Exactly one node must be starred");
+		}
 	}
 
 	private void assertTyped(RelToken relToken) throws IllegalRuleException {
