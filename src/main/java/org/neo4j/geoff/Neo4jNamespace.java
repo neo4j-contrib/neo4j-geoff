@@ -23,7 +23,6 @@ package org.neo4j.geoff;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 
@@ -196,7 +195,7 @@ public class Neo4jNamespace implements Namespace {
 	/* START OF INCLUSION RULE HANDLERS */
 
 	// N
-	void includeNode(NodeToken node, Map<String, Object> data)
+	private void includeNode(NodeToken node, Map<String, Object> data)
 			throws IllegalRuleException {
 		assertNamed(node);
 		if (this.nodes.containsKey(node.getName())) {
@@ -211,7 +210,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// R
-	void includeRelationshipByName(RelToken rel, Map<String, Object> data) throws DependencyException, IllegalRuleException {
+	private void includeRelationshipByName(RelToken rel, Map<String, Object> data) throws DependencyException, IllegalRuleException {
 		assertNamed(rel);
 		assertNotTyped(rel);
 		assertRegistered(rel);
@@ -221,7 +220,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N-R->N
-	void includeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+	private void includeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		if (GEOFF.DEBUG) {
 			System.out.println("Including relationship by type \"N-R->N\"");
@@ -243,7 +242,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N^I
-	void includeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+	private void includeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node, index);
 		assertRegistered(node);
@@ -255,7 +254,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// R^I
-	void includeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+	private void includeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(rel, index);
 		assertNotTyped(rel);
@@ -273,7 +272,7 @@ public class Neo4jNamespace implements Namespace {
 	/* START OF EXCLUSION RULE HANDLERS */
 
 	// !N
-	void excludeNode(NodeToken node, Map<String, Object> data)
+	private void excludeNode(NodeToken node, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node);
 		assertRegistered(node);
@@ -282,7 +281,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// !R
-	void excludeRelationshipByName(RelToken rel, Map<String, Object> data)
+	private void excludeRelationshipByName(RelToken rel, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(rel);
 		assertNotTyped(rel);
@@ -292,7 +291,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N-R-!N
-	void excludeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+	private void excludeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertAtLeastOneNamed(startNode, endNode);
 		if (startNode.hasName()) {
@@ -330,7 +329,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N'I
-	void excludeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+	private void excludeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node, index);
 		assertRegistered(node);
@@ -342,7 +341,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// R'I
-	void excludeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+	private void excludeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(rel, index);
 		assertNotTyped(rel);
@@ -359,14 +358,23 @@ public class Neo4jNamespace implements Namespace {
 
 	/* START OF REFLECTION RULE HANDLERS */
 
-	// N=N-R->N
-	// ========
-	// # A reflects start node of rel R
-	// (A):=(*)-[R]->()
-	// # B reflects end node of rel R
-	// (B):=()-[R]->(*)
-	//
-	void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+	/**
+	 * N=N-R->N
+	 * ========
+	 * # A reflects start node of rel R
+	 * (A):=(*)-[R]->()
+	 * # B reflects end node of rel R
+	 * (B):=()-[R]->(*)
+	 *
+	 * @param intoNode
+	 * @param startNode
+	 * @param rel
+	 * @param endNode
+	 * @param data
+	 * @throws DependencyException
+	 * @throws IllegalRuleException
+	 */
+	private void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(intoNode, rel);
 		assertExactlyOneStarred(startNode, endNode);
@@ -382,15 +390,84 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	// R=N-R->N
-	void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
+	/**
+	 * R=N-R->N
+	 * ========
+	 * # R reflects rel of type T between A and B
+	 * [R]:=(A)-[:T]->(B)
+	 * # R reflects rel of type T starting at node A
+	 * [R]:=(A)-[:T]->()
+	 * # R reflects rel of type T ending at node B
+	 * [R]:=()-[:T]->(B)
+	 *
+	 * @param intoRel
+	 * @param startNode
+	 * @param rel
+	 * @param endNode
+	 * @param data
+	 * @throws DependencyException
+	 * @throws IllegalRuleException
+	 */
+	private void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		// TODO
-		throw new NotImplementedException();
+		assertNamed(intoRel);
+		assertNotRegistered(intoRel);
+		assertAtLeastOneNamed(startNode, endNode);
+		if (startNode.hasName()) {
+			assertRegistered(startNode);
+		}
+		if (endNode.hasName()) {
+			assertRegistered(endNode);
+		}
+		assertNotNamed(rel);
+		assertTyped(rel);
+		assertIsEmpty(data);
+		DynamicRelationshipType t = DynamicRelationshipType.withName(rel.getType());
+		if (startNode.hasName() && endNode.hasName()) {
+			// [R]:=(A)-[:T]->(B)
+			Node s = this.nodes.get(startNode.getName());
+			Node e = this.nodes.get(endNode.getName());
+			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
+				if (r.getEndNode().getId() == e.getId()) {
+					register(intoRel.getName(), r);
+					return;
+				}
+			}
+			throw new DependencyException("No relationship to reflect");
+		} else if (startNode.hasName()) {
+			// [R]:=(A)-[:T]->()
+			Node s = this.nodes.get(startNode.getName());
+			Relationship r = s.getSingleRelationship(t, Direction.OUTGOING);
+			if (r == null) {
+				throw new DependencyException("No relationship to reflect");
+			} else {
+				register(intoRel.getName(), r);
+			}
+		} else {
+			// [R]:=()-[:T]->(B)
+			Node e = this.nodes.get(endNode.getName());
+			Relationship r = e.getSingleRelationship(t, Direction.INCOMING);
+			if (r == null) {
+				throw new DependencyException("No relationship to reflect");
+			} else {
+				register(intoRel.getName(), r);
+			}
+		}
 	}
 
-	// N=I
-	void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
+	/**
+	 * N=I
+	 * ===
+	 * # node A reflects entry in index I
+	 * (A):=|I|
+	 *
+	 * @param node
+	 * @param index
+	 * @param data
+	 * @throws DependencyException
+	 * @throws IllegalRuleException
+	 */
+	private void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(node, index);
 		assertNotRegistered(node);
@@ -400,11 +477,26 @@ public class Neo4jNamespace implements Namespace {
 		for (Map.Entry<String, Object> entry : data.entrySet()) {
 			hits = i.get(entry.getKey(), entry.getValue());
 		}
-		register(node.getName(), hits == null ? null : hits.getSingle());
+		if (hits == null || hits.size() == 0) {
+			throw new DependencyException("No index entry to reflect");
+		} else {
+			register(node.getName(), hits.getSingle());
+		}
 	}
 
-	// R=I
-	void reflectRelationshipFromIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
+	/**
+	 * R=I
+	 * ===
+	 * # rel R reflects entry in index I
+	 * [R]:=|I|
+	 *
+	 * @param rel
+	 * @param index
+	 * @param data
+	 * @throws DependencyException
+	 * @throws IllegalRuleException
+	 */
+	private void reflectRelationshipFromIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		assertNamed(rel, index);
 		assertNotTyped(rel);
@@ -415,7 +507,11 @@ public class Neo4jNamespace implements Namespace {
 		for (Map.Entry<String, Object> entry : data.entrySet()) {
 			hits = i.get(entry.getKey(), entry.getValue());
 		}
-		register(rel.getName(), hits == null ? null : hits.getSingle());
+		if (hits == null || hits.size() == 0) {
+			throw new DependencyException("No index entry to reflect");
+		} else {
+			register(rel.getName(), hits.getSingle());
+		}
 	}
 
 	/* END OF REFLECTION RULE HANDLERS */
