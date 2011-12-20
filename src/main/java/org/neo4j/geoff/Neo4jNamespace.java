@@ -358,7 +358,7 @@ public class Neo4jNamespace implements Namespace {
 
 	/* START OF REFLECTION RULE HANDLERS */
 
-	/**
+	/*
 	 * N=N-R->N
 	 * ========
 	 * # A reflects start node of rel R
@@ -366,13 +366,6 @@ public class Neo4jNamespace implements Namespace {
 	 * # B reflects end node of rel R
 	 * (B):=()-[R]->(*)
 	 *
-	 * @param intoNode
-	 * @param startNode
-	 * @param rel
-	 * @param endNode
-	 * @param data
-	 * @throws DependencyException
-	 * @throws IllegalRuleException
 	 */
 	private void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
@@ -390,7 +383,7 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	/**
+	/*
 	 * R=N-R->N
 	 * ========
 	 * # R reflects rel of type T between A and B
@@ -400,13 +393,6 @@ public class Neo4jNamespace implements Namespace {
 	 * # R reflects rel of type T ending at node B
 	 * [R]:=()-[:T]->(B)
 	 *
-	 * @param intoRel
-	 * @param startNode
-	 * @param rel
-	 * @param endNode
-	 * @param data
-	 * @throws DependencyException
-	 * @throws IllegalRuleException
 	 */
 	private void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
@@ -455,17 +441,12 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	/**
+	/*
 	 * N=I
 	 * ===
 	 * # node A reflects entry in index I
 	 * (A):=|I|
 	 *
-	 * @param node
-	 * @param index
-	 * @param data
-	 * @throws DependencyException
-	 * @throws IllegalRuleException
 	 */
 	private void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
@@ -484,17 +465,12 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	/**
+	/*
 	 * R=I
 	 * ===
 	 * # rel R reflects entry in index I
 	 * [R]:=|I|
 	 *
-	 * @param rel
-	 * @param index
-	 * @param data
-	 * @throws DependencyException
-	 * @throws IllegalRuleException
 	 */
 	private void reflectRelationshipFromIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
