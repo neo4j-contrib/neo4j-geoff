@@ -9,14 +9,21 @@ data held as key:value pairs. The descriptor is a sequence of characters, somewh
 [Cypher](http://docs.neo4j.org/chunked/stable/cypher-query-lang.html) query language and forms the basis of an
 *inclusion rule*, an *exclusion rule* or a *reflection rule*.
 
-## Inclusion Rules
+## 1 Inclusion Rules
 
 Inclusion rules are the simplest rules within the GEOFF format and, at a basic level, can be seen to represent a simple
 serialisation of graph content. These rules are the building blocks of the format itself and hold information
 representing *nodes*, *relationships* and *index entries*.
 
-### Node Inclusion Rules
+### 1.1 Node Inclusion Rules
 
+#### Synopsis
+```
+# node A
+(A) {...}
+```
+
+#### Description
 A node is the simplest entity which can be represented within GEOFF. A node inclusion descriptor consists of a name
 surrounded by parentheses. Any attached data represents a set of properties applicable to that node. The name itself
 is used only as a local reference to that node within the same context and holds no relevance to the underlying graph
@@ -34,8 +41,19 @@ The two parts of the rule - the descriptor and the property data - are separated
 of any number of `TAB` or `SPACE` characters. While the GEOFF format makes no restrictions on the types of the data
 provided as properties, the underlying database may do so.
 
-### Relationship Inclusion Rules
+### 1.2 Relationship Inclusion Rules
 
+#### Synopsis
+```
+# rel R
+[R]            {...}
+# A is related to B by rel of type T
+(A)-[:T]->(B)  {...}
+# A is related to B by rel R of type T
+(A)-[R:T]->(B) {...}
+```
+
+#### Description
 A relationship is a typed connection between two nodes and is represented by a name and/or a type name in square
 brackets, between two node tokens, all connected by an ASCII art arrow. The example below shows the definition of two
 nodes plus an unnamed relationship:
@@ -62,8 +80,17 @@ parameter*, it may later be updated using a simpler version of the rule containi
 [pub1]  {"year_of_publication": 1916, "complicated": true}
 ```
 
-### Index Inclusion Rules
+### 1.3 Index Inclusion Rules
 
+#### Synopsis
+```
+# node A is included in index I
+(A)<=|I| {...}
+# rel R is included in index I
+[R]<=|I| {...}
+```
+
+#### Description
 It is further possible to specify inclusions in database indexes from within a GEOFF file; this can apply to nodes or
 relationships and both use a similar syntax. The index token itself it contained between pipe `|` symbols and is drawn
 connected to the relevant node or relationship token with a heavy, left-pointing arrow `<=`:
@@ -78,20 +105,22 @@ connected to the relevant node or relationship token with a heavy, left-pointing
 The data supplied to these descriptors provide the key:value pairs under which the entities are indexed and may be
 restricted by the underlying database software.
 
-## Exclusion Rules
+## 2 Exclusion Rules
 
-*(coming soon)*
+### 2.1 Node Exclusion Rules
 
-### Node Exclusion Rules
-
+#### Synopsis
 ```
+# remove node A
 !(A)
 ```
 
-*(more coming soon!)*
+#### Description
+*(coming soon!)*
 
-### Relationship Exclusion Rules
+### 2.2 Relationship Exclusion Rules
 
+#### Synopsis
 ```
 # remove rel R
 ![R]
@@ -103,31 +132,44 @@ restricted by the underlying database software.
 ()-[:T]-!(B)
 ```
 
-*(more coming soon!)*
+#### Description
+*(coming soon!)*
 
-### Index Exclusion Rules
+### 2.3 Index Exclusion Rules
 
+#### Synopsis
 ```
 # exclude node A from index I
-(A)!=|I|
+(A)!=|I| {...}
 # exclude rel R from index I
-[R]!=|I|
+[R]!=|I| {...}
 ```
 
-*(more coming soon!)*
+#### Description
+*(coming soon!)*
 
-## Reflection Rules
+## 3 Reflection Rules
 
 Reflection rules allow node and relationship references to be extracted from an existing database instance from within
 GEOFF source. These extractions may traverse known nodes and relationships or may look up values in an index.
 
-### Relationship Reflection Rules
+### 3.1 Named Relationship Reflection Rules
 
+#### Synopsis
 ```
 # A reflects start node of rel R
 (A):=(*)-[R]->()
 # B reflects end node of rel R
 (B):=()-[R]->(*)
+```
+
+#### Description
+*(coming soon!)*
+
+### 3.2 Typed Relationship Reflection Rules
+
+#### Synopsis
+```
 # R reflects rel of type T between A and B
 [R]:=(A)-[:T]->(B)
 # R reflects rel of type T starting at node A
@@ -136,10 +178,20 @@ GEOFF source. These extractions may traverse known nodes and relationships or ma
 [R]:=()-[:T]->(B)
 ```
 
-*(more coming soon!)*
+#### Description
+*(coming soon!)*
 
-### Index Reflection Rules
+### 3.3 Index Reflection Rules
 
+#### Synopsis
+```
+# node A reflects entry in index I
+(A):=|I| {...}
+# rel R reflects entry in index I
+[R]:=|I| {...}
+```
+
+#### Description
 An index reflection rule looks up a value within a database index and assigns the entity discovered to a name within
 the current GEOFF namespace. The following example extracts the node `(bert)` from the `|Scientists|` index where the
 entry key and value equal "name" and "Einstein" respectively:
@@ -150,13 +202,13 @@ entry key and value equal "name" and "Einstein" respectively:
 
 Such a rule must have *exactly one* key:value pair specified.
 
-## Inputs and Outputs
+## 4 Inputs and Outputs
 
 A GEOFF parser for loading data can allow further inputs and outputs, beside the rules themselves. For input,
 parameters may be supplied which reference existing graph nodes or relationships; for output, a collection of all
 entity references is returned.
 
-### Load Parameters
+### 4.1 Load Parameters
 
 The rules described above all deal with entities which are defined within an earlier rule. Sometimes it is desirable to
 refer to pre-existing nodes and relationships however, and this can be achieved through use of *load parameters*. Such a
@@ -180,26 +232,18 @@ params.put("bert", albertEinsteinNode);
 GEOFF.loadIntoNeo4j(sourceReader, graphDB, params);
 ```
 
-### Return Values
+### 4.2 Return Values
 
 *(coming soon)*
 
-## Other Syntax
+## 5 Other Syntax
 
 *(coming soon)*
 
-### Rule Sets
+### 5.1 Rule Sets
 
 *(coming soon)*
 
-### Comments and Spacing
-
-*(coming soon)*
-
-## Format Specification
-
-*(coming soon)*
-
-## Example Code
+### 5.2 Comments and Spacing
 
 *(coming soon)*
