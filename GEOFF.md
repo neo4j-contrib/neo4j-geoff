@@ -218,10 +218,10 @@ Such a rule must have *exactly one* key:value pair specified.
 ?
 ```
 
-Sometimes rules may only apply under a certain condition. Within GEOFF it is possible to specify "if"-style
-conditions by use of the question mark `?` character. Here, each condition may test whether or not a node or
-relationship identifier has previously been defined within the current namespace. The following example tests the
-`|Scientists|` index for an entry and if none is found, creates one:
+Sometimes rules should only apply under certain conditions. Within GEOFF it is possible to specify "if"-style
+conditions by use of the question mark `?` character. Subsequent rules following such a will then be applied or ignored
+depending on whether or not a specific entity has been defined within the current namespace. The following example
+illustrates how to test the `|Scientists|` index for an entry and if none is found, create one:
 
 ```
 # reflect (bert) from |Scientists| where name = "Einstein" (if possible)
@@ -232,9 +232,9 @@ relationship identifier has previously been defined within the current namespace
 (bert)
 # ...and add it to |Scientists|
 (bert)<=|Scientists| {"name": "Einstein"}
-# reset condition (more or less an "end if")
+# reset condition (can be thought of as an "end if")
 ?
-# assign properties to (bert)
+# assign properties to (bert) (which should now definitely exist one way or the other!)
 (bert)               {"name": "Albert Einstein"}
 ```
 
