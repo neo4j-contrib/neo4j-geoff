@@ -219,9 +219,12 @@ Such a rule must have *exactly one* key:value pair specified.
 ```
 
 Sometimes rules should only apply under certain conditions. Within GEOFF it is possible to specify "if"-style
-conditions by use of the question mark `?` character. Subsequent rules following such a will then be applied or ignored
-depending on whether or not a specific entity has been defined within the current namespace. The following example
-illustrates how to test the `|Scientists|` index for an entry and if none is found, create one:
+conditions by use of the question mark `?` character. Subsequent rules following such a condition will then be applied
+or ignored depending on whether or not a specific entity has been defined within the current namespace. This will
+continue until another assertion rule is encountered, after which a new condition will apply. A solitary `?` will
+effectively "reset" any previous condition and therefore (re-)enable application of rules from that point onwards.
+
+The following example illustrates how to test the `|Scientists|` index for an entry and if none is found, create one:
 
 ```
 # reflect (bert) from |Scientists| where name = "Einstein" (if possible)
