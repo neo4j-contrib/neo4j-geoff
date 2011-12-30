@@ -24,6 +24,7 @@ import org.neo4j.geoff.util.JSONException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 public class GEOFFLoader<NS extends Namespace> {
@@ -49,8 +50,8 @@ public class GEOFFLoader<NS extends Namespace> {
 						// comment
 					} else if (line.charAt(0) == '{') {
 						// TODO: allow for multi-line JSON
-						RuleSet rules = RuleSet.from(line);
-						this.namespace.apply(rules);
+						RuleSet ruleSet = RuleSet.from(line);
+						this.namespace.apply(ruleSet);
 					} else {
 						rule = Rule.from(line);
 						// add the described data to the namespace
@@ -70,6 +71,64 @@ public class GEOFFLoader<NS extends Namespace> {
 			} while (line != null);
 		} finally {
 			bufferedReader.close();
+		}
+	}
+
+	public GEOFFLoader(Iterable<List<?>> rules, NS namespace)
+			throws IOException, GEOFFLoadException {
+		this.namespace = namespace;
+		int lineNumber = 0;
+		String descriptorString;
+		Descriptor descriptor;
+		Map<String, Object> data;
+		Rule rule;
+		// iterate through every line in the source data
+		for(List items : rules) {
+			if (items.size() == 0) {
+				// skip empty items
+				continue;
+			}
+			if (items.get(0) instanceof String) {
+				descriptorString = (String) items.get(0);
+			} else {
+				throw new GEOFFLoadException("Descriptor must be a string");
+			}
+			lineNumber++;
+			try {
+				if (descriptorString == null || descriptorString.trim().isEmpty()) {
+					// blank line;
+				} else if (descriptorString.charAt(0) == '#') {
+					// comment
+				} else if (descriptorString.charAt(0) == '{') {
+					// TODO: allow for multi-line JSON
+					RuleSet ruleSet = RuleSet.from(descriptorString);
+					this.namespace.apply(ruleSet);
+				} else {
+					descriptor = new Descriptor(descriptorString);
+					if (items.size() > 1 && items.get(1) != null && items.get(1) instanceof Map) {
+						try {
+							data = (Map<String, Object>) items.get(1);
+						} catch(ClassCastException e) {
+							throw new GEOFFLoadException("Data must be a map of string:object pairs", e);
+						}
+					} else {
+						data = null;
+					}
+					rule = new Rule(descriptor, data);
+					// add the described data to the namespace
+					this.namespace.apply(rule);
+				}
+			} catch (DependencyException e) {
+				throw new GEOFFLoadException("Failed dependency on line " + lineNumber, e);
+			} catch (IllegalRuleException e) {
+				throw new GEOFFLoadException("Illegal rule encountered on line " + lineNumber, e);
+			} catch (JSONException e) {
+				throw new GEOFFLoadException("JSON parsing error on line " + lineNumber, e);
+			} catch (SyntaxError e) {
+				throw new GEOFFLoadException("Syntax error on line " + lineNumber, e);
+			} catch (VampiricException e) {
+				// nothing reflected - carry on for now, might log or raise warning at some point in future
+			}
 		}
 	}
 

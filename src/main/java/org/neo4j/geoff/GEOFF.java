@@ -25,6 +25,7 @@ import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 public class GEOFF {
@@ -52,6 +53,35 @@ public class GEOFF {
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
 					reader,
+					new Neo4jNamespace(graphDB, params)
+			);
+			tx.success();
+			return loader.getNamespace().getEntities();
+		} finally {
+			tx.finish();
+		}
+	}
+
+	/**
+	 * Load GEOFF data from an iterable list of Rules into a Neo4j GraphDatabaseService instance.
+	 *
+	 * @param rules the GEOFF rules to load
+	 * @param graphDB the database instance to load into
+	 * @param params named Nodes and Relationships which can be referenced by Rules
+	 * @return set of named entities used during load
+	 * @throws GEOFFLoadException if a parsing error occurs
+	 * @throws IOException if a read failure occurs
+	 */
+	public static Map<String, PropertyContainer> loadIntoNeo4j(
+			Iterable<List<?>> rules,
+			GraphDatabaseService graphDB,
+			Map<String, ? extends PropertyContainer> params
+	)
+			throws GEOFFLoadException, IOException {
+		Transaction tx = graphDB.beginTx();
+		try {
+			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
+					rules,
 					new Neo4jNamespace(graphDB, params)
 			);
 			tx.success();
