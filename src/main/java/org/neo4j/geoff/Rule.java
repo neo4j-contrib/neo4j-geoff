@@ -55,6 +55,10 @@ public class Rule {
 		}
 	}
 
+	public boolean isAssertion() {
+		return this.descriptor.getToken(0).getTokenType() == Token.Type.QUERY;
+	}
+
 	public Descriptor getDescriptor() {
 		return this.descriptor;
 	}

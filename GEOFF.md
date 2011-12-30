@@ -202,17 +202,57 @@ entry key and value equal "name" and "Einstein" respectively:
 
 Such a rule must have *exactly one* key:value pair specified.
 
-## 4 Inputs and Outputs
+## 4 Assertion Rules
+
+### Synopsis
+```
+# apply following rules iff node N is defined
+?(A)
+# apply following rules iff rel R is defined
+?[R]
+# apply following rules iff node N is not defined
+?!(A)
+# apply following rules iff rel R is not defined
+?![R]
+# apply following rules always
+?
+```
+
+Sometimes rules may only apply under a certain condition. Within GEOFF it is possible to specify "if"-style
+conditions by use of the question mark `?` character. Here, each condition may test whether or not a node or
+relationship identifier has previously been defined within the current namespace. The following example tests the
+`|Scientists|` index for an entry and if none is found, creates one:
+
+```
+# reflect (bert) from |Scientists| where name = "Einstein" (if possible)
+(bert):=|Scientists| {"name": "Einstein"}
+# if (bert) is not defined (i.e. did not exist within the index reflection above)...
+?!(bert)
+# ...create a new empty node
+(bert)
+# ...and add it to |Scientists|
+(bert)<=|Scientists| {"name": "Einstein"}
+# reset condition (more or less an "end if")
+?
+# assign properties to (bert)
+(bert)               {"name": "Albert Einstein"}
+```
+
+Assertions cannot be nested and each one encountered will override the previous assertion. Assertions within *rule
+sets* (see below) are ignored.
+
+## 5 Inputs and Outputs
 
 A GEOFF parser for loading data can allow further inputs and outputs, beside the rules themselves. For input,
 parameters may be supplied which reference existing graph nodes or relationships; for output, a collection of all
 entity references is returned.
 
-### 4.1 Load Parameters
+### 5.1 Load Parameters
 
 The rules described above all deal with entities which are defined within an earlier rule. Sometimes it is desirable to
-refer to pre-existing nodes and relationships however, and this can be achieved through use of *load parameters*. Such a
-parameter takes the form of a named entity passed into a GEOFF parser which may be referenced within the file by name.
+refer to pre-existing nodes and relationships however, and this can be achieved through use of *load parameters*. Such
+a parameter takes the form of a named entity passed into a GEOFF parser which may be referenced within the file by
+name.
 
 Consider the example from above:
 
@@ -232,18 +272,18 @@ params.put("bert", albertEinsteinNode);
 GEOFF.loadIntoNeo4j(sourceReader, graphDB, params);
 ```
 
-### 4.2 Return Values
+### 5.2 Return Values
 
 *(coming soon)*
 
-## 5 Other Syntax
+## 6 Other Syntax
 
 *(coming soon)*
 
-### 5.1 Rule Sets
+### 6.1 Rule Sets
 
 *(coming soon)*
 
-### 5.2 Comments and Spacing
+### 6.2 Comments and Spacing
 
 *(coming soon)*

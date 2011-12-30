@@ -19,45 +19,15 @@
  */
 package org.neo4j.geoff;
 
-public class Token {
+/**
+ * Thrown when no reflection is possible.
+ * Vampire. No reflection. Geddit?! *sigh*
+ *
+ */
+public class VampiricException extends Exception {
 
-	public static enum Type {
-
-		NODE('N'),
-		REL('R'),
-		INDEX('I'),
-		DASH('-'),
-		ARROW('>'),
-		BANG('!'),
-		QUERY('?'),
-		REFLECTS('='),
-		INCLUDED_IN('^'),
-		EXCLUDED_FROM('\'');
-
-		private final char symbol;
-
-		private Type(char symbol) {
-			this.symbol = symbol;
-		}
-
-		public char getSymbol() {
-			return this.symbol;
-		}
-
+	public VampiricException(String s) {
+		super(s);
 	}
 
-	private final Type tokenType;
-
-	public Token(Type tokenType) {
-		this.tokenType = tokenType;
-	}
-
-	public Type getTokenType() {
-		return this.tokenType;
-	}
-
-	@Override
-	public String toString() {
-		return this.tokenType.name();
-	}
 }

@@ -69,6 +69,10 @@ public class TokenReader extends UeberReader {
 						tokens.add(new Token(Token.Type.BANG));
 					}
 					break;
+				case '?':
+					read('?');
+					tokens.add(new Token(Token.Type.QUERY));
+					break;
 				case ':':
 					read(':');
 					read('=');

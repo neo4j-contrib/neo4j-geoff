@@ -27,6 +27,10 @@ package org.neo4j.geoff;
  */
 public interface Namespace {
 
+	public boolean isEnabled();
+
+	public void setEnabled(boolean enabled);
+
 	/**
 	 * Apply a single rule to this namespace.
 	 *
@@ -34,7 +38,7 @@ public interface Namespace {
 	 * @throws DependencyException if the rule contains an unsatisfied dependency
 	 * @throws IllegalRuleException if the rule content is deemed illegal
 	 */
-	public void apply(Rule rule) throws DependencyException, IllegalRuleException;
+	public void apply(Rule rule) throws DependencyException, IllegalRuleException, VampiricException;
 
 	/**
 	 * Apply a set of rules to this namespace. The order in which these rules are
@@ -44,6 +48,6 @@ public interface Namespace {
 	 * @throws DependencyException if dependencies cannot be resolved within the rule set
 	 * @throws IllegalRuleException if the content of any rule is deemed illegal
 	 */
-	public void apply(RuleSet rules) throws DependencyException, IllegalRuleException;
+	public void apply(RuleSet rules) throws DependencyException, IllegalRuleException, VampiricException;
 
 }

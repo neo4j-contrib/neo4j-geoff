@@ -64,6 +64,8 @@ public class GEOFFLoader<NS extends Namespace> {
 					throw new GEOFFLoadException("JSON parsing error on line " + lineNumber, e);
 				} catch (SyntaxError e) {
 					throw new GEOFFLoadException("Syntax error on line " + lineNumber, e);
+				} catch (VampiricException e) {
+					// nothing reflected - carry on for now, might log or raise warning at some point in future
 				}
 			} while (line != null);
 		} finally {
@@ -86,6 +88,8 @@ public class GEOFFLoader<NS extends Namespace> {
 			throw new GEOFFLoadException("Illegal rule", e);
 		} catch (SyntaxError e) {
 			throw new GEOFFLoadException("Syntax error", e);
+		} catch (VampiricException e) {
+			// nothing reflected - carry on for now, might log or raise warning at some point in future
 		}
 	}
 
