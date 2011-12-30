@@ -30,7 +30,7 @@ import java.util.Map;
 public class GEOFF {
 
 	// debug switch used for conditional compilation
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 
 	/**
 	 * Load a stream of GEOFF data from a Reader into a Neo4j GraphDatabaseService instance.

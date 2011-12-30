@@ -1,0 +1,45 @@
+##
+# Copyright (c) 2002-2011 "Neo Technology,"
+# Network Engine for Objects in Lund AB [http://neotechnology.com]
+#
+# This file is part of Neo4j.
+#
+# Neo4j is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Artist
+(bowie):=|Artists| {"name": "David Bowie"}
+?!(bowie)
+(bowie)
+(bowie)<=|Artists| {"name": "David Bowie"}
+?
+
+# Track
+(oddity):=|Track| {"name": "Space Oddity [Bowie]"}
+?!(oddity)
+(oddity)
+(oddity)<=|Track| {"name": "Space Oddity [Bowie]"}
+?
+(oddity)          {"name": "Space Oddity"}
+
+# Release history
+(bowie)-[:RELEASED]-!(oddity)
+(bowie)-[:RELEASED]->(oddity) {"release_date": "1969-09-06", "uk_position": 5, "uk_weeks": 14}
+(bowie)-[:RELEASED]->(oddity) {"release_date": "1975-10-11", "uk_position": 1, "uk_weeks": 10}
+
+# Award history
+(ivor):=|Awards|            {"name": "Ivor Novello Award"}
+?(ivor)
+(oddity)-[:AWARDED]->(ivor) {"year": 1969}
+?
