@@ -36,7 +36,6 @@ public class RuleSet {
 	public static RuleSet from(Map<String, Map<String, Object>> map) throws SyntaxError {
 		HashMap<String, Rule> rules = new HashMap<String, Rule>(map.size());
 		for(Map.Entry<String, Map<String, Object>> entry : map.entrySet()) {
-			System.out.println(entry.getKey() + "=" + entry.getValue());
 			rules.put(entry.getKey(), new Rule(new Descriptor(entry.getKey()), entry.getValue()));
 		}
 		return new RuleSet(new HashSet<Rule>(rules.values()));

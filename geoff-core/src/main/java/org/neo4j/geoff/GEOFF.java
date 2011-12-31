@@ -25,7 +25,6 @@ import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.List;
 import java.util.Map;
 
 public class GEOFF {
@@ -73,7 +72,7 @@ public class GEOFF {
 	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Iterable<List<?>> rules,
+			Iterable<String> rules,
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)

@@ -35,16 +35,16 @@ public class JSON {
 	 * @return a list of lists
 	 * @throws JSONException when all hope is gone...
 	 */
-	public static List<List<?>> toArrayOfArrays(String json)
+	public static List<String> toArrayOfStrings(String json)
 			throws JSONException {
 		if (json == null || json.isEmpty()) {
 			return null;
 		} else {
 			ObjectMapper mapper = new ObjectMapper();
 			try {
-				return (List<List<?>>) mapper.readValue(json, List.class);
+				return (List<String>) mapper.readValue(json, Object.class);
 			} catch (ClassCastException e) {
-				throw new JSONException("Unable to cast JSON to List<String>", e);
+				throw new JSONException("Unable to cast JSON to array", e);
 			} catch (IOException e) {
 				throw new JSONException("Unable to read JSON", e);
 			}

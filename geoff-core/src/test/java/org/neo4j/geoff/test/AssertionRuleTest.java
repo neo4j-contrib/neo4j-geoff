@@ -22,13 +22,9 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.*;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
 
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
