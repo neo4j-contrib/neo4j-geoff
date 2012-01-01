@@ -67,7 +67,7 @@ public class GeoffPluginTest implements GraphHolder
         Node i = data.get().get( "I" );
         //Representation result = testQuery( JSON.toObject( "{\"(Joe)\":{\"name\":\"Joe\"}}" ) );
 	    List<String> rules = JSON.toArrayOfStrings("[\"(Joe) {\\\"name\\\":\\\"Joe\\\"}\"]");
-	    plugin.apply(db, null, rules.toArray(new String[rules.size()]), null);
+	    plugin.loadFromArray(db, rules.toArray(new String[rules.size()]));
         expectNodes( 1 );
     }
 

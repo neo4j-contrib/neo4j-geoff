@@ -33,7 +33,9 @@ import static org.junit.Assert.assertTrue;
 
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 {
-    private static final String ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/apply";
+    private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.string";
+	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.array";
+	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.object";
 
 	@Test
     @Documented
@@ -46,12 +48,12 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
                 "\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
                 "\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
                 "]";
-	    String payload = "{\"ruleArray\":"  + geoff + "}";
+	    String payload = "{\"rules\":"  + geoff + "}";
 	    //System.out.println(payload);
 	    RESTDocsGenerator rdgen = gen.get();
 	    rdgen.expectedStatus(ClientResponse.Status.OK);
 	    rdgen.payload(payload);
-        RESTDocsGenerator.ResponseEntity re = rdgen.post( ENDPOINT );
+        RESTDocsGenerator.ResponseEntity re = rdgen.post(ARRAY_ENDPOINT);
         String response = re.entity();
         assertTrue( response.contains( "OK" ) );
         assertTrue(db.index().existsForNodes("People"));
@@ -70,12 +72,12 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
 				"}";
-		String payload = "{\"ruleSet\":"  + geoff + "}";
+		String payload = "{\"rules\":"  + geoff + "}";
 		//System.out.println(payload);
 		RESTDocsGenerator rdgen = gen.get();
 		rdgen.expectedStatus(ClientResponse.Status.OK);
 		rdgen.payload(payload);
-		RESTDocsGenerator.ResponseEntity re = rdgen.post( ENDPOINT );
+		RESTDocsGenerator.ResponseEntity re = rdgen.post(OBJECT_ENDPOINT);
 		String response = re.entity();
 		assertTrue( response.contains( "OK" ) );
 		assertTrue(db.index().existsForNodes("People"));

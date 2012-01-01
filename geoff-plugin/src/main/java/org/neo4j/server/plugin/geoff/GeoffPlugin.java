@@ -31,24 +31,58 @@ import java.util.Map;
 @Description("Plugin to handle GEOFF data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
-	@Description("Apply GEOFF rules to the database")
+	@Name("load.string")
+	@Description("Load GEOFF rules into the database")
 	@PluginTarget(GraphDatabaseService.class)
-	public String apply(
+	public String loadFromString(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load") @Parameter(name = "ruleString", optional = true) String ruleString,
-			@Description("GEOFF rules to load") @Parameter(name = "ruleArray", optional = true) String[] ruleArray,
-			@Description("GEOFF rules to load") @Parameter(name = "ruleSet", optional = true) Map ruleSet
+			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) String rules,
+			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
 	)
 			throws SyntaxException {
 		try {
-			if (ruleString != null && !ruleString.isEmpty()) {
-				GEOFF.loadIntoNeo4j(new StringReader(ruleString), graphDB, null);
+			if (rules != null && !rules.isEmpty()) {
+				GEOFF.loadIntoNeo4j(new StringReader(rules), graphDB, null);
 			}
-			if (ruleArray != null && ruleArray.length > 0) {
-				GEOFF.loadIntoNeo4j(Arrays.asList(ruleArray), graphDB, null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "OK";
+	}
+
+	@Name("load.array")
+	@Description("Load GEOFF rules into the database")
+	@PluginTarget(GraphDatabaseService.class)
+	public String loadFromArray(
+			@Source GraphDatabaseService graphDB,
+			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) String[] rules,
+			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
+	)
+			throws SyntaxException {
+		try {
+			if (rules != null && rules.length > 0) {
+				GEOFF.loadIntoNeo4j(Arrays.asList(rules), graphDB, null);
 			}
-			if (ruleSet != null && !ruleSet.isEmpty()) {
-				GEOFF.loadIntoNeo4j((Map<String, Map<String, Object>>) ruleSet, graphDB, null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "OK";
+	}
+
+	@Name("load.object")
+	@Description("Load GEOFF rules into the database")
+	@PluginTarget(GraphDatabaseService.class)
+	public String loadFromObject(
+			@Source GraphDatabaseService graphDB,
+			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) Map rules,
+			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
+	)
+			throws SyntaxException {
+		try {
+			if (rules != null && !rules.isEmpty()) {
+				GEOFF.loadIntoNeo4j((Map<String, Map<String, Object>>) rules, graphDB, null);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
