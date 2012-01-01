@@ -34,8 +34,8 @@ import static org.junit.Assert.assertTrue;
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 {
     private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.string";
-	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.array";
-	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.object";
+	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.list";
+	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.map";
 
 	@Test
     @Documented
@@ -71,21 +71,14 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
 				"}";
 		String payload = "{\"rules\":"  + geoff + "}";
-		//System.out.println(payload);
 		RESTDocsGenerator rdgen = gen.get();
 		rdgen.expectedStatus(ClientResponse.Status.OK);
 		rdgen.payload(payload);
 		RESTDocsGenerator.ResponseEntity re = rdgen.post(OBJECT_ENDPOINT);
 		String response = re.entity();
-		assertTrue( response.contains( "OK" ) );
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 	}
 
-	@Test
-	public void sleep() throws InterruptedException {
-		Thread.sleep(600000);
-	}
-	
 }

@@ -52,8 +52,8 @@ public class GeoffPlugin extends ServerPlugin {
 		return nodesFrom(out);
 	}
 
-	@Name("load.array")
-	@Description("Load GEOFF rules into the database from an array of rule strings")
+	@Name("load.list")
+	@Description("Load GEOFF rules into the database from a list of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
 	public Iterable<Node> loadFromArray(
 			@Source GraphDatabaseService graphDB,
@@ -70,7 +70,7 @@ public class GeoffPlugin extends ServerPlugin {
 		return nodesFrom(out);
 	}
 
-	@Name("load.object")
+	@Name("load.map")
 	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
 	@PluginTarget(GraphDatabaseService.class)
 	public Iterable<Node> loadFromObject(
