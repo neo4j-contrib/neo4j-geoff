@@ -33,8 +33,7 @@ import java.util.*;
 @Description("Plugin to handle GEOFF data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
-	// Would prefer to be able to to this by providing alternative Content-Type (application/geoff?)
-	@Name("load.string")
+	@Name("load_from_string")
 	@Description("Load GEOFF rules into the database from a newline-delimited string")
 	@PluginTarget(GraphDatabaseService.class)
 	public Iterable<Node> loadFromString(
@@ -52,10 +51,10 @@ public class GeoffPlugin extends ServerPlugin {
 		return nodesFrom(out);
 	}
 
-	@Name("load.list")
+	@Name("load_from_list")
 	@Description("Load GEOFF rules into the database from a list of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
-	public Iterable<Node> loadFromArray(
+	public Iterable<Node> loadFromList(
 			@Source GraphDatabaseService graphDB,
 			@Description("GEOFF rules to load")
 			@Parameter(name = "rules", optional = false) String[] rules,
@@ -70,10 +69,10 @@ public class GeoffPlugin extends ServerPlugin {
 		return nodesFrom(out);
 	}
 
-	@Name("load.map")
+	@Name("load_from_map")
 	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
 	@PluginTarget(GraphDatabaseService.class)
-	public Iterable<Node> loadFromObject(
+	public Iterable<Node> loadFromMap(
 			@Source GraphDatabaseService graphDB,
 			@Description("GEOFF rules to load")
 			@Parameter(name = "rules", optional = false) Map rules,

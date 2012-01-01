@@ -33,9 +33,9 @@ import static org.junit.Assert.assertTrue;
 
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 {
-    private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.string";
-	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.list";
-	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load.map";
+    private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_string";
+	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
+	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_map";
 
 	@Test
     @Documented
