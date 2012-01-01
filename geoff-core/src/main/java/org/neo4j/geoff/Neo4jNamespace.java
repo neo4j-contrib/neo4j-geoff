@@ -62,13 +62,19 @@ public class Neo4jNamespace implements Namespace {
 		if (params != null) {
 			// separate params into nodes and relationships
 			for (Map.Entry<String, ? extends PropertyContainer> param : params.entrySet()) {
-				if (param.getValue() instanceof Node) {
-					register(param.getKey(), (Node) param.getValue());
-				} else if (param.getValue() instanceof Relationship) {
-					register(param.getKey(), (Relationship) param.getValue());
+				String key = param.getKey();
+				boolean isNodeKey = key.startsWith("(") && key.endsWith(")");
+				boolean isRelKey = key.startsWith("[") && key.endsWith("]");
+				boolean isUntypedKey = !(isNodeKey || isRelKey);
+				if (isNodeKey || isRelKey) {
+					key = key.substring(1, key.length() - 1);
+				}
+				if (param.getValue() instanceof Node && (isNodeKey || isUntypedKey)) {
+					register(key, (Node) param.getValue());
+				} else if (param.getValue() instanceof Relationship && (isRelKey || isUntypedKey)) {
+					register(key, (Relationship) param.getValue());
 				} else {
-					// unexpected param type! should never happen :-)
-					throw new IllegalArgumentException("Unexpected parameter type: " + param.getClass());
+					throw new IllegalArgumentException(String.format("Illegal parameter '%s':%s ", key, param.getValue().getClass().getName()));
 				}
 			}
 		}

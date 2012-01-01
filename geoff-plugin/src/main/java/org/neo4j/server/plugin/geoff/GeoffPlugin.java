@@ -19,76 +19,132 @@
  */
 package org.neo4j.server.plugin.geoff;
 
-import org.neo4j.cypher.SyntaxException;
 import org.neo4j.geoff.GEOFF;
+import org.neo4j.geoff.GEOFFLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.server.plugins.*;
 
+import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 @Description("Plugin to handle GEOFF data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
+	// Would prefer to be able to to this by providing alternative Content-Type (application/geoff?)
 	@Name("load.string")
-	@Description("Load GEOFF rules into the database")
+	@Description("Load GEOFF rules into the database from a newline-delimited string")
 	@PluginTarget(GraphDatabaseService.class)
-	public String loadFromString(
+	public Iterable<Node> loadFromString(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) String rules,
-			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
+			@Description("GEOFF rules to load")
+			@Parameter(name = "rules", optional = false) String rules,
+			@Description("Named entity references to pass into load routine")
+			@Parameter(name = "params", optional = true) Map params
 	)
-			throws SyntaxException {
-		try {
-			if (rules != null && !rules.isEmpty()) {
-				GEOFF.loadIntoNeo4j(new StringReader(rules), graphDB, null);
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "OK";
+			throws GEOFFLoadException, IOException {
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+				new StringReader(rules), graphDB, resolvedParams(params, graphDB)
+		);
+		// since we are limited by return types of server plugins, return only unnamed set of nodes
+		return nodesFrom(out);
 	}
 
 	@Name("load.array")
-	@Description("Load GEOFF rules into the database")
+	@Description("Load GEOFF rules into the database from an array of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
-	public String loadFromArray(
+	public Iterable<Node> loadFromArray(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) String[] rules,
-			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
+			@Description("GEOFF rules to load")
+			@Parameter(name = "rules", optional = false) String[] rules,
+			@Description("Named entity references to pass into load routine")
+			@Parameter(name = "params", optional = true) Map params
 	)
-			throws SyntaxException {
-		try {
-			if (rules != null && rules.length > 0) {
-				GEOFF.loadIntoNeo4j(Arrays.asList(rules), graphDB, null);
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "OK";
+			throws GEOFFLoadException, IOException {
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+				Arrays.asList(rules), graphDB, resolvedParams(params, graphDB)
+		);
+		// since we are limited by return types of server plugins, return only unnamed set of nodes
+		return nodesFrom(out);
 	}
 
 	@Name("load.object")
-	@Description("Load GEOFF rules into the database")
+	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
 	@PluginTarget(GraphDatabaseService.class)
-	public String loadFromObject(
+	public Iterable<Node> loadFromObject(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load") @Parameter(name = "rules", optional = false) Map rules,
-			@Description("Named entity references to pass into load routine") @Parameter(name = "params", optional = true) Map params
+			@Description("GEOFF rules to load")
+			@Parameter(name = "rules", optional = false) Map rules,
+			@Description("Named entity references to pass into load routine")
+			@Parameter(name = "params", optional = true) Map params
 	)
-			throws SyntaxException {
+			throws GEOFFLoadException, IOException {
 		try {
-			if (rules != null && !rules.isEmpty()) {
-				GEOFF.loadIntoNeo4j((Map<String, Map<String, Object>>) rules, graphDB, null);
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+					(Map<String, Map<String, Object>>) rules, graphDB, resolvedParams(params, graphDB)
+			);
+			// since we are limited by return types of server plugins, return only unnamed set of nodes
+			return nodesFrom(out);
+		} catch (ClassCastException e) {
+			throw new GEOFFLoadException("Unable to cast rules to named map");
 		}
-		return "OK";
 	}
 
+	/**
+	 * Resolve supplied parameters against the specified database
+	 *
+	 * @param params
+	 * @param graphDB
+	 * @return
+	 * @throws GEOFFLoadException
+	 */
+	private static Map<String, PropertyContainer> resolvedParams(Map params, GraphDatabaseService graphDB)
+			throws GEOFFLoadException
+	{
+		if (params == null) return null;
+		HashMap<String, PropertyContainer> p2 = new HashMap<String, PropertyContainer>(params.size());
+		for (Object param : params.entrySet()) {
+			if (param instanceof Map.Entry) {
+				Map.Entry entry = (Map.Entry) param;
+				Object entryKey = entry.getKey();
+				Object entryValue = entry.getValue();
+				if (entryKey instanceof String && entryValue instanceof String) {
+					String key = (String) entryKey;
+					String value = (String) entryValue;
+					if (value.startsWith("/node/")) {
+						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(6))));
+					} else if (value.startsWith("/relationship/")) {
+						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(13))));
+					} else {
+						throw new GEOFFLoadException("Cannot resolve parameter: " + key);
+					}
+				} else {
+					throw new GEOFFLoadException("Cannot read parameters");
+				}
+			} else {
+				throw new GEOFFLoadException("Cannot read parameters");
+			}
+		}
+		return p2;
+	}
+	
+	/**
+	 * Extract nodes from set of named nodes and relationships into set of unnamed nodes
+	 *
+	 * @param entities named map of nodes and relationships
+	 * @return set of extracted nodes
+	 */
+	private static Set<Node> nodesFrom(Map<String, PropertyContainer> entities)
+	{
+		HashSet<Node> nodes = new HashSet<Node>(entities.size());
+		for (PropertyContainer entity : entities.values()) {
+			if(entity instanceof Node) {
+				nodes.add((Node) entity);
+			}
+		}
+		return nodes;
+	}
+	
 }

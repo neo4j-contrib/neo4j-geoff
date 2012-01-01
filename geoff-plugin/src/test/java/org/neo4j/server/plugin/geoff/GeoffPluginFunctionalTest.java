@@ -49,13 +49,11 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
                 "\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
                 "]";
 	    String payload = "{\"rules\":"  + geoff + "}";
-	    //System.out.println(payload);
 	    RESTDocsGenerator rdgen = gen.get();
 	    rdgen.expectedStatus(ClientResponse.Status.OK);
 	    rdgen.payload(payload);
         RESTDocsGenerator.ResponseEntity re = rdgen.post(ARRAY_ENDPOINT);
         String response = re.entity();
-        assertTrue( response.contains( "OK" ) );
         assertTrue(db.index().existsForNodes("People"));
         assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
         assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -85,4 +83,9 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 	}
 
+	@Test
+	public void sleep() throws InterruptedException {
+		Thread.sleep(600000);
+	}
+	
 }
