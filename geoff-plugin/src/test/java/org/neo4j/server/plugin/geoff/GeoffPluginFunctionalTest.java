@@ -26,43 +26,38 @@ import org.neo4j.kernel.impl.annotations.Documented;
 import org.neo4j.server.rest.AbstractRestFunctionalTestBase;
 import org.neo4j.server.rest.RESTDocsGenerator;
 
-import java.io.UnsupportedEncodingException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
-{
-    private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_string";
+public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
+	private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_string";
 	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
 	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_map";
 
 	@Test
-    @Documented
-    public void canLoadGEOFFRuleArray() throws UnsupportedEncodingException
-    {
-        GraphDatabaseService db = graphdb();
-        String geoff = "[" +
-                "\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
-                "\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
-                "\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
-                "\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
-                "]";
-	    String payload = "{\"rules\":"  + geoff + "}";
-	    RESTDocsGenerator rdgen = gen.get();
-	    rdgen.expectedStatus(ClientResponse.Status.OK);
-	    rdgen.payload(payload);
-        RESTDocsGenerator.ResponseEntity re = rdgen.post(ARRAY_ENDPOINT);
-        String response = re.entity();
-        assertTrue(db.index().existsForNodes("People"));
-        assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-        assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-    }
+	@Documented
+	public void canLoadGEOFFRuleArray() {
+		GraphDatabaseService db = graphdb();
+		String geoff = "[" +
+				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
+				"\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
+				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
+				"\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
+				"]";
+		String payload = "{\"rules\":" + geoff + "}";
+		RESTDocsGenerator rdgen = gen.get();
+		rdgen.expectedStatus(ClientResponse.Status.OK);
+		rdgen.payload(payload);
+		RESTDocsGenerator.ResponseEntity re = rdgen.post(ARRAY_ENDPOINT);
+		String response = re.entity();
+		assertTrue(db.index().existsForNodes("People"));
+		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
+		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+	}
 
 	@Test
 	@Documented
-	public void canLoadGEOFFRuleSet() throws UnsupportedEncodingException
-	{
+	public void canLoadGEOFFRuleSet() {
 		GraphDatabaseService db = graphdb();
 		String geoff = "{" +
 				"\"(doc)\": {\"name\": \"doctor\"}," +
@@ -70,7 +65,7 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
 				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
 				"}";
-		String payload = "{\"rules\":"  + geoff + "}";
+		String payload = "{\"rules\":" + geoff + "}";
 		RESTDocsGenerator rdgen = gen.get();
 		rdgen.expectedStatus(ClientResponse.Status.OK);
 		rdgen.payload(payload);
@@ -80,5 +75,12 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 	}
+
+	/*
+	@Test
+	public void sleep() throws InterruptedException {
+		Thread.sleep(600000);
+	}
+	*/
 
 }
