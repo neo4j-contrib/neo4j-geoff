@@ -226,7 +226,7 @@ public class Neo4jNamespace implements Namespace {
 	// N
 	private void includeNode(NodeToken node, Map<String, Object> data)
 			throws IllegalRuleException {
-		continueIfNamed(node);
+		failIfNotAllNamed(node);
 		if (this.nodes.containsKey(node.getName())) {
 			Node n = this.nodes.get(node.getName());
 			removeProperties(n);
@@ -240,9 +240,9 @@ public class Neo4jNamespace implements Namespace {
 
 	// R
 	private void includeRelationshipByName(RelToken rel, Map<String, Object> data) throws DependencyException, IllegalRuleException {
-		continueIfNamed(rel);
-		continueIfNotTyped(rel);
-		continueIfRegistered(rel);
+		failIfNotAllNamed(rel);
+		failIfTyped(rel);
+		failIfNotRegistered(rel);
 		Relationship r = this.relationships.get(rel.getName());
 		removeProperties(r);
 		addProperties(r, data);
@@ -254,12 +254,12 @@ public class Neo4jNamespace implements Namespace {
 		if (GEOFF.DEBUG) {
 			System.out.println("Including relationship by type \"N-R->N\"");
 		}
-		continueIfNamed(startNode, endNode);
-		continueIfRegistered(startNode, endNode);
+		failIfNotAllNamed(startNode, endNode);
+		failIfNotRegistered(startNode, endNode);
 		if (rel.hasName()) {
-			continueIfNotRegistered(rel);
+			failIfRegistered(rel);
 		}
-		continueIfTyped(rel);
+		failIfNotTyped(rel);
 		Relationship r = this.nodes.get(startNode.getName()).createRelationshipTo(
 				this.nodes.get(endNode.getName()),
 				DynamicRelationshipType.withName(rel.getType())
@@ -271,23 +271,48 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N^I
+	// behaviour depends on what already exists
 	private void includeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(node, index);
-		continueIfRegistered(node);
-		Node n = this.nodes.get(node.getName());
+		failIfNotAllNamed(node, index);
+		boolean nodeExists = this.nodes.containsKey(node.getName());
 		Index<Node> i = this.graphDB.index().forNodes(index.getName());
-		for(Map.Entry<String, Object> entry : data.entrySet()) {
-			i.add(n, entry.getKey(), entry.getValue());
+		for (Map.Entry<String, Object> entry : data.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			IndexHits<Node> hits = i.get(key, value);
+			if (nodeExists && hits.size() == 0) {
+				// node exists, index entry doesn't - add entry to index
+				Node n1 = this.nodes.get(node.getName());
+				i.add(n1, key, value);
+			} else if (nodeExists) {
+				// both exist - test if they match
+				Node n1 = this.nodes.get(node.getName());
+				Node n2 = hits.getSingle();
+				if (n1.getId() == n2.getId()) {
+					// same - no need to do anything
+				} else {
+					// different - add new index entry anyway
+					i.add(n1, key, value);
+				}
+			} else if (hits.size() == 0) {
+				// neither exist - create node and add to index
+				Node n1 = this.graphDB.createNode();
+				register(node.getName(), n1);
+				i.add(n1, key, value);
+			} else {
+				// index entry exists, node doesn't - reflect entry into node
+				register(node.getName(), hits.getSingle());
+			}
 		}
 	}
 
 	// R^I
 	private void includeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(rel, index);
-		continueIfNotTyped(rel);
-		continueIfRegistered(rel);
+		failIfNotAllNamed(rel, index);
+		failIfTyped(rel);
+		failIfNotRegistered(rel);
 		Relationship r = this.relationships.get(rel.getName());
 		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
@@ -303,35 +328,35 @@ public class Neo4jNamespace implements Namespace {
 	// !N
 	private void excludeNode(NodeToken node, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(node);
-		continueIfRegistered(node);
-		continueIfEmpty(data);
+		failIfNotAllNamed(node);
+		failIfNotRegistered(node);
+		failIfNotEmpty(data);
 		unregisterNode(node.getName()).delete();
 	}
 
 	// !R
 	private void excludeRelationshipByName(RelToken rel, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(rel);
-		continueIfNotTyped(rel);
-		continueIfRegistered(rel);
-		continueIfEmpty(data);
+		failIfNotAllNamed(rel);
+		failIfTyped(rel);
+		failIfNotRegistered(rel);
+		failIfNotEmpty(data);
 		unregisterRelationship(rel.getName()).delete();
 	}
 
 	// N-R-!N
 	private void excludeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfAtLeastOneNamed(startNode, endNode);
+		failIfNotAtLeastOneNamed(startNode, endNode);
 		if (startNode.hasName()) {
-			continueIfRegistered(startNode);
+			failIfNotRegistered(startNode);
 		}
 		if (endNode.hasName()) {
-			continueIfRegistered(endNode);
+			failIfNotRegistered(endNode);
 		}
-		continueIfNotNamed(rel);
-		continueIfTyped(rel);
-		continueIfEmpty(data);
+		failIfNamed(rel);
+		failIfNotTyped(rel);
+		failIfNotEmpty(data);
 		DynamicRelationshipType t = DynamicRelationshipType.withName(rel.getType());
 		if (startNode.hasName() && endNode.hasName()) {
 			// (A)-[:T]-!(B)
@@ -360,8 +385,8 @@ public class Neo4jNamespace implements Namespace {
 	// N'I
 	private void excludeNodeIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(node, index);
-		continueIfRegistered(node);
+		failIfNotAllNamed(node, index);
+		failIfNotRegistered(node);
 		Node n = this.nodes.get(node.getName());
 		Index<Node> i = this.graphDB.index().forNodes(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
@@ -372,9 +397,9 @@ public class Neo4jNamespace implements Namespace {
 	// R'I
 	private void excludeRelationshipIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(rel, index);
-		continueIfNotTyped(rel);
-		continueIfRegistered(rel);
+		failIfNotAllNamed(rel, index);
+		failIfTyped(rel);
+		failIfNotRegistered(rel);
 		Relationship r = this.relationships.get(rel.getName());
 		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
 		for(Map.Entry<String, Object> entry : data.entrySet()) {
@@ -398,12 +423,12 @@ public class Neo4jNamespace implements Namespace {
 	 */
 	private void reflectNodeFromRelationship(NodeToken intoNode, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(intoNode, rel);
-		continueIfExactlyOneStarred(startNode, endNode);
-		continueIfNotRegistered(intoNode);
-		continueIfNotNamed(startNode, endNode);
-		continueIfRegistered(rel);
-		continueIfEmpty(data);
+		failIfNotAllNamed(intoNode, rel);
+		failIfNotExactlyOneStarred(startNode, endNode);
+		failIfRegistered(intoNode);
+		failIfNamed(startNode, endNode);
+		failIfNotRegistered(rel);
+		failIfNotEmpty(data);
 		Relationship r = this.relationships.get(rel.getName());
 		if (startNode.isStarred()) {
 			register(intoNode.getName(), r.getStartNode());
@@ -425,18 +450,18 @@ public class Neo4jNamespace implements Namespace {
 	 */
 	private void reflectRelationshipFromRelationship(RelToken intoRel, NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException, VampiricException {
-		continueIfNamed(intoRel);
-		continueIfNotRegistered(intoRel);
-		continueIfAtLeastOneNamed(startNode, endNode);
+		failIfNotAllNamed(intoRel);
+		failIfRegistered(intoRel);
+		failIfNotAtLeastOneNamed(startNode, endNode);
 		if (startNode.hasName()) {
-			continueIfRegistered(startNode);
+			failIfNotRegistered(startNode);
 		}
 		if (endNode.hasName()) {
-			continueIfRegistered(endNode);
+			failIfNotRegistered(endNode);
 		}
-		continueIfNotNamed(rel);
-		continueIfTyped(rel);
-		continueIfEmpty(data);
+		failIfNamed(rel);
+		failIfNotTyped(rel);
+		failIfNotEmpty(data);
 		DynamicRelationshipType t = DynamicRelationshipType.withName(rel.getType());
 		if (startNode.hasName() && endNode.hasName()) {
 			// [R]:=(A)-[:T]->(B)
@@ -479,9 +504,9 @@ public class Neo4jNamespace implements Namespace {
 	 */
 	private void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
-		continueIfNamed(node, index);
-		continueIfNotRegistered(node);
-		continueIfHasExactlyOneEntry(data);
+		failIfNotAllNamed(node, index);
+		failIfRegistered(node);
+		failIfNotExactlyOneEntry(data);
 		Index<Node> i = this.graphDB.index().forNodes(index.getName());
 		IndexHits<Node> hits = null;
 		for (Map.Entry<String, Object> entry : data.entrySet()) {
@@ -508,10 +533,10 @@ public class Neo4jNamespace implements Namespace {
 	 */
 	private void reflectRelationshipFromIndexEntry(RelToken rel, IndexToken index, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException, VampiricException {
-		continueIfNamed(rel, index);
-		continueIfNotTyped(rel);
-		continueIfNotRegistered(rel);
-		continueIfHasExactlyOneEntry(data);
+		failIfNotAllNamed(rel, index);
+		failIfTyped(rel);
+		failIfRegistered(rel);
+		failIfNotExactlyOneEntry(data);
 		Index<Relationship> i = this.graphDB.index().forRelationships(index.getName());
 		IndexHits<Relationship> hits = null;
 		for (Map.Entry<String, Object> entry : data.entrySet()) {
@@ -589,7 +614,7 @@ public class Neo4jNamespace implements Namespace {
 
 	/* START OF RULE FORMAT VALIDATORS */
 
-	private void continueIfNamed(NameableToken... tokens) throws IllegalRuleException {
+	private void failIfNotAllNamed(NameableToken... tokens) throws IllegalRuleException {
 		for (NameableToken token : tokens) {
 			if (!token.hasName()) {
 				throw new IllegalRuleException("All entities must have a name");
@@ -597,7 +622,7 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void continueIfNotNamed(NameableToken... tokens) throws IllegalRuleException {
+	private void failIfNamed(NameableToken... tokens) throws IllegalRuleException {
 		for (NameableToken token : tokens) {
 			if (token.hasName()) {
 				throw new IllegalRuleException("Entities cannot have a name");
@@ -605,7 +630,7 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void continueIfAtLeastOneNamed(NameableToken... tokens) throws IllegalRuleException {
+	private void failIfNotAtLeastOneNamed(NameableToken... tokens) throws IllegalRuleException {
 		for (NameableToken nameable : tokens) {
 			if (nameable.hasName()) {
 				return;
@@ -614,7 +639,7 @@ public class Neo4jNamespace implements Namespace {
 		throw new IllegalRuleException("At least one entity must have a name");
 	}
 
-	private void continueIfExactlyOneStarred(NodeToken... tokens) throws IllegalRuleException {
+	private void failIfNotExactlyOneStarred(NodeToken... tokens) throws IllegalRuleException {
 		int starCount = 0;
 		for (NameableToken nameable : tokens) {
 			if (nameable.isStarred()) {
@@ -626,25 +651,25 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void continueIfTyped(RelToken relToken) throws IllegalRuleException {
+	private void failIfNotTyped(RelToken relToken) throws IllegalRuleException {
 		if (!relToken.hasType()) {
 			throw new IllegalRuleException("Relationship must have a type: " + relToken.toString());
 		}
 	}
 
-	private void continueIfNotTyped(RelToken relToken) throws IllegalRuleException {
+	private void failIfTyped(RelToken relToken) throws IllegalRuleException {
 		if (relToken.hasType()) {
 			throw new IllegalRuleException("Relationship cannot have a type: " + relToken.toString());
 		}
 	}
 
-	private void continueIfEmpty(Map map) throws IllegalRuleException {
+	private void failIfNotEmpty(Map map) throws IllegalRuleException {
 		if (!map.isEmpty()) {
 			throw new IllegalRuleException("Data cannot be supplied with this rule");
 		}
 	}
 
-	private void continueIfHasExactlyOneEntry(Map map) throws IllegalRuleException {
+	private void failIfNotExactlyOneEntry(Map map) throws IllegalRuleException {
 		if (map.size() != 1) {
 			throw new IllegalRuleException("Map must contain exactly one key:value pair");
 		}
@@ -655,7 +680,7 @@ public class Neo4jNamespace implements Namespace {
 
 	/* START OF DEPENDENCY VALIDATORS */
 
-	private void continueIfRegistered(NodeToken... nodes) throws DependencyException {
+	private void failIfNotRegistered(NodeToken... nodes) throws DependencyException {
 		for (NodeToken node : nodes) {
 			if (!this.nodes.containsKey(node.getName())) {
 				throw new DependencyException("Node not found: " + node.toString());
@@ -663,19 +688,19 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void continueIfNotRegistered(NodeToken node) throws DependencyException {
+	private void failIfRegistered(NodeToken node) throws DependencyException {
 		if (this.nodes.containsKey(node.getName())) {
 			throw new DependencyException("Node already exists: " + node.toString());
 		}
 	}
 
-	private void continueIfRegistered(RelToken rel) throws DependencyException {
+	private void failIfNotRegistered(RelToken rel) throws DependencyException {
 		if (!this.relationships.containsKey(rel.getName())) {
 			throw new DependencyException("Relationship not found: " + rel.toString());
 		}
 	}
 
-	private void continueIfNotRegistered(RelToken rel) throws DependencyException {
+	private void failIfRegistered(RelToken rel) throws DependencyException {
 		if (this.relationships.containsKey(rel.getName())) {
 			throw new DependencyException("Relationship already exists: " + rel.toString());
 		}
