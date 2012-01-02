@@ -20,17 +20,9 @@
 
 # Artist
 (bowie):=|Artists| {"name": "David Bowie"}
-?!(bowie)
-(bowie)
-(bowie)<=|Artists| {"name": "David Bowie"}
-?
 
 # Track
 (oddity):=|Track| {"name": "Space Oddity [Bowie]"}
-?!(oddity)
-(oddity)
-(oddity)<=|Track| {"name": "Space Oddity [Bowie]"}
-?
 (oddity)          {"name": "Space Oddity"}
 
 # Release history
@@ -40,6 +32,4 @@
 
 # Award history
 (ivor):=|Awards|            {"name": "Ivor Novello Award"}
-?(ivor)
 (oddity)-[:AWARDED]->(ivor) {"year": 1969}
-?

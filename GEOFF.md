@@ -193,8 +193,9 @@ GEOFF source. These extractions may traverse known nodes and relationships or ma
 
 #### Description
 An index reflection rule looks up a value within a database index and assigns the entity discovered to a name within
-the current GEOFF namespace. The following example extracts the node `(bert)` from the `|Scientists|` index where the
-entry key and value equal "name" and "Einstein" respectively:
+the current GEOFF namespace. If no entry exists, a new node is created and added to the index. The following example
+extracts the node `(bert)` from the `|Scientists|` index where the entry key and value equal "name" and "Einstein"
+respectively:
 
 ```
 (bert):=|Scientists|    {"name": "Einstein"}
@@ -202,55 +203,13 @@ entry key and value equal "name" and "Einstein" respectively:
 
 Such a rule must have *exactly one* key:value pair specified.
 
-## 4 Assertion Rules
-
-### Synopsis
-```
-# apply following rules iff node N is defined
-?(A)
-# apply following rules iff rel R is defined
-?[R]
-# apply following rules iff node N is not defined
-?!(A)
-# apply following rules iff rel R is not defined
-?![R]
-# apply following rules always
-?
-```
-
-Sometimes rules should only apply under certain conditions. Within GEOFF it is possible to specify "if"-style
-conditions by use of the question mark `?` character. Subsequent rules following such a condition will then be applied
-or ignored depending on whether or not a specific entity has been defined within the current namespace. This will
-continue until another assertion rule is encountered, after which a new condition will apply. A solitary `?` will
-effectively "reset" any previous condition and therefore (re-)enable application of rules from that point onwards.
-
-The following example illustrates how to test the `|Scientists|` index for an entry and if none is found, create one:
-
-```
-# reflect (bert) from |Scientists| where name = "Einstein" (if possible)
-(bert):=|Scientists| {"name": "Einstein"}
-# if (bert) is not defined (i.e. did not exist within the index reflection above)...
-?!(bert)
-# ...create a new empty node
-(bert)
-# ...and add it to |Scientists|
-(bert)<=|Scientists| {"name": "Einstein"}
-# reset condition (can be thought of as an "end if")
-?
-# assign properties to (bert) (which should now definitely exist one way or the other!)
-(bert)               {"name": "Albert Einstein"}
-```
-
-Assertions cannot be nested and each one encountered will override the previous assertion. Assertions within *rule
-sets* (see below) are ignored.
-
-## 5 Inputs and Outputs
+## 4 Inputs and Outputs
 
 A GEOFF parser for loading data can allow further inputs and outputs, beside the rules themselves. For input,
 parameters may be supplied which reference existing graph nodes or relationships; for output, a collection of all
 entity references is returned.
 
-### 5.1 Load Parameters
+### 4.1 Load Parameters
 
 The rules described above all deal with entities which are defined within an earlier rule. Sometimes it is desirable to
 refer to pre-existing nodes and relationships however, and this can be achieved through use of *load parameters*. Such
@@ -275,18 +234,18 @@ params.put("bert", albertEinsteinNode);
 GEOFF.loadIntoNeo4j(sourceReader, graphDB, params);
 ```
 
-### 5.2 Return Values
+### 4.2 Return Values
 
 *(coming soon)*
 
-## 6 Other Syntax
+## 5 Other Syntax
 
 *(coming soon)*
 
-### 6.1 Rule Sets
+### 5.1 Rule Sets
 
 *(coming soon)*
 
-### 6.2 Comments and Spacing
+### 5.2 Comments and Spacing
 
 *(coming soon)*

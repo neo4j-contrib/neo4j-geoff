@@ -478,7 +478,7 @@ public class Neo4jNamespace implements Namespace {
 	 *
 	 */
 	private void reflectNodeFromIndexEntry(NodeToken node, IndexToken index, Map<String, Object> data)
-			throws DependencyException, IllegalRuleException, VampiricException {
+			throws DependencyException, IllegalRuleException {
 		continueIfNamed(node, index);
 		continueIfNotRegistered(node);
 		continueIfHasExactlyOneEntry(data);
@@ -488,7 +488,12 @@ public class Neo4jNamespace implements Namespace {
 			hits = i.get(entry.getKey(), entry.getValue());
 		}
 		if (hits == null || hits.size() == 0) {
-			throw new VampiricException("No index entry to reflect");
+			// no index entry found so create node and add to index
+			Node n = this.graphDB.createNode();
+			register(node.getName(), n);
+			for(Map.Entry<String, Object> entry : data.entrySet()) {
+				i.add(n, entry.getKey(), entry.getValue());
+			}
 		} else {
 			register(node.getName(), hits.getSingle());
 		}

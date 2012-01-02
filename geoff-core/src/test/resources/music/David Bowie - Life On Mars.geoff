@@ -20,17 +20,9 @@
 
 # Artist
 (bowie):=|Artists| {"name": "David Bowie"}
-?!(bowie)
-(bowie)
-(bowie)<=|Artists| {"name": "David Bowie"}
-?
 
 # Track
 (mars):=|Track| {"name": "Life On Mars? [Bowie]"}
-?!(mars)
-(mars)
-(mars)<=|Track| {"name": "Life On Mars? [Bowie]"}
-?
 (mars)          {"name": "Life On Mars?"}
 
 # Release history
