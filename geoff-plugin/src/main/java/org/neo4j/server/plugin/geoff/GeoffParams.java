@@ -19,7 +19,6 @@
  */
 package org.neo4j.server.plugin.geoff;
 
-import org.neo4j.geoff.GEOFFLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
@@ -39,10 +38,8 @@ public abstract class GeoffParams {
 	 * @param params
 	 * @param graphDB
 	 * @return
-	 * @throws org.neo4j.geoff.GEOFFLoadException
 	 */
 	public static Map<String, PropertyContainer> toEntities(Map params, GraphDatabaseService graphDB)
-			throws GEOFFLoadException
 	{
 		if (params == null) return null;
 		HashMap<String, PropertyContainer> p2 = new HashMap<String, PropertyContainer>(params.size());
@@ -59,13 +56,13 @@ public abstract class GeoffParams {
 					} else if (value.startsWith("/relationship/")) {
 						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(13))));
 					} else {
-						throw new GEOFFLoadException("Cannot resolve parameter: " + key);
+						throw new IllegalArgumentException("Cannot resolve parameter: " + key);
 					}
 				} else {
-					throw new GEOFFLoadException("Cannot read parameters");
+					throw new IllegalArgumentException("Cannot read parameters");
 				}
 			} else {
-				throw new GEOFFLoadException("Cannot read parameters");
+				throw new IllegalArgumentException("Cannot read parameters");
 			}
 		}
 		return p2;

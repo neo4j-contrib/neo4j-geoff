@@ -22,14 +22,15 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.GEOFF;
+import org.neo4j.geoff.Rule;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -52,86 +53,14 @@ public class GraphDescriptionTest {
 	}
 
 	@Test
-	public void canCreateGraphFromSingleRuleSet() throws Exception {
-		Reader reader = new StringReader("{" +
-				"\"(doc)\": {\"name\": \"doctor\"}," +
-				"\"(dal)\": {\"name\": \"dalek\"}," +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
-				"}");
-		GEOFF.loadIntoNeo4j(reader, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test
-	public void canCreateGraphFromRuleSetInUnexpectedOrder() throws Exception {
-		Reader reader = new StringReader("{" +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
-				"\"(doc)\": {\"name\": \"doctor\"}," +
-				"\"(dal)\": {\"name\": \"dalek\"}" +
-				"}");
-		GEOFF.loadIntoNeo4j(reader, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test
-	public void canCreateGraphFromOrderedMap() throws Exception {
-		TreeMap<String, Object> props;
-		TreeMap<String, Map<String, Object>> map = new TreeMap<String, Map<String, Object>>();
-		props = new TreeMap<String, Object>();
-		props.put("name", "doctor");
-		map.put("(doc)", props);
-		props = new TreeMap<String, Object>();
-		props.put("name", "dalek");
-		map.put("(dal)", props);
-		props = new TreeMap<String, Object>();
-		props.put("since", "forever");
-		map.put("(doc)-[:ENEMY_OF]->(dal)", props);
-		props = new TreeMap<String, Object>();
-		props.put("name", "The Doctor");
-		map.put("(doc)<=|People|", props);
-		GEOFF.loadIntoNeo4j(map, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test
-	public void canCreateGraphFromUnorderedMap() throws Exception {
-		HashMap<String, Object> props;
-		HashMap<String, Map<String, Object>> map = new HashMap<String, Map<String, Object>>();
-		props = new HashMap<String, Object>();
-		props.put("since", "forever");
-		map.put("(doc)-[:ENEMY_OF]->(dal)", props);
-		props = new HashMap<String, Object>();
-		props.put("name", "The Doctor");
-		map.put("(doc)<=|People|", props);
-		props = new HashMap<String, Object>();
-		props.put("name", "doctor");
-		map.put("(doc)", props);
-		props = new HashMap<String, Object>();
-		props.put("name", "dalek");
-		map.put("(dal)", props);
-		GEOFF.loadIntoNeo4j(map, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test
 	public void canCreateGraphWithHookToReferenceNode() throws Exception {
-		Reader reader = new StringReader("{" +
-				"\"(doc)\": {\"name\": \"doctor\"}," +
-				"\"(dal)\": {\"name\": \"dalek\"}," +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}," +
-				"\"(ref)-[:TIMELORD]->(doc)\":     null" +
-				"}");
+		Reader reader = new StringReader("[" +
+				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
+				"\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
+				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
+				"\"(doc)<=|People|     {\\\"name\\\": \\\"The Doctor\\\"}\"," +
+				"\"(ref)-[:TIMELORD]->(doc)\"" +
+				"]");
 		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);
 		hooks.put("ref", db.getReferenceNode());
 		GEOFF.loadIntoNeo4j(reader, db, hooks);
@@ -159,7 +88,7 @@ public class GraphDescriptionTest {
 				"(bar) {\"position\": \"south-east\"}\r\n" +
 				"(one) {\"position\": \"north-west\"}\r\n" +
 				"(two) {\"position\": \"south-west\"}\r\n" +
-				"{\"(foo)-[:SOUTH]->(bar)\": null, \"(bar)-[:WEST]->(two)\": null, \"(two)-[:NORTH]->(one)\": null, \"(one)-[:EAST]->(foo)\": null}\r\n"
+				"[\"(foo)-[:SOUTH]->(bar)\", \"(bar)-[:WEST]->(two)\", \"(two)-[:NORTH]->(one)\", \"(one)-[:EAST]->(foo)\"]\r\n"
 		);
 		Transaction tx = db.beginTx();
 		Node nodeOne = db.createNode();
@@ -231,6 +160,17 @@ public class GraphDescriptionTest {
 		assertFalse(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 	}
 
+	@Test
+	public void canLoadRulesCreatedFromValues() throws Exception {
+		ArrayList<Rule> rules = new ArrayList<Rule>();
+		rules.add(Rule.fromValues("(doc)", "name", "doctor", "age", 991));
+		rules.add(Rule.fromValues("(doc)<=|People|", "name", "The Doctor"));
+		GEOFF.loadIntoNeo4j(rules, db, null);
+		assertTrue(db.index().existsForNodes("People"));
+		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
+		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		db = new ImpermanentGraphDatabase();

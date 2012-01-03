@@ -24,10 +24,10 @@ package org.neo4j.geoff;
  * Vampire. No reflection. Geddit?! *sigh*
  *
  */
-public class VampiricException extends Exception {
+public class VampiricException extends GEOFFLoadException {
 
-	public VampiricException(String s) {
-		super(s);
+	VampiricException(int ruleNumber, String s) {
+		super(ruleNumber, s);
 	}
 
 }

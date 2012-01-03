@@ -68,25 +68,25 @@ public class GeoffPlugin extends ServerPlugin {
 		return new GeoffResultRepresentation(out);
 	}
 
-	@Name("load_from_map")
-	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
-	@PluginTarget(GraphDatabaseService.class)
-	public Representation loadFromMap(
-			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load")
-			@Parameter(name = "rules", optional = false) Map rules,
-			@Description("Named entity references to pass into load routine")
-			@Parameter(name = "params", optional = true) Map params
-	)
-			throws GEOFFLoadException, IOException {
-		try {
-			Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
-					(Map<String, Map<String, Object>>) rules, graphDB, GeoffParams.toEntities(params, graphDB)
-			);
-			return new GeoffResultRepresentation(out);
-		} catch (ClassCastException e) {
-			throw new GEOFFLoadException("Unable to cast rules to named map");
-		}
-	}
+//	@Name("load_from_map")
+//	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
+//	@PluginTarget(GraphDatabaseService.class)
+//	public Representation loadFromMap(
+//			@Source GraphDatabaseService graphDB,
+//			@Description("GEOFF rules to load")
+//			@Parameter(name = "rules", optional = false) Map rules,
+//			@Description("Named entity references to pass into load routine")
+//			@Parameter(name = "params", optional = true) Map params
+//	)
+//			throws GEOFFLoadException, IOException {
+//		try {
+//			Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+//					(Map<String, Map<String, Object>>) rules, graphDB, GeoffParams.toEntities(params, graphDB)
+//			);
+//			return new GeoffResultRepresentation(out);
+//		} catch (ClassCastException e) {
+//			throw new GEOFFLoadException("Unable to cast rules to named map");
+//		}
+//	}
 
 }

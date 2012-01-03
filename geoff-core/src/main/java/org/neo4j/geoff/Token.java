@@ -29,7 +29,6 @@ public class Token {
 		DASH('-'),
 		ARROW('>'),
 		BANG('!'),
-		QUERY('?'),
 		REFLECTS('='),
 		INCLUDED_IN('^'),
 		EXCLUDED_FROM('\'');

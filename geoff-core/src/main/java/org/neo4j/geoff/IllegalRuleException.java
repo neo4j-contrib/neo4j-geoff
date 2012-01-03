@@ -19,10 +19,10 @@
  */
 package org.neo4j.geoff;
 
-public class IllegalRuleException extends Exception {
+public class IllegalRuleException extends GEOFFLoadException {
 
-	public IllegalRuleException(String s) {
-		super(s);
+	IllegalRuleException(int ruleNumber, String s) {
+		super(ruleNumber, s);
 	}
 
 }

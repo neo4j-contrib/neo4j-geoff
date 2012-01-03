@@ -19,6 +19,8 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.util.SyntaxError;
+
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -34,7 +36,7 @@ public class Descriptor {
 		try {
 			this.tokens = reader.readTokens();
 		} catch(IOException e) {
-			throw new SyntaxError();
+			throw new IllegalArgumentException("Unparsable descriptor text", e);
 		}
 		StringBuilder str = new StringBuilder(tokens.length);
 		for(Token token : tokens) {

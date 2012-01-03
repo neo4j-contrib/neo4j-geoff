@@ -35,7 +35,7 @@ public class JSON {
 	 * @return a list of lists
 	 * @throws JSONException when all hope is gone...
 	 */
-	public static List<String> toArrayOfStrings(String json)
+	public static List<String> toListOfStrings(String json)
 			throws JSONException {
 		if (json == null || json.isEmpty()) {
 			return null;

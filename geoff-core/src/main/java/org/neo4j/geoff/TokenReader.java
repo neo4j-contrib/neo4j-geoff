@@ -19,6 +19,7 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.util.SyntaxError;
 import org.neo4j.geoff.util.UeberReader;
 
 import java.io.IOException;
@@ -69,19 +70,15 @@ public class TokenReader extends UeberReader {
 						tokens.add(new Token(Token.Type.BANG));
 					}
 					break;
-				case '?':
-					read('?');
-					tokens.add(new Token(Token.Type.QUERY));
-					break;
 				case ':':
 					read(':');
 					read('=');
 					tokens.add(new Token(Token.Type.REFLECTS));
 					break;
 				default:
-					throw new SyntaxError();
+					throw new UnexpectedCharacterException(ch);
 				}
-			} catch(EndOfStreamException e) {
+			} catch (EndOfStreamException e) {
 				done = true;
 			} catch (UnexpectedCharacterException e) {
 				throw new SyntaxError("Unexpected character encountered in token", e);

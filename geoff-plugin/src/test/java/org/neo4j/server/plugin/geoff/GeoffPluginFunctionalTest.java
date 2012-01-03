@@ -22,7 +22,6 @@ package org.neo4j.server.plugin.geoff;
 import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.impl.annotations.Documented;
 import org.neo4j.server.rest.AbstractRestFunctionalTestBase;
 import org.neo4j.server.rest.RESTDocsGenerator;
 
@@ -31,12 +30,10 @@ import static org.junit.Assert.assertTrue;
 
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
 	private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_string";
-	private static final String ARRAY_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
-	private static final String OBJECT_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_map";
+	private static final String LIST_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
 
 	@Test
-	@Documented
-	public void canLoadGEOFFRuleArray() {
+	public void canLoadGEOFFRuleList() {
 		GraphDatabaseService db = graphdb();
 		String geoff = "[" +
 				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
@@ -48,28 +45,7 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
 		RESTDocsGenerator rdgen = gen.get();
 		rdgen.expectedStatus(ClientResponse.Status.OK);
 		rdgen.payload(payload);
-		RESTDocsGenerator.ResponseEntity re = rdgen.post(ARRAY_ENDPOINT);
-		String response = re.entity();
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-
-	@Test
-	@Documented
-	public void canLoadGEOFFRuleSet() {
-		GraphDatabaseService db = graphdb();
-		String geoff = "{" +
-				"\"(doc)\": {\"name\": \"doctor\"}," +
-				"\"(dal)\": {\"name\": \"dalek\"}," +
-				"\"(doc)-[:ENEMY_OF]->(dal)\": {\"since\":\"forever\"}," +
-				"\"(doc)<=|People|\":     {\"name\": \"The Doctor\"}" +
-				"}";
-		String payload = "{\"rules\":" + geoff + "}";
-		RESTDocsGenerator rdgen = gen.get();
-		rdgen.expectedStatus(ClientResponse.Status.OK);
-		rdgen.payload(payload);
-		RESTDocsGenerator.ResponseEntity re = rdgen.post(OBJECT_ENDPOINT);
+		RESTDocsGenerator.ResponseEntity re = rdgen.post(LIST_ENDPOINT);
 		String response = re.entity();
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());

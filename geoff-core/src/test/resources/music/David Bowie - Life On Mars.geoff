@@ -19,12 +19,11 @@
 #
 
 # Artist
-(bowie):=|Artists| {"name": "David Bowie"}
+(bowie)<=|Artists| {"name": "David Bowie"}
 
 # Track
-(mars):=|Track| {"name": "Life On Mars? [Bowie]"}
+(mars)<=|Track| {"name": "Life On Mars? [Bowie]"}
 (mars)          {"name": "Life On Mars?"}
 
 # Release history
-(bowie)-[:RELEASED]-!(mars)
 (bowie)-[:RELEASED]->(mars) {"release_date": "1973-06-30", "uk_position": 3, "uk_weeks": 13}

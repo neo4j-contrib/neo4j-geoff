@@ -35,7 +35,7 @@ public class GEOFF {
 	/**
 	 * Load a stream of GEOFF data from a Reader into a Neo4j GraphDatabaseService instance.
 	 *
-	 * @param reader the Reader from which to read GEOFF rules
+	 * @param ruleReader the Reader from which to read GEOFF rules
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return set of named entities used during load
@@ -43,7 +43,7 @@ public class GEOFF {
 	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Reader reader,
+			Reader ruleReader,
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)
@@ -51,7 +51,7 @@ public class GEOFF {
 		Transaction tx = graphDB.beginTx();
 		try {
 			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
-					reader,
+					ruleReader,
 					new Neo4jNamespace(graphDB, params)
 			);
 			tx.success();
@@ -72,36 +72,7 @@ public class GEOFF {
 	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Iterable<String> rules,
-			GraphDatabaseService graphDB,
-			Map<String, ? extends PropertyContainer> params
-	)
-			throws GEOFFLoadException, IOException {
-		Transaction tx = graphDB.beginTx();
-		try {
-			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
-					rules,
-					new Neo4jNamespace(graphDB, params)
-			);
-			tx.success();
-			return loader.getNamespace().getEntities();
-		} finally {
-			tx.finish();
-		}
-	}
-
-	/**
-	 * Load GEOFF data from a Map of Rules (Descriptor:Data pairs) into a Neo4j GraphDatabaseService instance.
-	 *
-	 * @param rules the set of GEOFF rules to load
-	 * @param graphDB the database instance to load into
-	 * @param params named Nodes and Relationships which can be referenced by Rules
-	 * @return set of named entities used during load
-	 * @throws GEOFFLoadException if a parsing error occurs
-	 * @throws IOException if a read failure occurs
-	 */
-	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Map<String, Map<String, Object>> rules,
+			Iterable<?> rules,
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)

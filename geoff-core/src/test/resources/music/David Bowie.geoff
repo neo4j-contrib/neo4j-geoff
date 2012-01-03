@@ -19,5 +19,5 @@
 #
 
 # Artist
-(bowie):=|Artists| {"name": "David Bowie"}
+(bowie)<=|Artists| {"name": "David Bowie"}
 (bowie)            {"name": "David Bowie", "real_name": "David Robert Jones", "date_of_birth": "1947-01-08"}

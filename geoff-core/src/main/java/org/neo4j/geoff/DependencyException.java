@@ -19,10 +19,10 @@
  */
 package org.neo4j.geoff;
 
-public class DependencyException extends Exception {
+public class DependencyException extends GEOFFLoadException {
 
-	public DependencyException(String s) {
-		super(s);
+	public DependencyException(int ruleNumber, String s) {
+		super(ruleNumber, s);
 	}
 
 }

@@ -22,12 +22,25 @@ package org.neo4j.geoff;
 
 public class GEOFFLoadException extends Exception {
 
-	public GEOFFLoadException(String s) {
+	private final Integer ruleNumber;
+
+	GEOFFLoadException(int ruleNumber, String s) {
 		super(s);
+		this.ruleNumber = ruleNumber;
 	}
 
-	public GEOFFLoadException(String s, Throwable throwable) {
+	GEOFFLoadException(int ruleNumber, String s, Throwable throwable) {
 		super(s, throwable);
+		this.ruleNumber = ruleNumber;
 	}
 
+	GEOFFLoadException(String s, Throwable throwable) {
+		super(s, throwable);
+		this.ruleNumber = null;
+	}
+
+	public int getRuleNumber() {
+		return this.ruleNumber;
+	}
+	
 }

@@ -21,8 +21,11 @@ package org.neo4j.geoff;
 
 import org.neo4j.geoff.util.JSON;
 import org.neo4j.geoff.util.JSONException;
+import org.neo4j.geoff.util.SyntaxError;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,6 +34,14 @@ import java.util.Map;
  */
 public class Rule {
 
+	public static Rule fromValues(String descriptor, Object... data) throws SyntaxError {
+		HashMap<String, Object> dataMap = new HashMap<String, Object>(data.length / 2);
+		for (int i = 0; i < data.length; i += 2) {
+			dataMap.put(data[i].toString(), data[i + 1]);
+		}
+		return new Rule(new Descriptor(descriptor), dataMap);
+	}
+	
 	public static Rule from(String text) throws JSONException, SyntaxError {
 		if (GEOFF.DEBUG) {
 			System.out.println("Parsing rule: " + text);
@@ -43,6 +54,15 @@ public class Rule {
 		}
 	}
 
+	public static List<Rule> listFrom(String text) throws JSONException, SyntaxError {
+		List<String> strings = JSON.toListOfStrings(text);
+		ArrayList<Rule> rules = new ArrayList<Rule>(strings.size());
+		for(String string : strings) {
+			rules.add(Rule.from(string));
+		}
+		return rules;
+	}
+
 	private final Descriptor descriptor;
 	private final Map<String, Object> data;
 
@@ -53,10 +73,6 @@ public class Rule {
 		} else {
 			this.data = data;
 		}
-	}
-
-	public boolean isAssertion() {
-		return this.descriptor.getToken(0).getTokenType() == Token.Type.QUERY;
 	}
 
 	public Descriptor getDescriptor() {

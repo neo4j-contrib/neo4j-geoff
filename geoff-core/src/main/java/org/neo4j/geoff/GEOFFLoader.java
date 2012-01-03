@@ -20,117 +20,119 @@
 package org.neo4j.geoff;
 
 import org.neo4j.geoff.util.JSONException;
+import org.neo4j.geoff.util.SyntaxError;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Map;
+import java.io.StringReader;
 
 public class GEOFFLoader<NS extends Namespace> {
 
 	private final NS namespace;
-
-	public GEOFFLoader(Reader reader, NS namespace)
+	
+	NS getNamespace() {
+		return this.namespace;
+	}
+	
+	GEOFFLoader(Reader ruleReader, NS namespace)
 			throws IOException, GEOFFLoadException {
-		BufferedReader bufferedReader = new BufferedReader(reader);
 		this.namespace = namespace;
-		int lineNumber = 0;
-		String line;
-		Rule rule;
-		try {
-			// iterate through every line in the source data
-			do {
-				line = bufferedReader.readLine();
-				lineNumber++;
-				try {
-					if (line == null || line.trim().isEmpty()) {
-						// blank line;
-					} else if (line.charAt(0) == '#') {
-						// comment
-					} else if (line.charAt(0) == '{') {
-						// TODO: allow for multi-line JSON
-						RuleSet ruleSet = RuleSet.from(line);
-						this.namespace.apply(ruleSet);
-					} else {
-						rule = Rule.from(line);
-						// add the described data to the namespace
-						this.namespace.apply(rule);
-					}
-				} catch (DependencyException e) {
-					throw new GEOFFLoadException("Failed dependency on line " + lineNumber, e);
-				} catch (IllegalRuleException e) {
-					throw new GEOFFLoadException("Illegal rule encountered on line " + lineNumber, e);
-				} catch (JSONException e) {
-					throw new GEOFFLoadException("JSON parsing error on line " + lineNumber, e);
-				} catch (SyntaxError e) {
-					throw new GEOFFLoadException("Syntax error on line " + lineNumber, e);
-				} catch (VampiricException e) {
-					// nothing reflected - carry on for now, might log or raise warning at some point in future
-				}
-			} while (line != null);
-		} finally {
-			bufferedReader.close();
-		}
+		load(ruleReader);
 	}
 
-	public GEOFFLoader(Iterable<String> rules, NS namespace)
+	GEOFFLoader(Iterable<?> rules, NS namespace)
 			throws IOException, GEOFFLoadException {
 		this.namespace = namespace;
-		int lineNumber = 0;
-		Rule rule;
-		// iterate through every line in the source data
-		for(String line : rules) {
-			lineNumber++;
-			try {
-				if (line == null || line.trim().isEmpty()) {
-					// blank line;
-				} else if (line.charAt(0) == '#') {
-					// comment
-				} else if (line.charAt(0) == '{') {
-					// TODO: allow for multi-line JSON
-					RuleSet ruleSet = RuleSet.from(line);
-					this.namespace.apply(ruleSet);
-				} else {
-					rule = Rule.from(line);
-					// add the described data to the namespace
-					this.namespace.apply(rule);
-				}
-			} catch (DependencyException e) {
-				throw new GEOFFLoadException("Failed dependency on line " + lineNumber, e);
-			} catch (IllegalRuleException e) {
-				throw new GEOFFLoadException("Illegal rule encountered on line " + lineNumber, e);
-			} catch (JSONException e) {
-				throw new GEOFFLoadException("JSON parsing error on line " + lineNumber, e);
-			} catch (SyntaxError e) {
-				throw new GEOFFLoadException("Syntax error on line " + lineNumber, e);
-			} catch (VampiricException e) {
-				// nothing reflected - carry on for now, might log or raise warning at some point in future
-			}
-		}
+		load(rules);
 	}
 
 	/**
-	 * Load a graph from a Map of GEOFF descriptors
+	 * Load rules from a (potentially) eclectic collection of sources; each item may be a Rule, Iterable, Reader or
+	 * CharSequence
 	 *
+	 * @param rules a collection of rules and nested rules to load
+	 * @throws IOException
+	 * @throws GEOFFLoadException
 	 */
-	public GEOFFLoader(Map<String, Map<String, Object>> rules, NS namespace)
-			throws GEOFFLoadException {
-		this.namespace = namespace;
+	void load(Iterable<?> rules) throws IOException, GEOFFLoadException {
+		StringReader reader;
 		try {
-			this.namespace.apply(RuleSet.from(rules));
-		} catch (DependencyException e) {
-			throw new GEOFFLoadException("Failed dependency", e);
-		} catch (IllegalRuleException e) {
-			throw new GEOFFLoadException("Illegal rule", e);
-		} catch (SyntaxError e) {
-			throw new GEOFFLoadException("Syntax error", e);
+			for(Object item : rules) {
+				if (item instanceof Rule) {
+					this.namespace.apply((Rule) item);
+				} else if (item instanceof Iterable) {
+					load((Iterable) item);
+				} else if (item instanceof Reader) {
+					load((Reader) item);
+				} else if (item instanceof CharSequence) {
+					reader = new StringReader(item.toString());
+					try {
+						load(reader);
+					} finally {
+						reader.close();
+					}
+				} else {
+					throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
+				}
+			}
 		} catch (VampiricException e) {
 			// nothing reflected - carry on for now, might log or raise warning at some point in future
 		}
 	}
 
-	public NS getNamespace() {
-		return this.namespace;
+	/**
+	 * Load rules read from a Reader
+	 *
+	 * @param ruleReader the Reader to read rules from
+	 * @throws IOException
+	 * @throws GEOFFLoadException
+	 */
+	void load(Reader ruleReader) throws IOException, GEOFFLoadException {
+		BufferedReader bufferedReader = new BufferedReader(ruleReader);
+		try {
+			String ruleString = bufferedReader.readLine();
+			while (ruleString != null) {
+				load(ruleString);
+				ruleString = bufferedReader.readLine();
+			}
+		} finally {
+			bufferedReader.close();
+		}
+	}
+
+	/**
+	 * Load rules contained within a String; may contain single or multiple rules, separated by newline characters
+	 *
+	 * @param ruleString the rule or rules to load
+	 * @throws IOException
+	 * @throws GEOFFLoadException
+	 */
+	void load(String ruleString) throws IOException, GEOFFLoadException {
+		if (ruleString.contains("\n")) {
+			StringReader reader = new StringReader(ruleString);
+			try {
+				load(reader);
+			} finally {
+				reader.close();
+			}
+		} else {
+			try {
+				if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
+					// ignorable line
+				} else if (ruleString.startsWith("[\"")) {
+					this.namespace.apply(Rule.listFrom(ruleString));
+				} else {
+					this.namespace.apply(Rule.from(ruleString));
+				}
+			} catch (JSONException e) {
+				throw new GEOFFLoadException(this.namespace.getRuleNumber(), "JSON parsing error", e);
+			} catch (SyntaxError e) {
+				throw new GEOFFLoadException(this.namespace.getRuleNumber(), "Syntax error", e);
+			} catch (VampiricException e) {
+				// nothing reflected - carry on for now, might log or raise warning at some point in future
+			}
+		}
 	}
 
 }
