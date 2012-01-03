@@ -22,16 +22,17 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.*;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class RelationshipInclusionRuleTest {
 
@@ -68,9 +69,9 @@ public class RelationshipInclusionRuleTest {
 		assertEquals(1977, rule.getData().get("since"));
 	}
 
-
 	@Test
-	public void testLoadingRelationshipInclusionRule() throws Exception {
+	public void testLoadingRelationshipInclusionRuleWhereNodesExistButRelDoesnt() throws Exception {
+		db = new ImpermanentGraphDatabase();
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
 				"(B) {\"name\": \"Bob\"}\n" +
@@ -82,10 +83,102 @@ public class RelationshipInclusionRuleTest {
 		assertNotNull(rel);
 		assertTrue(rel.hasProperty("since"));
 		assertEquals(1977, rel.getProperty("since"));
+		Node startNode = rel.getStartNode();
+		int relCount = 0;
+		for (Relationship r : startNode.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("KNOWS"))) {
+			relCount++;
+		}
+		assertEquals(1, relCount);
+	}
+
+	@Test
+	public void testLoadingRelationshipInclusionRuleWhereNodesAndRelExist() throws Exception {
+		db = new ImpermanentGraphDatabase();
+		String source =
+				"(A) {\"name\": \"Alice\"}\n" +
+				"(B) {\"name\": \"Bob\"}\n" +
+				"(A)-[:KNOWS]->(B) {\"since\": 1977}\n" +
+				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
+				"";
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		assertNotNull(out);
+		Relationship rel = (Relationship) out.get("[R]");
+		assertNotNull(rel);
+		assertTrue(rel.hasProperty("since"));
+		assertEquals(1977, rel.getProperty("since"));
+		Node startNode = rel.getStartNode();
+		int relCount = 0;
+		for (Relationship r : startNode.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("KNOWS"))) {
+			relCount++;
+		}
+		assertEquals(1, relCount);
+	}
+
+	@Test
+	public void testLoadingRelationshipInclusionRuleWhereOnlyStartNodeExists() throws Exception {
+		db = new ImpermanentGraphDatabase();
+		String source =
+				"(A) {\"name\": \"Alice\"}\n" +
+				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
+				"";
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		assertNotNull(out);
+		Relationship rel = (Relationship) out.get("[R]");
+		assertNotNull(rel);
+		assertTrue(rel.hasProperty("since"));
+		assertEquals(1977, rel.getProperty("since"));
+		Node startNode = rel.getStartNode();
+		int relCount = 0;
+		for (Relationship r : startNode.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("KNOWS"))) {
+			relCount++;
+		}
+		assertEquals(1, relCount);
+	}
+
+	@Test
+	public void testLoadingRelationshipInclusionRuleWhereOnlyEndNodeExists() throws Exception {
+		db = new ImpermanentGraphDatabase();
+		String source =
+				"(B) {\"name\": \"Bob\"}\n" +
+				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
+				"";
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		assertNotNull(out);
+		Relationship rel = (Relationship) out.get("[R]");
+		assertNotNull(rel);
+		assertTrue(rel.hasProperty("since"));
+		assertEquals(1977, rel.getProperty("since"));
+		Node startNode = rel.getStartNode();
+		int relCount = 0;
+		for (Relationship r : startNode.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("KNOWS"))) {
+			relCount++;
+		}
+		assertEquals(1, relCount);
+	}
+
+	@Test
+	public void testLoadingRelationshipInclusionRuleWhereNeitherNodeExists() throws Exception {
+		db = new ImpermanentGraphDatabase();
+		String source =
+				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
+				"";
+		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		assertNotNull(out);
+		Relationship rel = (Relationship) out.get("[R]");
+		assertNotNull(rel);
+		assertTrue(rel.hasProperty("since"));
+		assertEquals(1977, rel.getProperty("since"));
+		Node startNode = rel.getStartNode();
+		int relCount = 0;
+		for (Relationship r : startNode.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("KNOWS"))) {
+			relCount++;
+		}
+		assertEquals(1, relCount);
 	}
 
 	@Test
 	public void testLoadingRelationshipInclusionRuleWithSelfUpdate() throws Exception {
+		db = new ImpermanentGraphDatabase();
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
 				"(B) {\"name\": \"Bob\"}\n" +
@@ -103,6 +196,7 @@ public class RelationshipInclusionRuleTest {
 
 	@Test
 	public void testLoadingRelationshipInclusionRuleWithLoadParameter() throws Exception {
+		db = new ImpermanentGraphDatabase();
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
 				"(B) {\"name\": \"Bob\"}\n" +

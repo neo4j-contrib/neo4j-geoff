@@ -249,25 +249,33 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// N-R->N
+	// behaviour varies depending on what exists
 	private void includeRelationshipByType(NodeToken startNode, RelToken rel, NodeToken endNode, Map<String, Object> data)
 			throws DependencyException, IllegalRuleException {
 		if (GEOFF.DEBUG) {
 			System.out.println("Including relationship by type \"N-R->N\"");
 		}
 		failIfNotAllNamed(startNode, endNode);
-		failIfNotRegistered(startNode, endNode);
 		if (rel.hasName()) {
+			// (A)-[R:T]->(B)
 			failIfRegistered(rel);
 		}
 		failIfNotTyped(rel);
-		Relationship r = this.nodes.get(startNode.getName()).createRelationshipTo(
-				this.nodes.get(endNode.getName()),
-				DynamicRelationshipType.withName(rel.getType())
-		);
-		if (rel.hasName()) {
-			register(rel.getName(), r);
+		Node n1 = getOrCreate(startNode);
+		Node n2 = getOrCreate(endNode);
+		RelationshipType type = DynamicRelationshipType.withName(rel.getType());
+		List<Relationship> rels = getRelationships(n1, type, n2);
+		Relationship r;
+		if (rels.size() == 0) {
+			r = n1.createRelationshipTo(n2, type);
+		} else {
+			r = rels.get(0);
 		}
 		addProperties(r, data);
+		if (rel.hasName()) {
+			// (A)-[R:T]->(B)
+			register(rel.getName(), r);
+		}
 	}
 
 	// N^I
@@ -440,7 +448,7 @@ public class Neo4jNamespace implements Namespace {
 	/*
 	 * R=N-R->N
 	 * ========
-	 * # R reflects rel of type T between A and B
+	 * # R reflects rel of type T between A and B (redundant? - could use (A)-[R:T]->(B) where R does not exist)
 	 * [R]:=(A)-[:T]->(B)
 	 * # R reflects rel of type T starting at node A
 	 * [R]:=(A)-[:T]->()
@@ -467,13 +475,12 @@ public class Neo4jNamespace implements Namespace {
 			// [R]:=(A)-[:T]->(B)
 			Node s = this.nodes.get(startNode.getName());
 			Node e = this.nodes.get(endNode.getName());
-			for (Relationship r : s.getRelationships(Direction.OUTGOING, t)) {
-				if (r.getEndNode().getId() == e.getId()) {
-					register(intoRel.getName(), r);
-					return;
-				}
+			List<Relationship> rels = getRelationships(s, t, e);
+			if (rels.size() == 0) {
+				throw new VampiricException("No relationship to reflect");
+			} else {
+				register(intoRel.getName(), rels.get(0));
 			}
-			throw new VampiricException("No relationship to reflect");
 		} else if (startNode.hasName()) {
 			// [R]:=(A)-[:T]->()
 			Node s = this.nodes.get(startNode.getName());
@@ -498,7 +505,7 @@ public class Neo4jNamespace implements Namespace {
 	/*
 	 * N=I
 	 * ===
-	 * # node A reflects entry in index I
+	 * # node A reflects entry in index I (redundant? could use (A)<=|I| where (A) does not exist and index entry does)
 	 * (A):=|I|
 	 *
 	 */
@@ -708,7 +715,28 @@ public class Neo4jNamespace implements Namespace {
 
 	/* END OF DEPENDENCY VALIDATORS */
 
+	
+	private Node getOrCreate(NodeToken node) {
+		Node n;
+		if (this.nodes.containsKey(node.getName())) {
+			n = this.nodes.get(node.getName());
+		} else {
+			n = this.graphDB.createNode();
+			register(node.getName(), n);
+		}
+		return n;
+	}
 
+	private List<Relationship> getRelationships(Node startNode, RelationshipType type, Node endNode) {
+		ArrayList<Relationship> rels = new ArrayList<Relationship>();
+		for (Relationship rel : startNode.getRelationships(Direction.OUTGOING, type)) {
+			if (rel.getEndNode().getId() == endNode.getId()) {
+				rels.add(rel);
+			}
+		}
+		return rels;
+	}
+	
 	private void register(String name, Node node) {
 		if (GEOFF.DEBUG) {
 			System.out.println("Registering node " + node.getId() + " as (" + name + ")");
