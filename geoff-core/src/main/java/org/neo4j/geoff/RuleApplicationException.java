@@ -19,15 +19,14 @@
  */
 package org.neo4j.geoff;
 
-/**
- * Thrown when no reflection is possible.
- * Vampire. No reflection. Geddit?! *sigh*
- *
- */
-public class VampiricException extends GEOFFLoadException {
+public class RuleApplicationException extends GEOFFLoadException {
 
-	VampiricException(int ruleNumber, String s) {
+	RuleApplicationException(int ruleNumber, String s) {
 		super(ruleNumber, s);
+	}
+
+	RuleApplicationException(int ruleNumber, String s, Throwable throwable) {
+		super(ruleNumber, s, throwable);
 	}
 
 }

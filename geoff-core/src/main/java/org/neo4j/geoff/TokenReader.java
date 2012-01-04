@@ -19,7 +19,6 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.util.SyntaxError;
 import org.neo4j.geoff.util.UeberReader;
 
 import java.io.IOException;

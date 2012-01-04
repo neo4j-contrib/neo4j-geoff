@@ -131,8 +131,8 @@ public class GraphDescriptionTest {
 		assertTrue(db.index().forNodes("Baddies").get("name", "Dalek Sec").hasNext());
 		assertEquals("dalek", db.index().forNodes("Baddies").get("name", "Dalek Sec").getSingle().getProperty("name"));
 		reader = new StringReader("" +
-				"(doc):=|People|     {\"name\": \"The Doctor\"}\n" +
-				"(dal):=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
+				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
+				"(dal)<=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
 				"(doc)-[enemy:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
 				"");
 		Map<String, PropertyContainer> stuff = GEOFF.loadIntoNeo4j(reader, db, null);
@@ -153,7 +153,7 @@ public class GraphDescriptionTest {
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
 		reader = new StringReader("" +
-				"(doc):=|People|     {\"name\": \"The Doctor\"}\n" +
+				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"(doc)!=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
 		GEOFF.loadIntoNeo4j(reader, db, null);

@@ -28,12 +28,22 @@ public class RelToken extends NameableToken {
 		this.type = type;
 	}
 
+	public RelToken(String name) {
+		super(Type.REL, name);
+		this.type = null;
+	}
+
 	public boolean hasType() {
 		return !(this.type == null || this.type.isEmpty() || "*".equals(this.type));
 	}
 
 	public String getType() {
 		return this.type;
+	}
+
+	@Override
+	public String getFullName() {
+		return String.format("[%s]", this.name);
 	}
 
 	@Override

@@ -21,7 +21,6 @@ package org.neo4j.geoff;
 
 import org.neo4j.geoff.util.JSON;
 import org.neo4j.geoff.util.JSONException;
-import org.neo4j.geoff.util.SyntaxError;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,25 +41,35 @@ public class Rule {
 		return new Rule(new Descriptor(descriptor), dataMap);
 	}
 	
-	public static Rule from(String text) throws JSONException, SyntaxError {
+	public static Rule from(String text) throws RuleFormatException {
 		if (GEOFF.DEBUG) {
 			System.out.println("Parsing rule: " + text);
 		}
 		String[] bits = text.split("\\s+", 2);
-		if (bits.length == 1) {
-			return new Rule(new Descriptor(bits[0]), null);
-		} else {
-			return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
+		try {
+			if (bits.length == 1) {
+				return new Rule(new Descriptor(bits[0]), null);
+			} else {
+				return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
+			}
+		} catch (SyntaxError e) {
+			throw new RuleFormatException(0, "Syntax error in rule", e);
+		} catch (JSONException e) {
+			throw new RuleFormatException(0, "Unparsable JSON in rule", e);
 		}
 	}
 
-	public static List<Rule> listFrom(String text) throws JSONException, SyntaxError {
-		List<String> strings = JSON.toListOfStrings(text);
-		ArrayList<Rule> rules = new ArrayList<Rule>(strings.size());
-		for(String string : strings) {
-			rules.add(Rule.from(string));
+	public static List<Rule> listFrom(String text) throws RuleFormatException {
+		try {
+			List<String> strings = JSON.toListOfStrings(text);
+			ArrayList<Rule> rules = new ArrayList<Rule>(strings.size());
+			for(String string : strings) {
+				rules.add(Rule.from(string));
+			}
+			return rules;
+		} catch (JSONException e) {
+			throw new RuleFormatException(0, "Cannot parse JSON list", e);
 		}
-		return rules;
 	}
 
 	private final Descriptor descriptor;

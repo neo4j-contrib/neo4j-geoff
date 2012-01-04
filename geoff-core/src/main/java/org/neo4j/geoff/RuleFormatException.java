@@ -19,20 +19,14 @@
  */
 package org.neo4j.geoff;
 
-public class IndexToken extends NameableToken {
+public class RuleFormatException extends GEOFFLoadException {
 
-	public IndexToken(String name) {
-		super(Type.INDEX, name);
+	RuleFormatException(int ruleNumber, String s) {
+		super(ruleNumber, s);
 	}
 
-	@Override
-	public String getFullName() {
-		return String.format("|%s|", this.name);
-	}
-
-	@Override
-	public String toString() {
-		return String.format("|%s|", this.name);
+	RuleFormatException(int ruleNumber, String s, Throwable throwable) {
+		super(ruleNumber, s, throwable);
 	}
 
 }

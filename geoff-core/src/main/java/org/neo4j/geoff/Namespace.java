@@ -33,28 +33,18 @@ public interface Namespace {
 	 * Apply a single rule to this namespace.
 	 *
 	 * @param rule the rule to apply
-	 * @throws DependencyException if the rule contains an unsatisfied dependency
-	 * @throws IllegalRuleException if the rule content is deemed illegal
+	 * @throws RuleFormatException if the rule content is deemed illegal
+	 * @throws RuleApplicationException if the rule fails during application
 	 */
-	public void apply(Rule rule) throws DependencyException, IllegalRuleException, VampiricException;
+	public void apply(Rule rule) throws RuleFormatException, RuleApplicationException;
 
 	/**
 	 * Apply a list of rules to this namespace.
 	 *
 	 * @param rules the list of rules to apply
-	 * @throws DependencyException if the rules contain an unsatisfied dependency
-	 * @throws IllegalRuleException if the content of any rule is deemed illegal
+	 * @throws RuleFormatException if the content of any rule is deemed illegal
+	 * @throws RuleApplicationException if the rule fails during application
 	 */
-	public void apply(Iterable<Rule> rules) throws DependencyException, IllegalRuleException, VampiricException;
-
-	/**
-	 * Apply a set of rules to this namespace. The order in which these rules are
-	 * applied should attempt to satisfy dependencies if possible.
-	 *
-	 * @param rules the set of rules to apply
-	 * @throws DependencyException if dependencies cannot be resolved within the rule set
-	 * @throws IllegalRuleException if the content of any rule is deemed illegal
-	 */
-//	public void apply(RuleSet rules) throws DependencyException, IllegalRuleException, VampiricException;
+	public void apply(Iterable<Rule> rules) throws RuleFormatException, RuleApplicationException;
 
 }

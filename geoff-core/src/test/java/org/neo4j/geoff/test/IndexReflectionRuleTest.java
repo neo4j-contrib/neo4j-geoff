@@ -94,7 +94,7 @@ public class IndexReflectionRuleTest {
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// make second call to query index entry
-		source = "(A):=|People| {\"name\": \"Allison, Alice\"}";
+		source = "(A)<=|People| {\"name\": \"Allison, Alice\"}";
 		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results
 		assertTrue(db.index().existsForNodes("People"));
@@ -115,7 +115,7 @@ public class IndexReflectionRuleTest {
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// make second call to query index entry
-		source = "[R]:=|Friends| {\"names\": \"Alice & Bob\"}";
+		source = "[R]<=|Friends| {\"names\": \"Alice & Bob\"}";
 		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results
 		assertTrue(db.index().existsForRelationships("Friends"));

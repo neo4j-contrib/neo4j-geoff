@@ -19,9 +19,6 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.util.JSONException;
-import org.neo4j.geoff.util.SyntaxError;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -57,27 +54,23 @@ public class GEOFFLoader<NS extends Namespace> {
 	 */
 	void load(Iterable<?> rules) throws IOException, GEOFFLoadException {
 		StringReader reader;
-		try {
-			for(Object item : rules) {
-				if (item instanceof Rule) {
-					this.namespace.apply((Rule) item);
-				} else if (item instanceof Iterable) {
-					load((Iterable) item);
-				} else if (item instanceof Reader) {
-					load((Reader) item);
-				} else if (item instanceof CharSequence) {
-					reader = new StringReader(item.toString());
-					try {
-						load(reader);
-					} finally {
-						reader.close();
-					}
-				} else {
-					throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
+		for(Object item : rules) {
+			if (item instanceof Rule) {
+				this.namespace.apply((Rule) item);
+			} else if (item instanceof Iterable) {
+				load((Iterable) item);
+			} else if (item instanceof Reader) {
+				load((Reader) item);
+			} else if (item instanceof CharSequence) {
+				reader = new StringReader(item.toString());
+				try {
+					load(reader);
+				} finally {
+					reader.close();
 				}
+			} else {
+				throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
 			}
-		} catch (VampiricException e) {
-			// nothing reflected - carry on for now, might log or raise warning at some point in future
 		}
 	}
 
@@ -117,20 +110,12 @@ public class GEOFFLoader<NS extends Namespace> {
 				reader.close();
 			}
 		} else {
-			try {
-				if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
-					// ignorable line
-				} else if (ruleString.startsWith("[\"")) {
-					this.namespace.apply(Rule.listFrom(ruleString));
-				} else {
-					this.namespace.apply(Rule.from(ruleString));
-				}
-			} catch (JSONException e) {
-				throw new GEOFFLoadException(this.namespace.getRuleNumber(), "JSON parsing error", e);
-			} catch (SyntaxError e) {
-				throw new GEOFFLoadException(this.namespace.getRuleNumber(), "Syntax error", e);
-			} catch (VampiricException e) {
-				// nothing reflected - carry on for now, might log or raise warning at some point in future
+			if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
+				// empty line or comment
+			} else if (ruleString.startsWith("[\"")) {
+				this.namespace.apply(Rule.listFrom(ruleString));
+			} else {
+				this.namespace.apply(Rule.from(ruleString));
 			}
 		}
 	}

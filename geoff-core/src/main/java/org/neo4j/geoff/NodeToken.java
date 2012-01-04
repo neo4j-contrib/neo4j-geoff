@@ -26,6 +26,11 @@ public class NodeToken extends NameableToken {
 	}
 
 	@Override
+	public String getFullName() {
+		return String.format("(%s)", this.name);
+	}
+
+	@Override
 	public String toString() {
 		return String.format("(%s)", this.name);
 	}

@@ -205,7 +205,7 @@ public class RelationshipReflectionRuleTest {
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 		params.put("R", r);
 		// make second call to query index entry
-		source = "(A):=(*)-[R]->()";
+		source = "(A)-[R]->()";
 		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		Node a = (Node) out.get("(A)");
@@ -230,7 +230,7 @@ public class RelationshipReflectionRuleTest {
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 		params.put("R", r);
 		// make second call to query index entry
-		source = "(B):=()-[R]->(*)";
+		source = "()-[R]->(B)";
 		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		Node a = (Node) out.get("(B)");
@@ -258,7 +258,7 @@ public class RelationshipReflectionRuleTest {
 		params.put("A", a);
 		params.put("B", b);
 		// make second call to query index entry
-		source = "[R]:=(A)-[:KNOWS]->(B)";
+		source = "(A)-[R:KNOWS]->(B)";
 		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		Relationship r = (Relationship) out.get("[R]");
@@ -283,7 +283,7 @@ public class RelationshipReflectionRuleTest {
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 		params.put("A", a);
 		// make second call to query index entry
-		source = "[R]:=(A)-[:KNOWS]->()";
+		source = "(A)-[R:KNOWS]->()";
 		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		Relationship r = (Relationship) out.get("[R]");
@@ -308,7 +308,7 @@ public class RelationshipReflectionRuleTest {
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
 		params.put("B", b);
 		// make second call to query index entry
-		source = "[R]:=()-[:KNOWS]->(B)";
+		source = "()-[R:KNOWS]->(B)";
 		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		Relationship r = (Relationship) out.get("[R]");
