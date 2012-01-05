@@ -31,8 +31,8 @@ import org.neo4j.test.ImpermanentGraphDatabase;
 import java.io.StringReader;
 import java.util.Map;
 
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.*;
+import static junit.framework.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class IndexReflectionRuleTest {
 
@@ -86,6 +86,7 @@ public class IndexReflectionRuleTest {
 
 	@Test
 	public void testLoadingNodeIndexReflectionRule() throws Exception {
+		db = new ImpermanentGraphDatabase();
 		// perform first call to inject node and add index entry
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
@@ -93,18 +94,24 @@ public class IndexReflectionRuleTest {
 				"";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
-		// make second call to query index entry
-		source = "(A)<=|People| {\"name\": \"Allison, Alice\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
 		assertTrue(people.get("name", "Allison, Alice").hasNext());
 		assertEquals("Alice", people.get("name", "Allison, Alice").getSingle().getProperty("name"));
+		// make second call to query index entry
+		source = "(A)<=|People| {\"name\": \"Allison, Alice\"}";
+		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		assertTrue(out.containsKey("(A)"));
+		assertTrue(out.get("(A)") instanceof Node);
+		Node node = (Node) out.get("(A)");
+		assertEquals("Alice", node.getProperty("name"));
 	}
 
 	@Test
 	public void testLoadingRelationshipIndexReflectionRule() throws Exception {
+		db = new ImpermanentGraphDatabase();
 		// perform first call to inject relationship and add index entry
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
@@ -114,14 +121,19 @@ public class IndexReflectionRuleTest {
 				"";
 		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
-		// make second call to query index entry
-		source = "[R]<=|Friends| {\"names\": \"Alice & Bob\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results
 		assertTrue(db.index().existsForRelationships("Friends"));
 		Index<Relationship> friends = db.index().forRelationships("Friends");
 		assertTrue(friends.get("names", "Alice & Bob").hasNext());
 		assertEquals(1977, friends.get("names", "Alice & Bob").getSingle().getProperty("since"));
+		// make second call to query index entry
+		source = "[R]<=|Friends| {\"names\": \"Alice & Bob\"}";
+		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		assertTrue(out.containsKey("[R]"));
+		assertTrue(out.get("[R]") instanceof Relationship);
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
 }

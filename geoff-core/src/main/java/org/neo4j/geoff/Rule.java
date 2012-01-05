@@ -77,11 +77,7 @@ public class Rule {
 
 	public Rule(Descriptor descriptor, Map<String, Object> data) {
 		this.descriptor = descriptor;
-		if(data == null) {
-			this.data = new HashMap<String, Object>();
-		} else {
-			this.data = data;
-		}
+		this.data = data;
 	}
 
 	public Descriptor getDescriptor() {

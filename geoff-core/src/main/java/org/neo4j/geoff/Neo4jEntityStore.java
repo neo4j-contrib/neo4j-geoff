@@ -19,6 +19,7 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
@@ -42,9 +43,9 @@ class Neo4jEntityStore {
 					key = key.substring(1, key.length() - 1);
 				}
 				if (param.getValue() instanceof Node && (isNodeKey || isUntypedKey)) {
-					add(new NodeToken(key), (Node) param.getValue());
+					define(new NodeToken(key), (Node) param.getValue());
 				} else if (param.getValue() instanceof Relationship && (isRelKey || isUntypedKey)) {
-					add(new RelToken(key), (Relationship) param.getValue());
+					define(new RelToken(key), (Relationship) param.getValue());
 				} else {
 					throw new IllegalArgumentException(String.format("Illegal parameter '%s':%s ", key, param.getValue().getClass().getName()));
 				}
@@ -52,21 +53,27 @@ class Neo4jEntityStore {
 		}
 	}
 
-	void add(NodeToken nodeToken, Node node) {
-		this.entities.put(nodeToken.getFullName(), node);
+	// will only define if undefined
+	void define(NodeToken nodeToken, Node node) {
+		if (nodeToken.hasName() && !this.entities.containsKey(nodeToken.getFullName()) && node != null) {
+			this.entities.put(nodeToken.getFullName(), node);
+		}
 	}
 
-	void add(RelToken relToken, Relationship relationship) {
-		this.entities.put(relToken.getFullName(), relationship);
+	// will only define if undefined
+	void define(RelToken relToken, Relationship relationship) {
+		if (relToken.hasName() && !this.entities.containsKey(relToken.getFullName()) && relationship != null) {
+			this.entities.put(relToken.getFullName(), relationship);
+		}
 	}
 
-	Node remove(NodeToken nodeToken) {
+	Node undefine(NodeToken nodeToken) {
 		Node node = (Node) this.entities.get(nodeToken.getFullName());
 		this.entities.remove(nodeToken.getFullName());
 		return node;
 	}
 
-	Relationship remove(RelToken relToken) {
+	Relationship undefine(RelToken relToken) {
 		Relationship relationship = (Relationship) this.entities.get(relToken.getFullName());
 		this.entities.remove(relToken.getFullName());
 		return relationship;
@@ -80,15 +87,55 @@ class Neo4jEntityStore {
 		return (Relationship) this.entities.get(relToken.getFullName());
 	}
 
-	boolean contains(NodeToken nodeToken) {
-		return this.entities.containsKey(nodeToken.getFullName());
+	boolean isDefined(NodeToken nodeToken) {
+		return nodeToken.hasName() && this.entities.containsKey(nodeToken.getFullName());
 	}
 
-	boolean contains(RelToken relToken) {
-		return this.entities.containsKey(relToken.getFullName());
+	boolean isDefined(RelToken relToken) {
+		return relToken.hasName() && this.entities.containsKey(relToken.getFullName());
 	}
 
-	public Map<String, PropertyContainer> entities() {
+	NodeState stateOf(NodeToken nodeToken) {
+		if (nodeToken.hasName()) {
+			if (this.isDefined(nodeToken)) {
+				return NodeState.DEFINED;
+			} else {
+				return NodeState.UNDEFINED;
+			}
+		} else {
+			return NodeState.MISSING;
+		}
+	}
+
+	RelState stateOf(RelToken relToken) {
+		if (relToken.hasName()) {
+			if (this.isDefined(relToken)) {
+				if (relToken.hasType()) {
+					if (this.get(relToken).isType(DynamicRelationshipType.withName(relToken.getType()))) {
+						return RelState.DEFINED_AND_CORRECTLY_TYPED;
+					} else {
+						return RelState.DEFINED_AND_INCORRECTLY_TYPED;
+					}
+				} else {
+					return RelState.DEFINED_AND_UNTYPED;
+				}
+			} else {
+				if (relToken.hasType()) {
+					return RelState.UNDEFINED_AND_TYPED;
+				} else {
+					return RelState.UNDEFINED_AND_UNTYPED;
+				}
+			}
+		} else {
+			if (relToken.hasType()) {
+				return RelState.MISSING_AND_TYPED;
+			} else {
+				return RelState.MISSING_AND_UNTYPED;
+			}
+		}
+	}
+
+	Map<String, PropertyContainer> entities() {
 		return this.entities;
 	}
 
