@@ -36,7 +36,7 @@ public interface Namespace {
 	 * @throws RuleFormatException if the rule content is deemed illegal
 	 * @throws RuleApplicationException if the rule fails during application
 	 */
-	public void apply(Rule rule) throws RuleFormatException, RuleApplicationException;
+	public void apply(Rule rule) throws RuleApplicationException;
 
 	/**
 	 * Apply a list of rules to this namespace.
@@ -45,6 +45,6 @@ public interface Namespace {
 	 * @throws RuleFormatException if the content of any rule is deemed illegal
 	 * @throws RuleApplicationException if the rule fails during application
 	 */
-	public void apply(Iterable<Rule> rules) throws RuleFormatException, RuleApplicationException;
+	public void apply(Iterable<Rule> rules) throws RuleApplicationException;
 
 }

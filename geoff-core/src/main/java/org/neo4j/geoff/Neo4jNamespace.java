@@ -45,7 +45,7 @@ public class Neo4jNamespace implements Namespace {
 	 * Set up a new Namespace attached to the supplied GraphDatabaseService
 	 *
 	 * @param graphDB the database in which to store items
-	 * @param params   set of pre-existing Nodes and Relationships accessible within this namespace
+	 * @param params set of pre-existing Nodes and Relationships accessible within this namespace
 	 */
 	Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> params) {
 		this.graphDB = graphDB;
@@ -61,7 +61,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	@Override
-	public void apply(Rule rule) throws RuleFormatException, RuleApplicationException {
+	public void apply(Rule rule) throws RuleApplicationException {
 		this.ruleNumber++;
 		if (Geoff.DEBUG) System.out.println(String.format("Applying rule #%d: %s", this.ruleNumber, rule));
 		String pattern = rule.getDescriptor().getPattern();
@@ -88,7 +88,7 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else if ("N-R-!N".equals(pattern)) {
-			deleteRelationship(
+			deleteRelationships(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(RelToken) rule.getDescriptor().getToken(2),
 					(NodeToken) rule.getDescriptor().getToken(5),
@@ -124,12 +124,12 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else {
-			throw new RuleFormatException(this.ruleNumber, "Rule cannot be identified: " + rule.toString());
+			throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
 		}
 	}
 
 	@Override
-	public void apply(Iterable<Rule> rules) throws RuleFormatException, RuleApplicationException {
+	public void apply(Iterable<Rule> rules) throws RuleApplicationException {
 		if (Geoff.DEBUG) System.out.println("Applying multiple rules");
 		for (Rule rule : rules) {
 			apply(rule);
@@ -137,19 +137,13 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Create/Update Node
-	 * ==================
-	 *
-	 * (A) {...}
+	 * Create or update node
 	 *
 	 * @param a node token
-	 * @param properties
-	 * @return
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
+	 * @param properties properties to be assigned to the node
+	 * @return the Node
 	 */
-	private Node createOrUpdateNode(NodeToken a, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
+	private Node createOrUpdateNode(NodeToken a, Map<String, Object> properties) {
 		Node node;
 		if (store.isDefined(a)) {
 			node = store.get(a);
@@ -162,24 +156,17 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Create/Update Relationship
-	 * ==========================
-	 *
-	 * (A)-[R]->(B)   {...}
-	 * (A)-[:T]->(B)  {...}
-	 * (A)-[:T]->>(B) {...}
-	 * (A)-[R:T]->(B) {...}
+	 * Create or update relationship
 	 *
 	 * @param a start node token
 	 * @param r relationship token
 	 * @param b end node token
-	 * @param properties
-	 * @return
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
+	 * @param properties properties to be assigned to the relationship
+	 * @return the Relationship
+	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
 	private Relationship createOrUpdateRelationship(NodeToken a, RelToken r, NodeToken b, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
+			throws RuleApplicationException {
 		failIfIncorrectlyTyped(r);
 		Relationship relationship;
 		if (store.isDefined(r)) {
@@ -205,102 +192,100 @@ public class Neo4jNamespace implements Namespace {
 		return relationship;
 	}
 
+	/**
+	 * Create or update relationship
+	 *
+	 * @param r relationship token
+	 * @param properties properties to be assigned to the relationship
+	 * @return the Relationship
+	 * @throws RuleApplicationException if type is invalid
+	 */
 	private Relationship createOrUpdateRelationship(RelToken r, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
+			throws RuleApplicationException {
 		return createOrUpdateRelationship(new NodeToken(""), r, new NodeToken(""), properties);
 	}
 
 	/**
-	 * Delete Node
-	 * ===========
-	 *
-	 * !(A)
+	 * Delete specific node
 	 *
 	 * @param a node token
 	 * @param properties
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
+	 * @throws RuleApplicationException if node is undefined
 	 */
 	private void deleteNode(NodeToken a, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
+			throws RuleApplicationException {
 		failIfNotDefined(a, "Cannot exclude undefined node");
 		store.undefine(a).delete();
 	}
 
 	/**
-	 * Simple Relationship Exclusion Rule
-	 * ==================================
-	 *
-	 * ![R]
-	 * ![R:T]
-	 *
-	 * @param r
+	 * Delete one or more relationships
+	 * 
+	 * @param a start node token
+	 * @param r relationship token
+	 * @param b end node token
 	 * @param properties
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
+	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
-	private void deleteRelationship(RelToken r, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotDefined(r, "Cannot exclude undefined relationship");
+	private void deleteRelationships(NodeToken a, RelToken r, NodeToken b, Map<String, Object> properties)
+			throws RuleApplicationException {
 		failIfIncorrectlyTyped(r);
-		store.undefine(r).delete();
-	}
-
-	// N-R-!N
-	// TODO: optimisation
-	private void deleteRelationship(NodeToken a, RelToken r, NodeToken b, Map<String, Object> properties)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAtLeastOneNamed(a, b);
-		failIfNamed(r);
-		failIfNotTyped(r);
-		failIfNotEmpty(properties);
-		if (a.hasName()) {
-			failIfNotDefined(a, "");
-		}
-		if (b.hasName()) {
-			failIfNotDefined(b, "");
-		}
-		failIfIncorrectlyTyped(r);
-		DynamicRelationshipType t = DynamicRelationshipType.withName(r.getType());
-		if (a.hasName() && b.hasName()) {
-			// (A)-[:T]-!(B)
-			Node startNode = store.get(a);
-			Node endNode = store.get(b);
-			for (Relationship relationship : startNode.getRelationships(Direction.OUTGOING, t)) {
-				if (relationship.getEndNode().getId() == endNode.getId()) {
-					relationship.delete();
-				}
+		if (store.isDefined(r)) {
+			Relationship relationship = store.undefine(r);
+			if (store.isDefined(a)) {
+				failIfNotEqual(store.get(a), relationship.getStartNode(), "Start node mismatch");
 			}
-		} else if (a.hasName()) {
-			// (A)-[:T]-!()
-			Node s = store.get(a);
-			for (Relationship relationship : s.getRelationships(Direction.OUTGOING, t)) {
-				relationship.delete();
+			if (store.isDefined(b)) {
+				failIfNotEqual(store.get(b), relationship.getEndNode(), "End node mismatch");
+			}
+			store.define(a, relationship.getStartNode());
+			store.define(b, relationship.getEndNode());
+			relationship.delete();
+		} else if (r.hasType()) {
+			if (store.isDefined(a) || store.isDefined(b)) {
+				RelationshipType type = DynamicRelationshipType.withName(r.getType());
+				List<Relationship> matches = match(a, b, type);
+				for (Relationship match : matches) {
+					match.delete();
+				}
+			} else {
+				throw new RuleApplicationException(this.ruleNumber, "Not enough information to identify relationships for deletion");
 			}
 		} else {
-			// ()-[:T]-!(B)
-			Node e = store.get(b);
-			for (Relationship relationship : e.getRelationships(Direction.INCOMING, t)) {
-				relationship.delete();
+			if (store.isDefined(a) || store.isDefined(b)) {
+				List<Relationship> matches = match(a, b);
+				for (Relationship match : matches) {
+					match.delete();
+				}
+			} else {
+				throw new RuleApplicationException(this.ruleNumber, "Not enough information to identify relationships for deletion");
 			}
 		}
 	}
 
 	/**
-	 * Include Node Index Entry
-	 * ========================
-	 *
-	 * (A)<=|I| {...}
+	 * Delete specific relationship
+	 * 
+	 * @param r relationship token
+	 * @param properties
+	 * @throws RuleApplicationException if type is invalid
+	 */
+	private void deleteRelationship(RelToken r, Map<String, Object> properties)
+			throws RuleApplicationException {
+		deleteRelationships(new NodeToken(""), r, new NodeToken(""), properties);
+	}
+
+	/**
+	 * Ensure entry is included within node index
 	 *
 	 * @param a node token
 	 * @param i index token
-	 * @param keyValuePairs
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
+	 * @param keyValuePairs the key:value pairs against which to create index entries
+	 * @throws RuleApplicationException if index is not named
 	 */
 	private void includeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
+			throws RuleApplicationException {
+		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
@@ -329,21 +314,16 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Include Relationship Index Entry
-	 * ================================
-	 *
-	 * [R]<=|I|   {...}
-	 * [R:T]<=|I| {...}
+	 * Ensure entry is included within relationship index
 	 *
 	 * @param r relationship token
 	 * @param i index token
 	 * @param keyValuePairs
-	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
 	private void includeIndexEntry(RelToken r, IndexToken i, Map<String, Object> keyValuePairs)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
+			throws RuleApplicationException {
+		failIfNotNamed(i, "Index must be named");
 		failIfIncorrectlyTyped(r);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
@@ -395,8 +375,8 @@ public class Neo4jNamespace implements Namespace {
 	 * @throws RuleApplicationException
 	 */
 	private void excludeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
+			throws RuleApplicationException {
+		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
 		if (store.isDefined(a)) {
 			Node node = store.get(a);
@@ -430,8 +410,8 @@ public class Neo4jNamespace implements Namespace {
 	 * @throws RuleApplicationException
 	 */
 	private void excludeIndexEntry(RelToken r, IndexToken i, Map<String, Object> keyValuePairs)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
+			throws RuleApplicationException {
+		failIfNotNamed(i, "Index must be named");
 		failIfIncorrectlyTyped(r);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
 		if (store.isDefined(r)) {
@@ -465,59 +445,14 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-
-	/* START OF RULE FORMAT VALIDATORS */
-
-	private void failIfNotAllNamed(NameableToken... tokens) throws RuleFormatException {
-		for (NameableToken token : tokens) {
-			if (!token.hasName()) {
-				throw new RuleFormatException(this.ruleNumber, "All entities must have a name");
-			}
-		}
-	}
-
-	private void failIfNamed(NameableToken... tokens) throws RuleFormatException {
-		for (NameableToken token : tokens) {
-			if (token.hasName()) {
-				throw new RuleFormatException(this.ruleNumber, "Entities cannot have a name");
-			}
-		}
-	}
-
-	private void failIfNotAtLeastOneNamed(NameableToken... tokens) throws RuleFormatException {
-		for (NameableToken nameable : tokens) {
-			if (nameable.hasName()) {
-				return;
-			}
-		}
-		throw new RuleFormatException(this.ruleNumber, "At least one entity must have a name");
-	}
-
-	private void failIfNotTyped(RelToken relToken) throws RuleFormatException {
-		if (!relToken.hasType()) {
-			throw new RuleFormatException(this.ruleNumber, "Relationship must have a type: " + relToken.toString());
-		}
-	}
-
-	private void failIfNotEmpty(Map map) throws RuleFormatException {
-		if (map != null && !map.isEmpty()) {
-			throw new RuleFormatException(this.ruleNumber, "Data cannot be supplied with this rule");
-		}
-	}
-
-	/* END OF RULE FORMAT VALIDATORS */
-
-
-	/* START OF RULE APPLICATION VALIDATORS */
-
-	private void failIfNotDefined(NodeToken node, String message) throws RuleApplicationException {
-		if (!store.isDefined(node)) {
+	private void failIfNotNamed(NameableToken token, String message) throws RuleApplicationException {
+		if (!token.hasName()) {
 			throw new RuleApplicationException(this.ruleNumber, message);
 		}
 	}
 
-	private void failIfNotDefined(RelToken rel, String message) throws RuleApplicationException {
-		if (!store.isDefined(rel)) {
+	private void failIfNotDefined(NodeToken node, String message) throws RuleApplicationException {
+		if (!store.isDefined(node)) {
 			throw new RuleApplicationException(this.ruleNumber, message);
 		}
 	}
@@ -539,12 +474,6 @@ public class Neo4jNamespace implements Namespace {
 			throw new RuleApplicationException(this.ruleNumber, message);
 		}
 	}
-	
-	private void fail(String message) throws RuleApplicationException {
-		throw new RuleApplicationException(this.ruleNumber, message);
-	}
-	
-	/* END OF DEPENDENCY VALIDATORS */
 
 	/**
 	 * If A and B are both defined, match all relationships between A and B
@@ -615,14 +544,6 @@ public class Neo4jNamespace implements Namespace {
 			}
 		}
 		return matches;
-	}
-
-	private void setProperties(Iterable<? extends PropertyContainer> entities, Map<String, Object> data) {
-		if (data != null) {
-			for(PropertyContainer entity : entities) {
-				setProperties(entity, data);
-			}
-		}
 	}
 
 	private void setProperties(PropertyContainer entity, Map<String, Object> data) {

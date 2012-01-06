@@ -38,33 +38,13 @@ import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class IncludeIndexEntryTest {
+public class IncludeRelationshipIndexEntryTest {
 
 	private ImpermanentGraphDatabase db;
 
 	@Before
 	public void setUp() throws Exception {
 		db = new ImpermanentGraphDatabase();
-	}
-
-	@Test
-	public void testNodeIndexInclusionRule() throws Exception {
-		String source = "(A)<=|People| {\"name\": \"Alice\"}";
-		Rule rule = Rule.from(source);
-		assertNotNull(rule);
-		assertEquals("N^I", rule.getDescriptor().getPattern());
-		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		assertTrue(rule.getDescriptor().getToken(2) instanceof IndexToken);
-		NodeToken nodeToken = (NodeToken) rule.getDescriptor().getToken(0);
-		assertEquals(Token.Type.NODE, nodeToken.getTokenType());
-		assertTrue(nodeToken.hasName());
-		assertEquals("A", nodeToken.getName());
-		IndexToken indexToken = (IndexToken) rule.getDescriptor().getToken(2);
-		assertEquals(Token.Type.INDEX, indexToken.getTokenType());
-		assertTrue(indexToken.hasName());
-		assertEquals("People", indexToken.getName());
-		assertTrue(rule.getData().containsKey("name"));
-		assertEquals("Alice", rule.getData().get("name"));
 	}
 
 	@Test
@@ -98,90 +78,6 @@ public class IncludeIndexEntryTest {
 				"";
 		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - node created then added to index
-		assertTrue(db.index().existsForNodes("People"));
-		Index<Node> people = db.index().forNodes("People");
-		assertTrue(people.get("name", "Allison, Alice").hasNext());
-		IndexHits<Node> hits = people.get("name", "Allison, Alice");
-		assertEquals(1, hits.size());
-		for(Node n : hits) {
-			assertEquals("Alice", n.getProperty("given-names"));
-		}
-	}
-
-	@Test
-	public void testLoadingNodeIndexInclusionRuleWhereBothExistAndAreSame() throws Exception {
-		db = new ImpermanentGraphDatabase();
-		// load node and add index entry
-		String source =
-				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
-				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"";
-		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results - 2nd call should have no effect
-		assertTrue(db.index().existsForNodes("People"));
-		Index<Node> people = db.index().forNodes("People");
-		assertTrue(people.get("name", "Allison, Alice").hasNext());
-		IndexHits<Node> hits = people.get("name", "Allison, Alice");
-		assertEquals(1, hits.size());
-		for(Node n : hits) {
-			assertEquals("Alice", n.getProperty("given-names"));
-		}
-	}
-
-	@Test
-	public void testLoadingNodeIndexInclusionRuleWhereBothExistAndAreDifferent() throws Exception {
-		db = new ImpermanentGraphDatabase();
-		// load node and add index entry
-		String source =
-				"(A1) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
-				"(A1)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"(A2) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
-				"(A2)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"";
-		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results - should be multiple index entries
-		assertTrue(db.index().existsForNodes("People"));
-		Index<Node> people = db.index().forNodes("People");
-		assertTrue(people.get("name", "Allison, Alice").hasNext());
-		IndexHits<Node> hits = people.get("name", "Allison, Alice");
-		assertEquals(2, hits.size());
-		for(Node n : hits) {
-			assertEquals("Alice", n.getProperty("given-names"));
-		}
-	}
-
-	@Test
-	public void testLoadingNodeIndexInclusionRuleWhereNeitherExist() throws Exception {
-		db = new ImpermanentGraphDatabase();
-		// load node and add index entry
-		String source =
-				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
-				"";
-		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results - node created via index entry, then updated
-		assertTrue(db.index().existsForNodes("People"));
-		Index<Node> people = db.index().forNodes("People");
-		assertTrue(people.get("name", "Allison, Alice").hasNext());
-		IndexHits<Node> hits = people.get("name", "Allison, Alice");
-		assertEquals(1, hits.size());
-		for(Node n : hits) {
-			assertEquals("Alice", n.getProperty("given-names"));
-		}
-	}
-
-	@Test
-	public void testLoadingNodeIndexInclusionRuleWhereIndexEntryExistsButNodeDoesnt() throws Exception {
-		db = new ImpermanentGraphDatabase();
-		// load node and add index entry
-		String source =
-				"(A1) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
-				"(A1)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"(A2)<=|People| {\"name\": \"Allison, Alice\"}\n" +
-				"";
-		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
-		// check results - should reflect index entry into node
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
 		assertTrue(people.get("name", "Allison, Alice").hasNext());
