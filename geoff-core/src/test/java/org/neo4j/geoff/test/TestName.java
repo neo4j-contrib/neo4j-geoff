@@ -17,21 +17,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.test;
 
+class TestName {
 
-public class GEOFFLoadException extends Exception {
-
-	final Integer ruleNumber;
-
-	GEOFFLoadException(int ruleNumber, String s) {
-		super(s);
-		this.ruleNumber = ruleNumber;
-	}
-
-	GEOFFLoadException(int ruleNumber, String s, Throwable throwable) {
-		super(s, throwable);
-		this.ruleNumber = ruleNumber;
-	}
+	static final String ALICE = "Alice Allison";
+	static final String BOB   = "Bob Robertson";
+	static final String CAROL = "Carol Carlson";
 
 }

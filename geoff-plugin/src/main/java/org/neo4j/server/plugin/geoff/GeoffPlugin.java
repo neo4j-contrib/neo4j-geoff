@@ -19,8 +19,8 @@
  */
 package org.neo4j.server.plugin.geoff;
 
-import org.neo4j.geoff.GEOFF;
-import org.neo4j.geoff.GEOFFLoadException;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.server.plugins.*;
@@ -31,38 +31,38 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Map;
 
-@Description("Plugin to handle GEOFF data insertion and emits")
+@Description("Plugin to handle Geoff data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
 	@Name("load_from_string")
-	@Description("Load GEOFF rules into the database from a newline-delimited string")
+	@Description("Load Geoff rules into the database from a newline-delimited string")
 	@PluginTarget(GraphDatabaseService.class)
 	public Representation loadFromString(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load")
+			@Description("Geoff rules to load")
 			@Parameter(name = "rules", optional = false) String rules,
 			@Description("Named entity references to pass into load routine")
 			@Parameter(name = "params", optional = true) Map params
 	)
-			throws GEOFFLoadException, IOException {
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+			throws GeoffLoadException, IOException {
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(
 				new StringReader(rules), graphDB, GeoffParams.toEntities(params, graphDB)
 		);
 		return new GeoffResultRepresentation(out);
 	}
 
 	@Name("load_from_list")
-	@Description("Load GEOFF rules into the database from a list of rule strings")
+	@Description("Load Geoff rules into the database from a list of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
 	public Representation loadFromList(
 			@Source GraphDatabaseService graphDB,
-			@Description("GEOFF rules to load")
+			@Description("Geoff rules to load")
 			@Parameter(name = "rules", optional = false) String[] rules,
 			@Description("Named entity references to pass into load routine")
 			@Parameter(name = "params", optional = true) Map params
 	)
-			throws GEOFFLoadException, IOException {
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
+			throws GeoffLoadException, IOException {
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(
 				Arrays.asList(rules), graphDB, GeoffParams.toEntities(params, graphDB)
 		);
 		return new GeoffResultRepresentation(out);

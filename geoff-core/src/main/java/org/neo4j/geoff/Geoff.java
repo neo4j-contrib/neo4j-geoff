@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Map;
 
-public class GEOFF {
+public class Geoff {
 
 	// debug switch used for conditional compilation
 	static final boolean DEBUG = false;
@@ -39,7 +39,7 @@ public class GEOFF {
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return set of named entities used during load
-	 * @throws GEOFFLoadException if a parsing error occurs
+	 * @throws GeoffLoadException if a parsing error occurs
 	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
@@ -47,10 +47,10 @@ public class GEOFF {
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)
-			throws GEOFFLoadException, IOException {
+			throws GeoffLoadException, IOException {
 		Transaction tx = graphDB.beginTx();
 		try {
-			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
+			GeoffLoader<Neo4jNamespace> loader = new GeoffLoader<Neo4jNamespace>(
 					ruleReader,
 					new Neo4jNamespace(graphDB, params)
 			);
@@ -68,7 +68,7 @@ public class GEOFF {
 	 * @param graphDB the database instance to load into
 	 * @param params named Nodes and Relationships which can be referenced by Rules
 	 * @return set of named entities used during load
-	 * @throws GEOFFLoadException if a parsing error occurs
+	 * @throws GeoffLoadException if a parsing error occurs
 	 * @throws IOException if a read failure occurs
 	 */
 	public static Map<String, PropertyContainer> loadIntoNeo4j(
@@ -76,10 +76,10 @@ public class GEOFF {
 			GraphDatabaseService graphDB,
 			Map<String, ? extends PropertyContainer> params
 	)
-			throws GEOFFLoadException, IOException {
+			throws GeoffLoadException, IOException {
 		Transaction tx = graphDB.beginTx();
 		try {
-			GEOFFLoader<Neo4jNamespace> loader = new GEOFFLoader<Neo4jNamespace>(
+			GeoffLoader<Neo4jNamespace> loader = new GeoffLoader<Neo4jNamespace>(
 					rules,
 					new Neo4jNamespace(graphDB, params)
 			);

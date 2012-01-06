@@ -17,12 +17,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.test;
 
-public class DependencyException extends GEOFFLoadException {
+import org.neo4j.geoff.GeoffBuilder;
 
-	public DependencyException(int ruleNumber, String s) {
-		super(ruleNumber, s);
+class TestGeoffBuilder extends GeoffBuilder {
+
+	TestGeoffBuilder(String... ruleStrings) {
+		super(ruleStrings);
+	}
+
+	void appendAlice() {
+		this.append("(A) {\"name\": \"" + TestName.ALICE + "\"}");
+	}
+
+	void appendBob() {
+		this.append("(B) {\"name\": \"" + TestName.BOB + "\"}");
+	}
+
+	void appendCarol() {
+		this.append("(C) {\"name\": \"" + TestName.CAROL + "\"}");
+	}
+
+	void appendRelationship(boolean named, boolean typed) {
+		String rel = "";
+		if (named) rel += "R";
+		if (typed) rel += ":KNOWS";
+		this.append("(A)-[" + rel + "]->(B) {\"since\": 1977}");
 	}
 
 }

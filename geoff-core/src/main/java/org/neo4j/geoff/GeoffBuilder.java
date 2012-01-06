@@ -19,10 +19,32 @@
  */
 package org.neo4j.geoff;
 
-public class Mismatch extends Exception {
+import java.io.Reader;
+import java.io.StringReader;
 
-	public Mismatch(String s) {
-		super(s);
+public class GeoffBuilder {
+	
+	private final StringBuilder builder;
+	
+	public GeoffBuilder(String... ruleStrings) {
+		this.builder = new StringBuilder();
+		for (String ruleString : ruleStrings) {
+			this.append(ruleString);
+		}
+	}
+	
+	public void append(String ruleString) {
+		this.builder.append(ruleString);
+		this.builder.append("\n");
 	}
 
+	@Override
+	public String toString() {
+		return this.builder.toString();
+	}
+	
+	public Reader getReader() {
+		return new StringReader(this.toString());
+	}
+	
 }

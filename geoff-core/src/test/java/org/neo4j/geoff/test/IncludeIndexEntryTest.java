@@ -38,7 +38,7 @@ import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class IndexInclusionRuleTest {
+public class IncludeIndexEntryTest {
 
 	private ImpermanentGraphDatabase db;
 
@@ -96,7 +96,7 @@ public class IndexInclusionRuleTest {
 				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
 				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - node created then added to index
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -117,7 +117,7 @@ public class IndexInclusionRuleTest {
 				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - 2nd call should have no effect
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -139,7 +139,7 @@ public class IndexInclusionRuleTest {
 				"(A2) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
 				"(A2)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - should be multiple index entries
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -159,7 +159,7 @@ public class IndexInclusionRuleTest {
 				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - node created via index entry, then updated
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -180,7 +180,7 @@ public class IndexInclusionRuleTest {
 				"(A1)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"(A2)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results - should reflect index entry into node
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -202,7 +202,7 @@ public class IndexInclusionRuleTest {
 				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
 				"[R]<=|Friends| {\"names\": \"Alice & Bob\"}\n" +
 				"";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		// check results
 		assertTrue(db.index().existsForRelationships("Friends"));
 		Index<Relationship> friends = db.index().forRelationships("Friends");
@@ -215,7 +215,7 @@ public class IndexInclusionRuleTest {
 		db = new ImpermanentGraphDatabase();
 		// perform first call to inject node
 		String source = "(A) {\"name\": \"Alice\"}";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Node node = (Node) out.get("(A)");
@@ -224,7 +224,7 @@ public class IndexInclusionRuleTest {
 		params.put("A", node);
 		// make second call to add index entry
 		source = "(A)<=|People| {\"name\": \"Allison, Alice\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -241,7 +241,7 @@ public class IndexInclusionRuleTest {
 				"(B) {\"name\": \"Bob\"}\n" +
 				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Relationship rel = (Relationship) out.get("[R]");
@@ -250,7 +250,7 @@ public class IndexInclusionRuleTest {
 		params.put("R", rel);
 		// make second call to add index entry
 		source = "[R]<=|Friends| {\"names\": \"Alice & Bob\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		assertTrue(db.index().existsForRelationships("Friends"));
 		Index<Relationship> friends = db.index().forRelationships("Friends");

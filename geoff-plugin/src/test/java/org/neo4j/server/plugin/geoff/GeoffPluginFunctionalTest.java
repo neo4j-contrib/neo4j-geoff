@@ -33,7 +33,7 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
 	private static final String LIST_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
 
 	@Test
-	public void canLoadGEOFFRuleList() {
+	public void canLoadGeoffRuleList() {
 		GraphDatabaseService db = graphdb();
 		String geoff = "[" +
 				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +

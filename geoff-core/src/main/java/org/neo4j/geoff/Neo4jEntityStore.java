@@ -95,44 +95,11 @@ class Neo4jEntityStore {
 		return relToken.hasName() && this.entities.containsKey(relToken.getFullName());
 	}
 
-	NodeState stateOf(NodeToken nodeToken) {
-		if (nodeToken.hasName()) {
-			if (this.isDefined(nodeToken)) {
-				return NodeState.DEFINED;
-			} else {
-				return NodeState.UNDEFINED;
-			}
-		} else {
-			return NodeState.MISSING;
-		}
-	}
-
-	RelState stateOf(RelToken relToken) {
-		if (relToken.hasName()) {
-			if (this.isDefined(relToken)) {
-				if (relToken.hasType()) {
-					if (this.get(relToken).isType(DynamicRelationshipType.withName(relToken.getType()))) {
-						return RelState.DEFINED_AND_CORRECTLY_TYPED;
-					} else {
-						return RelState.DEFINED_AND_INCORRECTLY_TYPED;
-					}
-				} else {
-					return RelState.DEFINED_AND_UNTYPED;
-				}
-			} else {
-				if (relToken.hasType()) {
-					return RelState.UNDEFINED_AND_TYPED;
-				} else {
-					return RelState.UNDEFINED_AND_UNTYPED;
-				}
-			}
-		} else {
-			if (relToken.hasType()) {
-				return RelState.MISSING_AND_TYPED;
-			} else {
-				return RelState.MISSING_AND_UNTYPED;
-			}
-		}
+	boolean isIncorrectlyTyped(RelToken relToken) {
+		return
+				isDefined(relToken) &&
+				relToken.hasType() &&
+				!this.get(relToken).isType(DynamicRelationshipType.withName(relToken.getType()));
 	}
 
 	Map<String, PropertyContainer> entities() {

@@ -19,14 +19,19 @@
  */
 package org.neo4j.geoff;
 
-public class RuleApplicationException extends GeoffLoadException {
 
-	RuleApplicationException(int ruleNumber, String s) {
-		super(ruleNumber, s);
+public class GeoffLoadException extends Exception {
+
+	final Integer ruleNumber;
+
+	GeoffLoadException(int ruleNumber, String s) {
+		super(s);
+		this.ruleNumber = ruleNumber;
 	}
 
-	RuleApplicationException(int ruleNumber, String s, Throwable throwable) {
-		super(ruleNumber, s, throwable);
+	GeoffLoadException(int ruleNumber, String s, Throwable throwable) {
+		super(s, throwable);
+		this.ruleNumber = ruleNumber;
 	}
 
 }

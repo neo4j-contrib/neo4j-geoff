@@ -35,7 +35,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 
-public class IndexExclusionRuleTest {
+public class ExcludeIndexEntryTest {
 
 	private ImpermanentGraphDatabase db;
 
@@ -92,7 +92,7 @@ public class IndexExclusionRuleTest {
 				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
 				"(A)<=|People| {\"name\": \"Allison, Alice\"}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Node node = (Node) out.get("(A)");
@@ -101,7 +101,7 @@ public class IndexExclusionRuleTest {
 		params.put("A", node);
 		// make second call to add index entry
 		source = "(A)!=|People| {\"name\": \"Allison, Alice\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		assertTrue(db.index().existsForNodes("People"));
 		Index<Node> people = db.index().forNodes("People");
@@ -117,7 +117,7 @@ public class IndexExclusionRuleTest {
 				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
 				"[R]<=|Friends| {\"names\": \"Alice & Bob\"}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Relationship rel = (Relationship) out.get("[R]");
@@ -126,7 +126,7 @@ public class IndexExclusionRuleTest {
 		params.put("R", rel);
 		// make second call to add index entry
 		source = "[R]!=|Friends| {\"names\": \"Alice & Bob\"}";
-		GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		assertTrue(db.index().existsForRelationships("Friends"));
 		Index<Relationship> friends = db.index().forRelationships("Friends");

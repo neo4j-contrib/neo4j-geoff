@@ -40,9 +40,9 @@ public class Rule {
 		}
 		return new Rule(new Descriptor(descriptor), dataMap);
 	}
-	
+
 	public static Rule from(String text) throws RuleFormatException {
-		if (GEOFF.DEBUG) {
+		if (Geoff.DEBUG) {
 			System.out.println("Parsing rule: " + text);
 		}
 		String[] bits = text.split("\\s+", 2);

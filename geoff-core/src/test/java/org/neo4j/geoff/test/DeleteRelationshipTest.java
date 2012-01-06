@@ -32,7 +32,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 
-public class RelationshipExclusionRuleTest {
+public class DeleteRelationshipTest {
 
 	private ImpermanentGraphDatabase db;
 
@@ -133,7 +133,7 @@ public class RelationshipExclusionRuleTest {
 				"(B) {\"name\": \"Bob\"}\n" +
 				"(A)-[R:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Relationship r = (Relationship) out.get("[R]");
@@ -142,7 +142,7 @@ public class RelationshipExclusionRuleTest {
 		params.put("R", r);
 		// make second call to remove relationship
 		source = "![R]";
-		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		out = Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		r = (Relationship) out.get("[R]");
 		assertNull(r);
@@ -156,7 +156,7 @@ public class RelationshipExclusionRuleTest {
 				"(B) {\"name\": \"Bob\"}\n" +
 				"(A)-[:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Node a = (Node) out.get("(A)");
@@ -168,7 +168,7 @@ public class RelationshipExclusionRuleTest {
 		params.put("B", b);
 		// make second call to remove relationship
 		source = "(A)-[:KNOWS]-!(B)";
-		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		out = Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		a = (Node) out.get("(A)");
 		assertNotNull(a);
@@ -186,7 +186,7 @@ public class RelationshipExclusionRuleTest {
 				"(B) {\"name\": \"Bob\"}\n" +
 				"(A)-[:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Node a = (Node) out.get("(A)");
@@ -195,7 +195,7 @@ public class RelationshipExclusionRuleTest {
 		params.put("A", a);
 		// make second call to remove relationship
 		source = "(A)-[:KNOWS]-!()";
-		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		out = Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		a = (Node) out.get("(A)");
 		assertNotNull(a);
@@ -210,7 +210,7 @@ public class RelationshipExclusionRuleTest {
 				"(B) {\"name\": \"Bob\"}\n" +
 				"(A)-[:KNOWS]->(B) {\"since\": 1977}\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
 		// build params for second call from output of first
 		Node b = (Node) out.get("(B)");
@@ -219,7 +219,7 @@ public class RelationshipExclusionRuleTest {
 		params.put("B", b);
 		// make second call to remove relationship
 		source = "()-[:KNOWS]-!(B)";
-		out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		out = Geoff.loadIntoNeo4j(new StringReader(source), db, params);
 		// check results
 		b = (Node) out.get("(B)");
 		assertNotNull(b);

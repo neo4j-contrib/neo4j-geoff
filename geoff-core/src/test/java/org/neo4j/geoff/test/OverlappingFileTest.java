@@ -21,8 +21,8 @@ package org.neo4j.geoff.test;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.geoff.GEOFF;
-import org.neo4j.geoff.GEOFFLoadException;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.GeoffLoadException;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -51,10 +51,10 @@ public class OverlappingFileTest {
 	 * without causing duplication
 	 */
 	@Test
-	public void canLoadOverlappingFiles() throws GEOFFLoadException, IOException {
-		GEOFF.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
-		GEOFF.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
+	public void canLoadOverlappingFiles() throws GeoffLoadException, IOException {
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
 		assertNotNull(out);
 		assertTrue(out.containsKey("(bowie)"));
 		assertTrue(out.get("(bowie)") instanceof Node);

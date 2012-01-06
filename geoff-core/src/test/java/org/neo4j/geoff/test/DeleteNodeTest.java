@@ -21,7 +21,7 @@ package org.neo4j.geoff.test;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.geoff.GEOFF;
+import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.NodeToken;
 import org.neo4j.geoff.Rule;
 import org.neo4j.geoff.Token;
@@ -33,10 +33,9 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 
-public class NodeInclusionRuleTest {
+public class DeleteNodeTest {
 
 	private ImpermanentGraphDatabase db;
 
@@ -46,59 +45,48 @@ public class NodeInclusionRuleTest {
 	}
 
 	@Test
-	public void testNodeInclusionRule() throws Exception {
-		String source = "(A) {\"name\": \"Alice\"}";
+	public void testNodeExclusionRule() throws Exception {
+		String source = "!(A)";
 		Rule rule = Rule.from(source);
 		assertNotNull(rule);
-		assertEquals("N", rule.getDescriptor().getPattern());
-		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		NodeToken token = (NodeToken) rule.getDescriptor().getToken(0);
+		assertEquals("!N", rule.getDescriptor().getPattern());
+		assertTrue(rule.getDescriptor().getToken(1) instanceof NodeToken);
+		NodeToken token = (NodeToken) rule.getDescriptor().getToken(1);
 		assertEquals(Token.Type.NODE, token.getTokenType());
 		assertTrue(token.hasName());
 		assertEquals("A", token.getName());
-		assertTrue(rule.getData().containsKey("name"));
-		assertEquals("Alice", rule.getData().get("name"));
 	}
 
 	@Test
-	public void testLoadingNodeInclusionRule() throws Exception {
-		String source = "(A) {\"name\": \"Alice\"}";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
-		assertNotNull(out);
-		Node node = (Node) out.get("(A)");
-		assertNotNull(node);
-		assertTrue(node.hasProperty("name"));
-		assertEquals("Alice", node.getProperty("name"));
-	}
-
-	@Test
-	public void testLoadingNodeInclusionRuleWithSelfUpdate() throws Exception {
+	public void testLoadingNodeExclusionRule() throws Exception {
+		// perform call to add and remove node
 		String source =
-				"(A)\n" +
 				"(A) {\"name\": \"Alice\"}\n" +
-				"(A) {\"foo\": \"bar\"}\n" +
+				"!(A)\n" +
 				"";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
 		assertNotNull(out);
-		Node node = (Node) out.get("(A)");
-		assertNotNull(node);
-		assertFalse(node.hasProperty("name"));
-		assertTrue(node.hasProperty("foo"));
-		assertEquals("bar", node.getProperty("foo"));
+		assertEquals(0, out.size());
 	}
 
 	@Test
 	public void testLoadingNodeInclusionRuleWithLoadParameter() throws Exception {
-		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
-		params.put("A", db.getReferenceNode());
+		// perform first call to inject node
 		String source = "(A) {\"name\": \"Alice\"}";
-		Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(new StringReader(source), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
 		assertNotNull(out);
+		// build params for second call from output of first
 		Node node = (Node) out.get("(A)");
 		assertNotNull(node);
-		assertTrue(node.hasProperty("name"));
-		assertEquals("Alice", node.getProperty("name"));
-		assertEquals(db.getReferenceNode().getId(), node.getId());
+		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>(1);
+		params.put("A", node);
+		// make second call to remove node
+		source = "!(A)";
+		out = Geoff.loadIntoNeo4j(new StringReader(source), db, params);
+		// check results
+		assertNotNull(out);
+		assertEquals(0, out.size());
 	}
 
 }

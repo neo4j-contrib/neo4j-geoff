@@ -63,71 +63,62 @@ public class Neo4jNamespace implements Namespace {
 	@Override
 	public void apply(Rule rule) throws RuleFormatException, RuleApplicationException {
 		this.ruleNumber++;
-		if (GEOFF.DEBUG) System.out.println(String.format("Applying rule #%d: %s", this.ruleNumber, rule));
+		if (Geoff.DEBUG) System.out.println(String.format("Applying rule #%d: %s", this.ruleNumber, rule));
 		String pattern = rule.getDescriptor().getPattern();
 		if ("N".equals(pattern)) {
-			applyNodeInclusionRule(
+			createOrUpdateNode(
 					(NodeToken) rule.getDescriptor().getToken(0),
-					rule.getData()
-			);
-		} else if ("R".equals(pattern)) {
-			applySimpleRelationshipInclusionRule(
-					(RelToken) rule.getDescriptor().getToken(0),
 					rule.getData()
 			);
 		} else if ("N-R->N".equals(pattern)) {
-			applyFullRelationshipInclusionRule(
+			createOrUpdateRelationship(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(RelToken) rule.getDescriptor().getToken(2),
 					(NodeToken) rule.getDescriptor().getToken(5),
-					rule.getData(),
-					false
+					rule.getData()
 			);
-		} else if ("N-R->>N".equals(pattern)) {
-			applyFullRelationshipInclusionRule(
+		} else if ("R".equals(pattern)) {
+			createOrUpdateRelationship(
+					(RelToken) rule.getDescriptor().getToken(0),
+					rule.getData()
+			);
+		} else if ("!N".equals(pattern)) {
+			deleteNode(
+					(NodeToken) rule.getDescriptor().getToken(1),
+					rule.getData()
+			);
+		} else if ("N-R-!N".equals(pattern)) {
+			deleteRelationship(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(RelToken) rule.getDescriptor().getToken(2),
-					(NodeToken) rule.getDescriptor().getToken(6),
-					rule.getData(),
-					true
+					(NodeToken) rule.getDescriptor().getToken(5),
+					rule.getData()
+			);
+		} else if ("!R".equals(pattern)) {
+			deleteRelationship(
+					(RelToken) rule.getDescriptor().getToken(1),
+					rule.getData()
 			);
 		} else if ("N^I".equals(pattern)) {
-			applyNodeIndexInclusionRule(
+			includeIndexEntry(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
 		} else if ("R^I".equals(pattern)) {
-			applyRelationshipIndexInclusionRule(
+			includeIndexEntry(
 					(RelToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
-		} else if ("!N".equals(pattern)) {
-			applyNodeExclusionRule(
-					(NodeToken) rule.getDescriptor().getToken(1),
-					rule.getData()
-			);
-		} else if ("!R".equals(pattern)) {
-			applySimpleRelationshipExclusionRule(
-					(RelToken) rule.getDescriptor().getToken(1),
-					rule.getData()
-			);
-		} else if ("N-R-!N".equals(pattern)) {
-			applyFullRelationshipExclusionRule(
-					(NodeToken) rule.getDescriptor().getToken(0),
-					(RelToken) rule.getDescriptor().getToken(2),
-					(NodeToken) rule.getDescriptor().getToken(5),
-					rule.getData()
-			);
 		} else if ("N'I".equals(pattern)) {
-			applyNodeIndexExclusionRule(
+			excludeIndexEntry(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
 		} else if ("R'I".equals(pattern)) {
-			applyRelationshipIndexExclusionRule(
+			excludeIndexEntry(
 					(RelToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
@@ -139,25 +130,25 @@ public class Neo4jNamespace implements Namespace {
 
 	@Override
 	public void apply(Iterable<Rule> rules) throws RuleFormatException, RuleApplicationException {
-		if (GEOFF.DEBUG) System.out.println("Applying multiple rules");
+		if (Geoff.DEBUG) System.out.println("Applying multiple rules");
 		for (Rule rule : rules) {
 			apply(rule);
 		}
 	}
 
 	/**
-	 * Node Inclusion Rule
-	 * ===================
+	 * Create/Update Node
+	 * ==================
 	 *
 	 * (A) {...}
 	 *
 	 * @param a node token
-	 * @param data
+	 * @param properties
 	 * @return
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private Node applyNodeInclusionRule(NodeToken a, Map<String, Object> data)
+	private Node createOrUpdateNode(NodeToken a, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
 		Node node;
 		if (store.isDefined(a)) {
@@ -166,35 +157,13 @@ public class Neo4jNamespace implements Namespace {
 			node = this.graphDB.createNode();
 			store.define(a, node);
 		}
-		setProperties(node, data);
+		setProperties(node, properties);
 		return node;
 	}
 
 	/**
-	 * Simple Relationship Inclusion Rule
-	 * ==================================
-	 *
-	 * [R]   {...}
-	 * [R:T] {...}
-	 *
-	 * @param r relationship token
-	 * @param data
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
-	 */
-	private void applySimpleRelationshipInclusionRule(RelToken r, Map<String, Object> data)
-			throws RuleFormatException, RuleApplicationException {
-		failIfIncorrectlyTyped(r);
-		if (store.isDefined(r)) {
-			setProperties(store.get(r), data);
-		} else {
-			fail("Illegal rule format");
-		}
-	}
-
-	/**
-	 * Full Relationship Inclusion Rule
-	 * ================================
+	 * Create/Update Relationship
+	 * ==========================
 	 *
 	 * (A)-[R]->(B)   {...}
 	 * (A)-[:T]->(B)  {...}
@@ -204,12 +173,12 @@ public class Neo4jNamespace implements Namespace {
 	 * @param a start node token
 	 * @param r relationship token
 	 * @param b end node token
-	 * @param data
-	 * @param append
+	 * @param properties
+	 * @return
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private void applyFullRelationshipInclusionRule(NodeToken a, RelToken r, NodeToken b, Map<String, Object> data, boolean append)
+	private Relationship createOrUpdateRelationship(NodeToken a, RelToken r, NodeToken b, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
 		failIfIncorrectlyTyped(r);
 		Relationship relationship;
@@ -221,137 +190,38 @@ public class Neo4jNamespace implements Namespace {
 			if (store.isDefined(b)) {
 				failIfNotEqual(store.get(b), relationship.getEndNode(), "End node mismatch");
 			}
-			setProperties(relationship, data);
+			store.define(a, relationship.getStartNode());
+			store.define(b, relationship.getEndNode());
+			setProperties(relationship, properties);
 		} else if (r.hasType()) {
-			RelationshipType type = DynamicRelationshipType.withName(r.getType());
-			List<Relationship> relationships = match(a, b, type);
-			if (relationships.isEmpty() || append) {
-				Node startNode = applyNodeInclusionRule(a, null);
-				Node endNode = applyNodeInclusionRule(b, null);
-				relationship = startNode.createRelationshipTo(endNode, type);
-				setProperties(relationship, data);
-			} else {
-				setProperties(relationships, data);
-				relationship = relationships.get(0);
-			}
+			Node startNode = createOrUpdateNode(a, null);
+			Node endNode = createOrUpdateNode(b, null);
+			relationship = startNode.createRelationshipTo(endNode, DynamicRelationshipType.withName(r.getType()));
+			setProperties(relationship, properties);
 		} else {
-			List<Relationship> relationships = match(a, b);
-			if (relationships.isEmpty() || append) {
-				fail("Cannot create untyped relationship");
-			}
-			setProperties(relationships, data);
-			relationship = relationships.get(0);
+			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationship");
 		}
 		store.define(r, relationship);
-		store.define(a, relationship.getStartNode());
-		store.define(b, relationship.getEndNode());
+		return relationship;
 	}
 
-	/**
-	 * Node Index Inclusion Rule
-	 * =========================
-	 *
-	 * (A)<=|I| {...}
-	 *
-	 * @param a node token
-	 * @param i index token
-	 * @param data
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
-	 */
-	private void applyNodeIndexInclusionRule(NodeToken a, IndexToken i, Map<String, Object> data)
+	private Relationship createOrUpdateRelationship(RelToken r, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
-		Index<Node> index = this.graphDB.index().forNodes(i.getName());
-		for (Map.Entry<String, Object> entry : data.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-			IndexHits<Node> hits = index.get(key, value);
-			if (store.isDefined(a)) {
-				Node node = store.get(a);
-				boolean indexed = false;
-				for (Node hit : hits) {
-					indexed = indexed || (node.getId() == hit.getId());
-				}
-				if (!indexed) {
-					index.add(node, key, value);
-				}
-			} else {
-				Node node;
-				if (hits.size() == 0) {
-					node = this.graphDB.createNode();
-					index.add(node, key, value);
-				} else {
-					node = hits.getSingle();
-				}
-				store.define(a, node);
-			}
-		}
+		return createOrUpdateRelationship(new NodeToken(""), r, new NodeToken(""), properties);
 	}
 
 	/**
-	 * Relationship Index Inclusion Rule
-	 * =================================
-	 *
-	 * [R]<=|I|   {...}
-	 * [R:T]<=|I| {...}
-	 *
-	 * @param r relationship token
-	 * @param i index token
-	 * @param data
-	 * @throws RuleFormatException
-	 * @throws RuleApplicationException
-	 */
-	private void applyRelationshipIndexInclusionRule(RelToken r, IndexToken i, Map<String, Object> data)
-			throws RuleFormatException, RuleApplicationException {
-		failIfNotAllNamed(i);
-		failIfIncorrectlyTyped(r);
-		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
-		for (Map.Entry<String, Object> entry : data.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-			IndexHits<Relationship> hits = index.get(key, value);
-			if (store.isDefined(r)) {
-				Relationship relationship = store.get(r);
-				boolean indexed = false;
-				for (Relationship hit : hits) {
-					indexed = indexed || (relationship.getId() == hit.getId());
-				}
-				if (!indexed) {
-					index.add(relationship, key, value);
-				}
-			} else if (r.hasType()) {
-				RelationshipType type = DynamicRelationshipType.withName(r.getType());
-				Relationship relationship = null;
-				for (Relationship hit : hits) {
-					if (hit.isType(type)) {
-						relationship = hit;
-						break;
-					}
-				}
-				failIfNull(relationship, String.format("No index entries found of type %s", r.getType()));
-				store.define(r, relationship);
-			} else {
-				for (Relationship hit : hits) {
-					store.define(r, hit);
-				}
-				failIfNotDefined(r, "No index entries found");
-			}
-		}
-	}
-
-	/**
-	 * Node Exclusion Rule
-	 * ===================
+	 * Delete Node
+	 * ===========
 	 *
 	 * !(A)
 	 *
 	 * @param a node token
-	 * @param data
+	 * @param properties
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private void applyNodeExclusionRule(NodeToken a, Map<String, Object> data)
+	private void deleteNode(NodeToken a, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
 		failIfNotDefined(a, "Cannot exclude undefined node");
 		store.undefine(a).delete();
@@ -365,11 +235,11 @@ public class Neo4jNamespace implements Namespace {
 	 * ![R:T]
 	 *
 	 * @param r
-	 * @param data
+	 * @param properties
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private void applySimpleRelationshipExclusionRule(RelToken r, Map<String, Object> data)
+	private void deleteRelationship(RelToken r, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
 		failIfNotDefined(r, "Cannot exclude undefined relationship");
 		failIfIncorrectlyTyped(r);
@@ -378,12 +248,12 @@ public class Neo4jNamespace implements Namespace {
 
 	// N-R-!N
 	// TODO: optimisation
-	private void applyFullRelationshipExclusionRule(NodeToken a, RelToken r, NodeToken b, Map<String, Object> data)
+	private void deleteRelationship(NodeToken a, RelToken r, NodeToken b, Map<String, Object> properties)
 			throws RuleFormatException, RuleApplicationException {
 		failIfNotAtLeastOneNamed(a, b);
 		failIfNamed(r);
 		failIfNotTyped(r);
-		failIfNotEmpty(data);
+		failIfNotEmpty(properties);
 		if (a.hasName()) {
 			failIfNotDefined(a, "");
 		}
@@ -417,28 +287,124 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	/**
-	 * Node Index Exclusion Rule
-	 * =========================
+	 * Include Node Index Entry
+	 * ========================
+	 *
+	 * (A)<=|I| {...}
+	 *
+	 * @param a node token
+	 * @param i index token
+	 * @param keyValuePairs
+	 * @throws RuleFormatException
+	 * @throws RuleApplicationException
+	 */
+	private void includeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+			throws RuleFormatException, RuleApplicationException {
+		failIfNotAllNamed(i);
+		Index<Node> index = this.graphDB.index().forNodes(i.getName());
+		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			IndexHits<Node> hits = index.get(key, value);
+			if (store.isDefined(a)) {
+				Node node = store.get(a);
+				boolean indexed = false;
+				for (Node hit : hits) {
+					indexed = indexed || (node.getId() == hit.getId());
+				}
+				if (!indexed) {
+					index.add(node, key, value);
+				}
+			} else {
+				Node node;
+				if (hits.size() == 0) {
+					node = this.graphDB.createNode();
+					index.add(node, key, value);
+				} else {
+					node = hits.getSingle();
+				}
+				store.define(a, node);
+			}
+		}
+	}
+
+	/**
+	 * Include Relationship Index Entry
+	 * ================================
+	 *
+	 * [R]<=|I|   {...}
+	 * [R:T]<=|I| {...}
+	 *
+	 * @param r relationship token
+	 * @param i index token
+	 * @param keyValuePairs
+	 * @throws RuleFormatException
+	 * @throws RuleApplicationException
+	 */
+	private void includeIndexEntry(RelToken r, IndexToken i, Map<String, Object> keyValuePairs)
+			throws RuleFormatException, RuleApplicationException {
+		failIfNotAllNamed(i);
+		failIfIncorrectlyTyped(r);
+		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
+		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			IndexHits<Relationship> hits = index.get(key, value);
+			if (store.isDefined(r)) {
+				Relationship relationship = store.get(r);
+				boolean indexed = false;
+				for (Relationship hit : hits) {
+					indexed = indexed || (relationship.getId() == hit.getId());
+				}
+				if (!indexed) {
+					index.add(relationship, key, value);
+				}
+			} else if (r.hasType()) {
+				RelationshipType type = DynamicRelationshipType.withName(r.getType());
+				Relationship relationship = null;
+				for (Relationship hit : hits) {
+					if (hit.isType(type)) {
+						relationship = hit;
+						break;
+					}
+				}
+				failIfNull(relationship, String.format("No index entries found of type %s", r.getType()));
+				store.define(r, relationship);
+			} else {
+				Relationship relationship = null;
+				for (Relationship hit : hits) {
+					relationship = hit;
+					break;
+				}
+				failIfNull(relationship, "No index entries found");
+				store.define(r, relationship);
+			}
+		}
+	}
+
+	/**
+	 * Exclude Node Index Entry
+	 * ========================
 	 *
 	 * (A)!=|I| {...}
 	 *
 	 * @param a node token
 	 * @param i index token
-	 * @param data
+	 * @param keyValuePairs
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private void applyNodeIndexExclusionRule(NodeToken a, IndexToken i, Map<String, Object> data)
+	private void excludeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleFormatException, RuleApplicationException {
 		failIfNotAllNamed(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
 		if (store.isDefined(a)) {
 			Node node = store.get(a);
-			for (Map.Entry<String, Object> entry : data.entrySet()) {
+			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				index.remove(node, entry.getKey(), entry.getValue());
 			}
 		} else {
-			for (Map.Entry<String, Object> entry : data.entrySet()) {
+			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				IndexHits<Node> hits = index.get(key, value);
@@ -450,34 +416,32 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	// R'I
-
 	/**
-	 * Relationship Index Exclusion Rule
-	 * =================================
+	 * Exclude Relationship Index Entry
+	 * ================================
 	 *
 	 * [R]!=|I|   {...}
 	 * [R:T]!=|I| {...}
 	 *
 	 * @param r relationship token
 	 * @param i index token
-	 * @param data
+	 * @param keyValuePairs
 	 * @throws RuleFormatException
 	 * @throws RuleApplicationException
 	 */
-	private void applyRelationshipIndexExclusionRule(RelToken r, IndexToken i, Map<String, Object> data)
+	private void excludeIndexEntry(RelToken r, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleFormatException, RuleApplicationException {
 		failIfNotAllNamed(i);
 		failIfIncorrectlyTyped(r);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
 		if (store.isDefined(r)) {
 			Relationship relationship = store.get(r);
-			for (Map.Entry<String, Object> entry : data.entrySet()) {
+			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				index.remove(relationship, entry.getKey(), entry.getValue());
 			}
 		} else if (r.hasType()) {
 			RelationshipType type = DynamicRelationshipType.withName(r.getType());
-			for (Map.Entry<String, Object> entry : data.entrySet()) {
+			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				IndexHits<Relationship> hits = index.get(key, value);
@@ -489,7 +453,7 @@ public class Neo4jNamespace implements Namespace {
 				}
 			}
 		} else {
-			for (Map.Entry<String, Object> entry : data.entrySet()) {
+			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				IndexHits<Relationship> hits = index.get(key, value);
@@ -535,12 +499,6 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	private void failIfTyped(RelToken relToken) throws RuleFormatException {
-		if (relToken.hasType()) {
-			throw new RuleFormatException(this.ruleNumber, "Relationship cannot have a type: " + relToken.toString());
-		}
-	}
-
 	private void failIfNotEmpty(Map map) throws RuleFormatException {
 		if (map != null && !map.isEmpty()) {
 			throw new RuleFormatException(this.ruleNumber, "Data cannot be supplied with this rule");
@@ -565,7 +523,7 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	private void failIfIncorrectlyTyped(RelToken rel) throws RuleApplicationException {
-		if (store.stateOf(rel) == RelState.DEFINED_AND_INCORRECTLY_TYPED) {
+		if (store.isIncorrectlyTyped(rel)) {
 			throw new RuleApplicationException(this.ruleNumber, "Relationship is incorrectly typed: " + rel.toString());
 		}
 	}

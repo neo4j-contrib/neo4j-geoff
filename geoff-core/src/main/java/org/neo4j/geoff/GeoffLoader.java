@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-public class GEOFFLoader<NS extends Namespace> {
+public class GeoffLoader<NS extends Namespace> {
 
 	private final NS namespace;
 	
@@ -32,14 +32,14 @@ public class GEOFFLoader<NS extends Namespace> {
 		return this.namespace;
 	}
 	
-	GEOFFLoader(Reader ruleReader, NS namespace)
-			throws IOException, GEOFFLoadException {
+	GeoffLoader(Reader ruleReader, NS namespace)
+			throws IOException, GeoffLoadException {
 		this.namespace = namespace;
 		load(ruleReader);
 	}
 
-	GEOFFLoader(Iterable<?> rules, NS namespace)
-			throws IOException, GEOFFLoadException {
+	GeoffLoader(Iterable<?> rules, NS namespace)
+			throws IOException, GeoffLoadException {
 		this.namespace = namespace;
 		load(rules);
 	}
@@ -50,9 +50,9 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param rules a collection of rules and nested rules to load
 	 * @throws IOException
-	 * @throws GEOFFLoadException
+	 * @throws GeoffLoadException
 	 */
-	void load(Iterable<?> rules) throws IOException, GEOFFLoadException {
+	void load(Iterable<?> rules) throws IOException, GeoffLoadException {
 		StringReader reader;
 		for(Object item : rules) {
 			if (item instanceof Rule) {
@@ -79,9 +79,9 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param ruleReader the Reader to read rules from
 	 * @throws IOException
-	 * @throws GEOFFLoadException
+	 * @throws GeoffLoadException
 	 */
-	void load(Reader ruleReader) throws IOException, GEOFFLoadException {
+	void load(Reader ruleReader) throws IOException, GeoffLoadException {
 		BufferedReader bufferedReader = new BufferedReader(ruleReader);
 		try {
 			String ruleString = bufferedReader.readLine();
@@ -99,9 +99,9 @@ public class GEOFFLoader<NS extends Namespace> {
 	 *
 	 * @param ruleString the rule or rules to load
 	 * @throws IOException
-	 * @throws GEOFFLoadException
+	 * @throws GeoffLoadException
 	 */
-	void load(String ruleString) throws IOException, GEOFFLoadException {
+	void load(String ruleString) throws IOException, GeoffLoadException {
 		if (ruleString.contains("\n")) {
 			StringReader reader = new StringReader(ruleString);
 			try {
