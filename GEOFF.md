@@ -68,6 +68,132 @@ properties on that node:
 
 ## Relationships
 
+Representation of relationships in GEOFF is similar to that of nodes except
+that square brackets are used instead of parentheses. Additionally,
+relationships may optionally have an attached type (which is required when
+attempting to create a new relationship).
+
+```
+# Create an anonymous relationship of type "KNOWS"
+[:KNOWS] {"how_many_years": 4}
+
+# Create a similar relationship, named "REL1"
+[REL1:KNOWS] {"how_many_years": 4}
+```
+
+The examples above all define simple relationships where the start and end
+nodes have not been explicitly specified. In these cases, new anonymous nodes
+will be implicitly created before connecting them with the new relationship.
+
+As with nodes, it is possible to update realtionships which have previously
+been defined using a similar notation:
+
+```
+# Update the relationship "REL1" with new properties
+[REL1] {"how_many_years": 5}
+
+# Update the relationship "REL1" with new properties (if of type "KNOWS")
+[REL1:KNOWS] {"how_many_years": 6}
+
+# Update the relationship "REL1" with new properties (if of type "LOVES")
+# In this example, this will be filtered out and ignored as an incorrect
+# relationship type has been specified
+[REL1:LOVES] {"how_many_years": 7}
+```
+
+Defining new relationships would not be much use if it were not possible to
+refer to the nodes which they connect. The notation above is actually a
+shorthand form of the longer ASCII art style notation ```()-[R:TYPE]->()```.
+Those familiar with Cypher will of course recognise the pattern from this
+language.
+
+The full relationship notation of course allows more complex combinations of
+rules to be defined, including using named nodes. The following two examples
+illustrate how to pre-define and post-define the nodes of a new realtionship
+respectively; both produce identical results:
+
+```
+# Example 1: create nodes, then join with relationship
+(A)                {"name": "Alice"}
+(B)                {"name": "Bob"}
+(A)-[R:KNOWS]->(B) {"since": 1977}
+
+# Example 2: create relationship, then update node properties
+(A)-[R:KNOWS]->(B) {"since": 1977}
+(A)                {"name": "Alice"}
+(B)                {"name": "Bob"}
+```
+
 ## Index Entries
 
 ## Parameters
+
+## Dictionary of Notation
+
+```
+# create anonymous node with no properties
+()
+() {}
+
+# create anonymous node with properties
+() {"property": "value"}
+
+# create node A with no properties
+(A)
+
+# create node A with no properties or
+# update node A to remove all properties
+(A) {}
+
+# create node A with properties or
+# update node A with replacement properties
+(A) {"property": "value"}
+
+# create anonymous relationship of type TYPE between two new anonymous nodes
+[:TYPE]        {"property": "value"}
+()-[:TYPE]->() {"property": "value"}
+
+# create relationship R of type TYPE between two new anonymous nodes or
+# update relationship R (if of type TYPE) with replacement properties
+[R:TYPE]        {"property": "value"}
+()-[R:TYPE]->() {"property": "value"}
+
+# update relationship R with replacement properties
+[R]        {"property": "value"}
+()-[R]->() {"property": "value"}
+
+# create relationship R of type TYPE between one or more named nodes or
+# update relationship R (if of type TYPE) with replacement properties
+# - if A and/or B are undefined, look up start and end nodes respectively
+(A)-[R:TYPE]->()  {"property": "value"}
+(A)-[R:TYPE]->(B) {"property": "value"}
+()-[R:TYPE]->(B)  {"property": "value"}
+
+# update relationship R with replacement properties
+# - if A and/or B are undefined, look up start and end nodes respectively
+(A)-[R]->()  {"property": "value"}
+(A)-[R]->(B) {"property": "value"}
+()-[R]->(B)  {"property": "value"}
+
+# create relationship of type TYPE between one or more named nodes 
+(A)-[:TYPE]->()  {"property": "value"}
+(A)-[:TYPE]->(B) {"property": "value"}
+()-[:TYPE]->(B)  {"property": "value"}
+
+# ensure inclusion of node in index under key:value pair
+# - if node defined and index entry doesn't exist, add index entry
+# - if node undefined and index entry exists, look up index entry
+# - if node undefined and entry doesn't exist, create node and add entry
+(A)<=|Index| {"key": "value"}
+
+# ensure inclusion of relationship in index under key:value pair
+# - if rel defined and index entry doesn't exist, add index entry
+# - if rel undefined and index entry exists, look up index entry
+[R]<=|Index| {"key": "value"}
+
+# ensure inclusion of relationship in index under key:value pair
+# - if rel of type TYPE defined and index entry doesn't exist, add index entry
+# - if rel undefined and index entry of type TYPE exists, look up index entry
+# - if rel undefined and entry doesn't exist, create rel and add entry
+[R:TYPE]<=|Index| {"key": "value"}
+```

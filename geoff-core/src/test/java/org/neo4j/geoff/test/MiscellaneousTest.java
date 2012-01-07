@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.neo4j.geoff.test.TestDatabase.*;
 
 public class MiscellaneousTest {
 
@@ -174,6 +175,40 @@ public class MiscellaneousTest {
 	@Before
 	public void setUp() throws Exception {
 		db = new ImpermanentGraphDatabase();
+	}
+
+	@Test
+	public void canCreateNodesBeforeRelationship() throws Exception {
+		TestDatabase db = new TestDatabase();
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(A)                {\"name\": \"Alice Allison\"}");
+		geoff.append("(B)                {\"name\": \"Bob Robertson\"}");
+		geoff.append("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNodesExist(out, "(A)", "(B)");
+		assertAlice((Node) out.get("(A)"));
+		assertBob((Node) out.get("(B)"));
+		assertRelationshipsExist(out, "[R]");
+		assertTrue(out.get("[R]").hasProperty("since"));
+		assertEquals(1977, out.get("[R]").getProperty("since"));
+		db.assertCounts(3, 1);
+	}
+
+	@Test
+	public void canCreateRelationshipBeforeNodes() throws Exception {
+		TestDatabase db = new TestDatabase();
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
+		geoff.append("(A)                {\"name\": \"Alice Allison\"}");
+		geoff.append("(B)                {\"name\": \"Bob Robertson\"}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNodesExist(out, "(A)", "(B)");
+		assertAlice((Node) out.get("(A)"));
+		assertBob((Node) out.get("(B)"));
+		assertRelationshipsExist(out, "[R]");
+		assertTrue(out.get("[R]").hasProperty("since"));
+		assertEquals(1977, out.get("[R]").getProperty("since"));
+		db.assertCounts(3, 1);
 	}
 
 }
