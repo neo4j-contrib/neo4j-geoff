@@ -54,6 +54,7 @@ public class OverlappingFileTest {
 	public void canLoadOverlappingFiles() throws GeoffLoadException, IOException {
 		db = new ImpermanentGraphDatabase();
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity v2.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
 		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
 		assertNotNull(out);
@@ -81,7 +82,7 @@ public class OverlappingFileTest {
 		db = new ImpermanentGraphDatabase();
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
-		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity v2.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
