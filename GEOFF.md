@@ -103,7 +103,7 @@ been defined using a similar notation:
 
 Defining new relationships would not be much use if it were not possible to
 refer to the nodes which they connect. The notation above is actually a
-shorthand form of the longer ASCII art style notation ```()-[R:TYPE]->()```.
+shorthand form of the longer ASCII art style notation `()-[R:TYPE]->()`.
 Those familiar with Cypher will of course recognise the pattern from this
 language.
 
@@ -127,6 +127,29 @@ respectively; both produce identical results:
 ## Index Entries
 
 ## Parameters
+
+## Installation and Usage
+
+### Java
+
+### Java (REST server plugin)
+
+To install, copy the [geoff-core.jar](http://py2neo.org/geoff/geoff-core.jar)
+file into `$NEO4J_HOME/system/lib/` and the
+[geoff-plugin.jar](http://py2neo.org/geoff/geoff-core.jar) file into
+`$NEO4J_HOME/plugins/`. Make sure to restart the server to enable the plugin.
+
+### Python (py2neo)
+
+A `geoff.py` module is provided with [py2neo](http://py2neo.org/) which allows
+dumping and loading of data through functions familiar to those who have used
+the Python [pickle](http://docs.python.org/library/pickle.html) and
+[marshal](http://docs.python.org/library/marshal.html) modules.
+
+If the REST server plugin has been installed (see above) then this py2neo will
+detect and use this plugin for loading Geoff data. If this plugin is not
+available, a client-side version will be used instead. Please note that the
+client-side version is now deprecated in favour of the server plugin.
 
 ## Dictionary of Notation
 
