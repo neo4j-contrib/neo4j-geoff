@@ -43,7 +43,7 @@ either a name or a set of data, therefore allowing variations such as:
 # Create a node with no data
 (bert)
 
-# Create a nameless, dataless node!
+# Create a nameless, data-less node!
 ()
 ```
 
