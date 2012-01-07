@@ -19,6 +19,8 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.except.RuleApplicationException;
+
 /**
  * Provides context for items to be added to a database and retained by
  * name so that they may be referred to from within the same context.
@@ -27,13 +29,11 @@ package org.neo4j.geoff;
  */
 public interface Namespace {
 
-	public int getRuleNumber();
-
 	/**
 	 * Apply a single rule to this namespace.
 	 *
 	 * @param rule the rule to apply
-	 * @throws RuleFormatException if the rule content is deemed illegal
+	 * @throws org.neo4j.geoff.except.RuleFormatException if the rule content is deemed illegal
 	 * @throws RuleApplicationException if the rule fails during application
 	 */
 	public void apply(Rule rule) throws RuleApplicationException;
@@ -42,7 +42,7 @@ public interface Namespace {
 	 * Apply a list of rules to this namespace.
 	 *
 	 * @param rules the list of rules to apply
-	 * @throws RuleFormatException if the content of any rule is deemed illegal
+	 * @throws org.neo4j.geoff.except.RuleFormatException if the content of any rule is deemed illegal
 	 * @throws RuleApplicationException if the rule fails during application
 	 */
 	public void apply(Iterable<Rule> rules) throws RuleApplicationException;

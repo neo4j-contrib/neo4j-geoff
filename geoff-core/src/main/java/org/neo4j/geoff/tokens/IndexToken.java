@@ -17,46 +17,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.tokens;
 
-public class Token {
+public class IndexToken extends NameableToken {
 
-	public static enum Type {
-
-		NODE('N'),
-		REL('R'),
-		INDEX('I'),
-		DASH('-'),
-		ARROW('>'),
-		BANG('!'),
-		REFLECTS('='),
-		INCLUDED_IN('^'),
-		EXCLUDED_FROM('\'');
-
-		private final char symbol;
-
-		private Type(char symbol) {
-			this.symbol = symbol;
-		}
-
-		public char getSymbol() {
-			return this.symbol;
-		}
-
-	}
-
-	private final Type tokenType;
-
-	public Token(Type tokenType) {
-		this.tokenType = tokenType;
-	}
-
-	public Type getTokenType() {
-		return this.tokenType;
+	public IndexToken(String name) {
+		super(Type.INDEX, name);
 	}
 
 	@Override
 	public String toString() {
-		return this.tokenType.name();
+		return String.format("|%s|", this.name);
 	}
+
 }

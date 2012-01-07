@@ -20,7 +20,7 @@
 package org.neo4j.server.plugin.geoff;
 
 import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.GeoffLoadException;
+import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.server.plugins.*;

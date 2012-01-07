@@ -22,7 +22,7 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.GeoffLoadException;
+import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -52,8 +52,41 @@ public class OverlappingFileTest {
 	 */
 	@Test
 	public void canLoadOverlappingFiles() throws GeoffLoadException, IOException {
+		db = new ImpermanentGraphDatabase();
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
+		assertNotNull(out);
+		assertTrue(out.containsKey("(bowie)"));
+		assertTrue(out.get("(bowie)") instanceof Node);
+		Node bowie = (Node) out.get("(bowie)");
+		assertEquals("David Robert Jones", bowie.getProperty("real_name"));
+		assertTrue(bowie.hasRelationship(Direction.OUTGOING, DynamicRelationshipType.withName("RELEASED")));
+		int rels = 0;
+		for(Relationship rel : bowie.getRelationships(Direction.OUTGOING, DynamicRelationshipType.withName("RELEASED"))) {
+			rels++;
+			Node artist = rel.getStartNode();
+			Node track = rel.getEndNode();
+			System.out.println(String.format("%s released %s on %s",
+					artist.getProperty("name"),
+					track.getProperty("name"),
+					rel.getProperty("release_date")
+			));
+		}
+		assertEquals(3, rels);
+	}
+
+	@Test
+	public void canLoadFilesMultipleTimes() throws GeoffLoadException, IOException {
+		db = new ImpermanentGraphDatabase();
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
+		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
 		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(readerForResource("music/David Bowie.geoff"), db, null);
 		assertNotNull(out);
 		assertTrue(out.containsKey("(bowie)"));

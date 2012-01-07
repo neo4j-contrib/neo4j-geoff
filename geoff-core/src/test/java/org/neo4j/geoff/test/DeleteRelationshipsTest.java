@@ -21,7 +21,11 @@ package org.neo4j.geoff.test;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.geoff.*;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.Rule;
+import org.neo4j.geoff.tokens.NodeToken;
+import org.neo4j.geoff.tokens.RelationshipToken;
+import org.neo4j.geoff.tokens.Token;
 import org.neo4j.graphdb.*;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
@@ -32,7 +36,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 
-public class DeleteRelationshipTest {
+public class DeleteRelationshipsTest {
 
 	private ImpermanentGraphDatabase db;
 
@@ -47,8 +51,8 @@ public class DeleteRelationshipTest {
 		Rule rule = Rule.from(source);
 		assertNotNull(rule);
 		assertEquals("!R", rule.getDescriptor().getPattern());
-		assertTrue(rule.getDescriptor().getToken(1) instanceof RelToken);
-		RelToken token = (RelToken) rule.getDescriptor().getToken(1);
+		assertTrue(rule.getDescriptor().getToken(1) instanceof RelationshipToken);
+		RelationshipToken token = (RelationshipToken) rule.getDescriptor().getToken(1);
 		assertEquals(Token.Type.REL, token.getTokenType());
 		assertTrue(token.hasName());
 		assertEquals("R", token.getName());
@@ -62,17 +66,17 @@ public class DeleteRelationshipTest {
 		assertNotNull(rule);
 		assertEquals("N-R-!N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelationshipToken);
 		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
 		NodeToken startToken = (NodeToken) rule.getDescriptor().getToken(0);
 		assertEquals(Token.Type.NODE, startToken.getTokenType());
 		assertTrue(startToken.hasName());
 		assertEquals("A", startToken.getName());
-		RelToken relToken = (RelToken) rule.getDescriptor().getToken(2);
-		assertEquals(Token.Type.REL, relToken.getTokenType());
-		assertFalse(relToken.hasName());
-		assertTrue(relToken.hasType());
-		assertEquals("T", relToken.getType());
+		RelationshipToken relationshipToken = (RelationshipToken) rule.getDescriptor().getToken(2);
+		assertEquals(Token.Type.REL, relationshipToken.getTokenType());
+		assertFalse(relationshipToken.hasName());
+		assertTrue(relationshipToken.hasType());
+		assertEquals("T", relationshipToken.getType());
 		NodeToken endToken = (NodeToken) rule.getDescriptor().getToken(5);
 		assertEquals(Token.Type.NODE, endToken.getTokenType());
 		assertTrue(endToken.hasName());
@@ -86,17 +90,17 @@ public class DeleteRelationshipTest {
 		assertNotNull(rule);
 		assertEquals("N-R-!N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelationshipToken);
 		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
 		NodeToken startToken = (NodeToken) rule.getDescriptor().getToken(0);
 		assertEquals(Token.Type.NODE, startToken.getTokenType());
 		assertTrue(startToken.hasName());
 		assertEquals("A", startToken.getName());
-		RelToken relToken = (RelToken) rule.getDescriptor().getToken(2);
-		assertEquals(Token.Type.REL, relToken.getTokenType());
-		assertFalse(relToken.hasName());
-		assertTrue(relToken.hasType());
-		assertEquals("T", relToken.getType());
+		RelationshipToken relationshipToken = (RelationshipToken) rule.getDescriptor().getToken(2);
+		assertEquals(Token.Type.REL, relationshipToken.getTokenType());
+		assertFalse(relationshipToken.hasName());
+		assertTrue(relationshipToken.hasType());
+		assertEquals("T", relationshipToken.getType());
 		NodeToken endToken = (NodeToken) rule.getDescriptor().getToken(5);
 		assertEquals(Token.Type.NODE, endToken.getTokenType());
 		assertFalse(endToken.hasName());
@@ -109,16 +113,16 @@ public class DeleteRelationshipTest {
 		assertNotNull(rule);
 		assertEquals("N-R-!N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelationshipToken);
 		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
 		NodeToken startToken = (NodeToken) rule.getDescriptor().getToken(0);
 		assertEquals(Token.Type.NODE, startToken.getTokenType());
 		assertFalse(startToken.hasName());
-		RelToken relToken = (RelToken) rule.getDescriptor().getToken(2);
-		assertEquals(Token.Type.REL, relToken.getTokenType());
-		assertFalse(relToken.hasName());
-		assertTrue(relToken.hasType());
-		assertEquals("T", relToken.getType());
+		RelationshipToken relationshipToken = (RelationshipToken) rule.getDescriptor().getToken(2);
+		assertEquals(Token.Type.REL, relationshipToken.getTokenType());
+		assertFalse(relationshipToken.hasName());
+		assertTrue(relationshipToken.hasType());
+		assertEquals("T", relationshipToken.getType());
 		NodeToken endToken = (NodeToken) rule.getDescriptor().getToken(5);
 		assertEquals(Token.Type.NODE, endToken.getTokenType());
 		assertTrue(endToken.hasName());

@@ -17,12 +17,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.except;
 
-public class SyntaxError extends Exception {
 
-	public SyntaxError(String s, Throwable throwable) {
+public class GeoffLoadException extends Exception {
+
+	protected final Integer ruleNumber;
+
+	public GeoffLoadException(int ruleNumber, String s) {
+		super(s);
+		this.ruleNumber = ruleNumber;
+	}
+
+	public GeoffLoadException(int ruleNumber, String s, Throwable throwable) {
 		super(s, throwable);
+		this.ruleNumber = ruleNumber;
 	}
 
 }

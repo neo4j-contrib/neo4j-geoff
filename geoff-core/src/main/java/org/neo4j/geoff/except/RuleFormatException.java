@@ -17,33 +17,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.except;
 
-public abstract class NameableToken extends Token {
+public class RuleFormatException extends GeoffLoadException {
 
-	public static boolean isValidNameChar(char ch) {
-		return Character.isLetterOrDigit(ch) || ch == '_';
-	}
-
-	protected final String name;
-
-	public NameableToken(Type tokenType, String name) {
-		super(tokenType);
-		this.name = name;
-	}
-
-	public boolean hasName() {
-		return !(this.name == null || this.name.isEmpty() || "*".equals(this.name));
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public abstract String getFullName();
-	
-	public boolean isStarred() {
-		return "*".equals(this.name);
+	public RuleFormatException(int ruleNumber, String s, Throwable throwable) {
+		super(ruleNumber, s, throwable);
 	}
 
 }

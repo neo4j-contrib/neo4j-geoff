@@ -17,22 +17,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.tokens;
 
-public class NodeToken extends NameableToken {
+public abstract class NameableToken extends Token {
 
-	public NodeToken(String name) {
-		super(Type.NODE, name);
+	protected final String name;
+
+	public NameableToken(Type tokenType, String name) {
+		super(tokenType);
+		this.name = name;
 	}
 
-	@Override
-	public String getFullName() {
-		return String.format("(%s)", this.name);
+	public boolean hasName() {
+		return !(this.name == null || this.name.isEmpty() || "*".equals(this.name));
 	}
 
-	@Override
-	public String toString() {
-		return String.format("(%s)", this.name);
+	public String getName() {
+		return this.name;
 	}
 
 }

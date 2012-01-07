@@ -19,6 +19,8 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.except.GeoffLoadException;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;

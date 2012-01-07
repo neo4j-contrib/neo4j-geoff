@@ -20,9 +20,15 @@
 package org.neo4j.geoff.test;
 
 import org.junit.Test;
-import org.neo4j.geoff.*;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.Rule;
+import org.neo4j.geoff.except.RuleApplicationException;
+import org.neo4j.geoff.tokens.NodeToken;
+import org.neo4j.geoff.tokens.RelationshipToken;
+import org.neo4j.geoff.tokens.Token;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,12 +47,12 @@ public class CreateOrUpdateRelationshipTest {
 		Rule rule = Rule.from(source);
 		assertNotNull(rule);
 		assertEquals("R", rule.getDescriptor().getPattern());
-		assertTrue(rule.getDescriptor().getToken(0) instanceof RelToken);
-		RelToken relToken = (RelToken) rule.getDescriptor().getToken(0);
-		assertEquals(Token.Type.REL, relToken.getTokenType());
-		assertFalse(relToken.hasName());
-		assertTrue(relToken.hasType());
-		assertEquals("KNOWS", relToken.getType());
+		assertTrue(rule.getDescriptor().getToken(0) instanceof RelationshipToken);
+		RelationshipToken relationshipToken = (RelationshipToken) rule.getDescriptor().getToken(0);
+		assertEquals(Token.Type.REL, relationshipToken.getTokenType());
+		assertFalse(relationshipToken.hasName());
+		assertTrue(relationshipToken.hasType());
+		assertEquals("KNOWS", relationshipToken.getType());
 		assertTrue(rule.getData().containsKey("since"));
 		assertEquals(1977, rule.getData().get("since"));
 	}
@@ -58,17 +64,17 @@ public class CreateOrUpdateRelationshipTest {
 		assertNotNull(rule);
 		assertEquals("N-R->N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
-		assertTrue(rule.getDescriptor().getToken(2) instanceof RelToken);
+		assertTrue(rule.getDescriptor().getToken(2) instanceof RelationshipToken);
 		assertTrue(rule.getDescriptor().getToken(5) instanceof NodeToken);
 		NodeToken startToken = (NodeToken) rule.getDescriptor().getToken(0);
 		assertEquals(Token.Type.NODE, startToken.getTokenType());
 		assertTrue(startToken.hasName());
 		assertEquals("A", startToken.getName());
-		RelToken relToken = (RelToken) rule.getDescriptor().getToken(2);
-		assertEquals(Token.Type.REL, relToken.getTokenType());
-		assertFalse(relToken.hasName());
-		assertTrue(relToken.hasType());
-		assertEquals("KNOWS", relToken.getType());
+		RelationshipToken relationshipToken = (RelationshipToken) rule.getDescriptor().getToken(2);
+		assertEquals(Token.Type.REL, relationshipToken.getTokenType());
+		assertFalse(relationshipToken.hasName());
+		assertTrue(relationshipToken.hasType());
+		assertEquals("KNOWS", relationshipToken.getType());
 		NodeToken endToken = (NodeToken) rule.getDescriptor().getToken(5);
 		assertEquals(Token.Type.NODE, endToken.getTokenType());
 		assertTrue(endToken.hasName());
@@ -378,49 +384,74 @@ public class CreateOrUpdateRelationshipTest {
 
 	/////////////////////
 
-	@Test(expected = RuleApplicationException.class)
-	public void cannotUpdateShortNamedIncorrectlyTypedRelationship() throws Exception {
+	@Test
+	public void ignoresShortNamedIncorrectlyTypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("[R:HATES] {\"foo\": \"bar\"}");
-		Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		assertRelationshipsExist(out, "[R]");
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertFalse(relationship.hasProperty("foo"));
+		assertTrue(relationship.hasProperty("since"));
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
-	@Test(expected = RuleApplicationException.class)
-	public void cannotUpdateNamedIncorrectlyTypedRelationship() throws Exception {
+	@Test
+	public void ignoresNamedIncorrectlyTypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("()-[R:HATES]->() {\"foo\": \"bar\"}");
-		Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		assertRelationshipsExist(out, "[R]");
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertFalse(relationship.hasProperty("foo"));
+		assertTrue(relationship.hasProperty("since"));
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
-	@Test(expected = RuleApplicationException.class)
-	public void cannotUpdateNamedIncorrectlyTypedRelationshipA() throws Exception {
+	@Test
+	public void ignoresNamedIncorrectlyTypedRelationshipA() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("(A)-[R:HATES]->() {\"foo\": \"bar\"}");
-		Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		assertRelationshipsExist(out, "[R]");
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertFalse(relationship.hasProperty("foo"));
+		assertTrue(relationship.hasProperty("since"));
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
-	@Test(expected = RuleApplicationException.class)
-	public void cannotUpdateNamedIncorrectlyTypedRelationshipAB() throws Exception {
+	@Test
+	public void ignoresNamedIncorrectlyTypedRelationshipAB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("(A)-[R:HATES]->(B) {\"foo\": \"bar\"}");
-		Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		assertRelationshipsExist(out, "[R]");
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertFalse(relationship.hasProperty("foo"));
+		assertTrue(relationship.hasProperty("since"));
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
-	@Test(expected = RuleApplicationException.class)
-	public void cannotUpdateNamedIncorrectlyTypedRelationshipB() throws Exception {
+	@Test
+	public void ignoresNamedIncorrectlyTypedRelationshipB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("()-[R:HATES]->(B) {\"foo\": \"bar\"}");
-		Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, params);
+		assertRelationshipsExist(out, "[R]");
+		Relationship relationship = (Relationship) out.get("[R]");
+		assertFalse(relationship.hasProperty("foo"));
+		assertTrue(relationship.hasProperty("since"));
+		assertEquals(1977, relationship.getProperty("since"));
 	}
 
 	/////////////////////

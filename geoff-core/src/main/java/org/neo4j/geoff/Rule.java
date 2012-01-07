@@ -19,6 +19,8 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.except.RuleFormatException;
+import org.neo4j.geoff.except.SyntaxError;
 import org.neo4j.geoff.util.JSON;
 import org.neo4j.geoff.util.JSONException;
 

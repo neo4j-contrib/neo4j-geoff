@@ -17,16 +17,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.tokens;
 
-public class RuleFormatException extends GeoffLoadException {
+public abstract class EntityToken extends NameableToken {
 
-	RuleFormatException(int ruleNumber, String s) {
-		super(ruleNumber, s);
+	private static String beforeDot(String name) {
+		int dot = name.indexOf('.');
+		if (dot >= 0) {
+			return name.substring(0, dot);
+		} else {
+			return name;
+		}
 	}
 
-	RuleFormatException(int ruleNumber, String s, Throwable throwable) {
-		super(ruleNumber, s, throwable);
+	private static int afterDot(String name, int defaultValue) {
+		int dot = name.indexOf('.');
+		if (dot >= 0) {
+			return Integer.parseInt(name.substring(dot + 1));
+		} else {
+			return defaultValue;
+		}
+	}
+
+	protected final int index;
+	
+	public EntityToken(Type tokenType, String name) {
+		super(tokenType, beforeDot(name));
+		this.index = afterDot(name, 0);
+	}
+
+	public int getIndex() {
+		return this.index;
 	}
 
 }

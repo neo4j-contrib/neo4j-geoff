@@ -21,9 +21,9 @@ package org.neo4j.geoff.test;
 
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.NodeToken;
 import org.neo4j.geoff.Rule;
-import org.neo4j.geoff.Token;
+import org.neo4j.geoff.tokens.NodeToken;
+import org.neo4j.geoff.tokens.Token;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 

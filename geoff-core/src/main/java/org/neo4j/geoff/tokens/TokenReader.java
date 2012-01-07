@@ -17,8 +17,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.tokens;
 
+import org.neo4j.geoff.except.SyntaxError;
 import org.neo4j.geoff.util.UeberReader;
 
 import java.io.IOException;
@@ -29,6 +30,14 @@ public class TokenReader extends UeberReader {
 
 	public TokenReader(Reader reader) {
 		super(reader);
+	}
+
+	public static boolean isDigit(char ch) {
+		return Character.isDigit(ch);
+	}
+
+	public static boolean isNameChar(char ch) {
+		return Character.isLetterOrDigit(ch) || ch == '_';
 	}
 
 	public Token[] readTokens() throws IOException, SyntaxError {
@@ -49,7 +58,7 @@ public class TokenReader extends UeberReader {
 					break;
 				case '-':
 					read('-');
-					tokens.add(new Token(Token.Type.DASH));
+					tokens.add(new Token(Token.Type.SINGLE_LINE));
 					break;
 				case '>':
 					read('>');
@@ -69,10 +78,9 @@ public class TokenReader extends UeberReader {
 						tokens.add(new Token(Token.Type.BANG));
 					}
 					break;
-				case ':':
-					read(':');
+				case '=':
 					read('=');
-					tokens.add(new Token(Token.Type.REFLECTS));
+					tokens.add(new Token(Token.Type.DOUBLE_LINE));
 					break;
 				default:
 					throw new UnexpectedCharacterException(ch);
@@ -88,20 +96,14 @@ public class TokenReader extends UeberReader {
 
 	public NodeToken readNodeToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
 		read('(');
-		char ch = peek();
 		NodeToken token;
-		if(ch == '*') {
-			read('*');
-			token = new NodeToken("*");
-		} else {
-			String name = readName();
-			token = new NodeToken(name);
-		}
+		String name = readName();
+		token = new NodeToken(name);
 		read(')');
 		return token;
 	}
 
-	public RelToken readRelToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+	public RelationshipToken readRelToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
 		read('[');
 		String name = readName();
 		String type = "";
@@ -110,7 +112,7 @@ public class TokenReader extends UeberReader {
 			type = readName();
 		}
 		read(']');
-		return new RelToken(name, type);
+		return new RelationshipToken(name, type);
 	}
 
 	public Token readIndexToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
@@ -120,10 +122,22 @@ public class TokenReader extends UeberReader {
 		return new IndexToken(name);
 	}
 
-	public String readName() throws IOException, EndOfStreamException {
+	public String readName() throws IOException, EndOfStreamException, UnexpectedCharacterException {
 		StringBuilder str = new StringBuilder(80);
-		while(NameableToken.isValidNameChar(peek())) {
+		while (isNameChar(peek())) {
 			str.append(read());
+		}
+		if (peek() == '.') {
+			str.append(read('.'));
+			char ch = peek();
+			if (ch >= '1' && ch <= '9') {
+				str.append(read(ch));
+			} else {
+				throw new UnexpectedCharacterException(ch);
+			}
+			while (isDigit(peek())) {
+				str.append(read());
+			}
 		}
 		return str.toString();
 	}

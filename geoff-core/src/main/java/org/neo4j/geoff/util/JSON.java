@@ -35,6 +35,7 @@ public class JSON {
 	 * @return a list of lists
 	 * @throws JSONException when all hope is gone...
 	 */
+	@SuppressWarnings("unchecked")
 	public static List<String> toListOfStrings(String json)
 			throws JSONException {
 		if (json == null || json.isEmpty()) {
@@ -59,6 +60,7 @@ public class JSON {
 	 * @return a String:Object collection
 	 * @throws JSONException when all hope is gone...
 	 */
+	@SuppressWarnings("unchecked")
 	public static Map<String, Object> toObject(String json)
 			throws JSONException {
 		if (json == null || json.isEmpty()) {
@@ -83,6 +85,7 @@ public class JSON {
 	 * @return
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("unchecked")
 	public static Map<String, Map<String, Object>> toObjectOfObjects(String json)
 			throws JSONException {
 		if (json == null || json.isEmpty()) {

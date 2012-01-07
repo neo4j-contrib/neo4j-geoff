@@ -17,22 +17,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.tokens;
 
-public class IndexToken extends NameableToken {
+public class NodeToken extends EntityToken {
 
-	public IndexToken(String name) {
-		super(Type.INDEX, name);
-	}
-
-	@Override
-	public String getFullName() {
-		return String.format("|%s|", this.name);
+	public NodeToken(String name) {
+		super(Type.NODE, name);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("|%s|", this.name);
+		if (this.index == 0) {
+			return String.format("(%s)", this.name);
+		} else {
+			return String.format("(%s.%d)", this.name, this.index);
+		}
 	}
 
 }

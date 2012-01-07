@@ -19,6 +19,7 @@
  */
 package org.neo4j.geoff;
 
+import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Transaction;

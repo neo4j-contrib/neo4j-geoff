@@ -17,16 +17,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.test.util;
 
-public class RuleApplicationException extends GeoffLoadException {
+import org.junit.Test;
+import org.neo4j.geoff.util.SparseArray;
 
-	RuleApplicationException(int ruleNumber, String s) {
-		super(ruleNumber, s);
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+public class SparseArrayTest {
+	
+	@Test
+	public void canCreateArray() {
+		SparseArray<String> array = new SparseArray<String>();
+		array.put(10, "foo");
+		array.put(6, "bar");
+		assertTrue(array.hasIndex(6));
+		assertTrue(array.hasIndex(10));
+		assertFalse(array.hasIndex(9));
+		assertEquals("foo", array.get(10));
+		array.remove(10);
+		assertTrue(array.hasIndex(6));
+		assertFalse(array.hasIndex(10));
+		List<String> list = array.toList();
+		assertNotNull(list);
+		assertEquals(1, list.size());
+		assertEquals("bar", list.get(0));
 	}
-
-	RuleApplicationException(int ruleNumber, String s, Throwable throwable) {
-		super(ruleNumber, s, throwable);
-	}
-
+	
 }

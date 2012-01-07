@@ -17,42 +17,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.except;
 
-public class RelToken extends NameableToken {
+public class SyntaxError extends Exception {
 
-	protected final String type;
-
-	public RelToken(String name, String type) {
-		super(Type.REL, name);
-		this.type = type;
-	}
-
-	public RelToken(String name) {
-		super(Type.REL, name);
-		this.type = null;
-	}
-
-	public boolean hasType() {
-		return !(this.type == null || this.type.isEmpty() || "*".equals(this.type));
-	}
-
-	public String getType() {
-		return this.type;
-	}
-
-	@Override
-	public String getFullName() {
-		return String.format("[%s]", this.name);
-	}
-
-	@Override
-	public String toString() {
-		if(this.type == null || this.type.isEmpty()) {
-			return String.format("[%s]", this.name);
-		} else {
-			return String.format("[%s:%s]", this.name, this.type);
-		}
+	public SyntaxError(String s, Throwable throwable) {
+		super(s, throwable);
 	}
 
 }
