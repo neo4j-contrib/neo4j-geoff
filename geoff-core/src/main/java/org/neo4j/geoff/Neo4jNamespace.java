@@ -104,14 +104,14 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else if ("N-R->N".equals(pattern)) {
-			createOrUpdateRelationship(
+			createOrUpdateRelationships(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(RelationshipToken) rule.getDescriptor().getToken(2),
 					(NodeToken) rule.getDescriptor().getToken(5),
 					rule.getData()
 			);
 		} else if ("R".equals(pattern)) {
-			createOrUpdateRelationship(
+			createOrUpdateRelationships(
 					(RelationshipToken) rule.getDescriptor().getToken(0),
 					rule.getData()
 			);
@@ -123,7 +123,7 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else if ("!N".equals(pattern)) {
-			deleteNode(
+			deleteNodes(
 					(NodeToken) rule.getDescriptor().getToken(1),
 					rule.getData()
 			);
@@ -135,30 +135,30 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else if ("!R".equals(pattern)) {
-			deleteRelationship(
+			deleteRelationships(
 					(RelationshipToken) rule.getDescriptor().getToken(1),
 					rule.getData()
 			);
 		} else if ("N^I".equals(pattern)) {
-			includeIndexEntry(
+			includeIndexEntries(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
 		} else if ("R^I".equals(pattern)) {
-			includeIndexEntry(
+			includeIndexEntries(
 					(RelationshipToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
 		} else if ("N'I".equals(pattern)) {
-			excludeIndexEntry(
+			excludeIndexEntries(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
 			);
 		} else if ("R'I".equals(pattern)) {
-			excludeIndexEntry(
+			excludeIndexEntries(
 					(RelationshipToken) rule.getDescriptor().getToken(0),
 					(IndexToken) rule.getDescriptor().getToken(2),
 					rule.getData()
@@ -206,7 +206,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @return the Relationship
 	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
-	private List<Relationship> createOrUpdateRelationship(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private List<Relationship> createOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 			throws RuleApplicationException {
 		if (isIncorrectlyTyped(r, 0)) {
 			return new ArrayList<Relationship>();
@@ -251,9 +251,9 @@ public class Neo4jNamespace implements Namespace {
 	 * @return the Relationship
 	 * @throws RuleApplicationException if type is invalid
 	 */
-	private List<Relationship> createOrUpdateRelationship(RelationshipToken r, Map<String, Object> properties)
+	private List<Relationship> createOrUpdateRelationships(RelationshipToken r, Map<String, Object> properties)
 			throws RuleApplicationException {
-		return createOrUpdateRelationship(new NodeToken(""), r, new NodeToken(""), properties);
+		return createOrUpdateRelationships(new NodeToken(""), r, new NodeToken(""), properties);
 	}
 
 	private void reflectRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
@@ -277,7 +277,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties
 	 * @throws RuleApplicationException if node is undefined
 	 */
-	private void deleteNode(NodeToken a, Map<String, Object> properties)
+	private void deleteNodes(NodeToken a, Map<String, Object> properties)
 			throws RuleApplicationException {
 		failIfNotDefined(a, "Cannot exclude undefined node");
 		for (Node node : nodeStore.remove(a)) {
@@ -316,7 +316,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties
 	 * @throws RuleApplicationException if type is invalid
 	 */
-	private void deleteRelationship(RelationshipToken r, Map<String, Object> properties)
+	private void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
 			throws RuleApplicationException {
 		deleteRelationships(new NodeToken(""), r, new NodeToken(""), properties);
 	}
@@ -329,7 +329,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs the key:value pairs against which to create index entries
 	 * @throws RuleApplicationException if index is not named
 	 */
-	private void includeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+	private void includeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -367,7 +367,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void includeIndexEntry(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+	private void includeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		if (isIncorrectlyTyped(r, 0)) {
@@ -421,7 +421,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void excludeIndexEntry(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+	private void excludeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -455,7 +455,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void excludeIndexEntry(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+	private void excludeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		if (isIncorrectlyTyped(r, 0)) {
