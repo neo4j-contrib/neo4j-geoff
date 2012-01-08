@@ -1,4 +1,8 @@
-# Neo4j-GEOFF
+# neo4j-geoff
 
-The Neo4j-GEOFF project provides a loader API for use with Neo4j and the GEOFF file format. For full details of the
-format, please see the GEOFF.md file.
+The neo4j-geoff project provides a core Geoff library plus a Neo4j server
+plugin, enabling usage via the RESTful web service interface.
+
+For full details of the format and how to use this plugin, please visit
+[http://py2neo.org/geoff].
+
