@@ -149,11 +149,11 @@ the Python [pickle](http://docs.python.org/library/pickle.html) and
 The dump (export) operations require a list of `neo4j.Path` objects and are
 defined as follows:
 
-`geoff.dump(paths, file)`
+`geoff.dump(paths, file)`  
 Outputs the set of all component nodes and relationships within the specified
 paths to a file.
 
-`geoff.dumps(paths)`
+`geoff.dumps(paths)`  
 Returns the set of all component nodes and relationships within the specified
 paths as a string.
 
