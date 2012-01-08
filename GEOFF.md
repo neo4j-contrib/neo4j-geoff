@@ -130,14 +130,12 @@ respectively; both produce identical results:
 
 ## Installation and Usage
 
-### Java
-
 ### Java (REST server plugin)
 
 To install, copy the [geoff-core.jar](http://py2neo.org/geoff/geoff-core.jar)
 file into `$NEO4J_HOME/system/lib/` and the
 [geoff-plugin.jar](http://py2neo.org/geoff/geoff-core.jar) file into
-`$NEO4J_HOME/plugins/`. Make sure to restart the server to enable the plugin.
+`$NEO4J_HOME/plugins/`. Be sure to restart the server to enable the plugin.
 
 ### Python (py2neo)
 
@@ -146,10 +144,54 @@ dumping and loading of data through functions familiar to those who have used
 the Python [pickle](http://docs.python.org/library/pickle.html) and
 [marshal](http://docs.python.org/library/marshal.html) modules.
 
-If the REST server plugin has been installed (see above) then this py2neo will
-detect and use this plugin for loading Geoff data. If this plugin is not
-available, a client-side version will be used instead. Please note that the
-client-side version is now deprecated in favour of the server plugin.
+#### Dumping
+
+The dump (export) operations require a list of `neo4j.Path` objects and are
+defined as follows:
+
+`geoff.dump(paths, file)`
+Outputs the set of all component nodes and relationships within the specified
+paths to a file.
+
+`geoff.dumps(paths)`
+Returns the set of all component nodes and relationships within the specified
+paths as a string.
+
+**Example:**
+```python
+from py2neo import neo4j, geoff
+gdb = neo4j.GraphDatabaseService("http://localhost:7474/db/data/")
+ref_node = gdb.get_reference_node()
+traverser = ref_node.traverse(order="depth_first", max_depth=2)
+print geoff.dumps(traverser.paths)
+```
+
+#### Loading
+
+The load (import) operations require both serialised data and a
+`neo4j.GraphDatabaseService` into which the load will be carried out. If the
+REST server plugin has been installed (see above) then py2neo will detect and
+use this plugin automatically for loading Geoff data. If this plugin is not
+available, a client-side version will be used instead. **Please note that the
+client-side version is now deprecated in favour of the server plugin.**
+
+The load functions are defined as follows:
+
+`geoff.load(file, gdb)`
+Loads all nodes, relationships and index entries from a file into the
+specified database.
+
+`geoff.loads(str, gdb)`
+Loads all nodes, relationships and index entries from a string into the
+specified database.
+
+**Example:**
+```python
+from py2neo import neo4j, geoff
+gdb = neo4j.GraphDatabaseService("http://localhost:7474/db/data/")
+ref_node = gdb.get_reference_node()
+ref_node.create_relationship_to(geoff.load(file("foo.geoff"), gdb), "FOO")
+```
 
 ## Dictionary of Notation
 
@@ -219,4 +261,5 @@ client-side version is now deprecated in favour of the server plugin.
 # - if rel undefined and index entry of type TYPE exists, look up index entry
 # - if rel undefined and entry doesn't exist, create rel and add entry
 [R:TYPE]<=|Index| {"key": "value"}
+
 ```
