@@ -149,15 +149,14 @@ the Python [pickle](http://docs.python.org/library/pickle.html) and
 The dump (export) operations require a list of `neo4j.Path` objects and are
 defined as follows:
 
-`geoff.dump(paths, file)`  
-Outputs the set of all component nodes and relationships within the specified
-paths to a file.
+`geoff.dump(paths, file)` - output the set of all component nodes and
+relationships within the specified paths to a file
 
-`geoff.dumps(paths)`  
-Returns the set of all component nodes and relationships within the specified
-paths as a string.
+`geoff.dumps(paths)` - return the set of all component nodes and relationships
+within the specified paths as a string
 
-**Example:**
+Example code:
+
 ```python
 from py2neo import neo4j, geoff
 gdb = neo4j.GraphDatabaseService("http://localhost:7474/db/data/")
@@ -177,15 +176,14 @@ client-side version is now deprecated in favour of the server plugin.**
 
 The load functions are defined as follows:
 
-`geoff.load(file, gdb)`
-Loads all nodes, relationships and index entries from a file into the
-specified database.
+`geoff.load(file, gdb)` - load all nodes, relationships and index entries
+from a file into the specified database
 
-`geoff.loads(str, gdb)`
-Loads all nodes, relationships and index entries from a string into the
-specified database.
+`geoff.loads(str, gdb)` - load all nodes, relationships and index entries
+from a string into the specified database
 
-**Example:**
+Example code:
+
 ```python
 from py2neo import neo4j, geoff
 gdb = neo4j.GraphDatabaseService("http://localhost:7474/db/data/")
@@ -193,7 +191,7 @@ ref_node = gdb.get_reference_node()
 ref_node.create_relationship_to(geoff.load(file("foo.geoff"), gdb), "FOO")
 ```
 
-## Dictionary of Notation
+## Summary of Notation
 
 ```
 # create anonymous node with no properties
