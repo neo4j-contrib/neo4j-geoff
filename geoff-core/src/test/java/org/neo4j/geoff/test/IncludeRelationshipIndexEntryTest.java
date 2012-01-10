@@ -19,7 +19,15 @@
  */
 package org.neo4j.geoff.test;
 
-import org.junit.Before;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Rule;
@@ -31,26 +39,10 @@ import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
-import org.neo4j.test.ImpermanentGraphDatabase;
 
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
+public class IncludeRelationshipIndexEntryTest extends TestBase{
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-public class IncludeRelationshipIndexEntryTest {
-
-	private ImpermanentGraphDatabase db;
-
-	@Before
-	public void setUp() throws Exception {
-		db = new ImpermanentGraphDatabase();
-	}
-
+	
 	@Test
 	public void testRelationshipIndexInclusionRule() throws Exception {
 		String source = "[R]<=|People| {\"name\": \"Alice\"}";
@@ -74,7 +66,6 @@ public class IncludeRelationshipIndexEntryTest {
 
 	@Test
 	public void testLoadingNodeIndexInclusionRuleWhereNodeExistsButIndexEntryDoesnt() throws Exception {
-		db = new ImpermanentGraphDatabase();
 		// load node and add index entry
 		String source =
 				"(A) {\"given-names\": \"Alice\", \"family-name\": \"Allison\"}\n" +
@@ -94,7 +85,6 @@ public class IncludeRelationshipIndexEntryTest {
 
 	@Test
 	public void testLoadingRelationshipIndexInclusionRule() throws Exception {
-		db = new ImpermanentGraphDatabase();
 		// load relationship and add index entry
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
@@ -112,7 +102,6 @@ public class IncludeRelationshipIndexEntryTest {
 
 	@Test
 	public void testLoadingNodeIndexInclusionRuleWithLoadParameter() throws Exception {
-		db = new ImpermanentGraphDatabase();
 		// perform first call to inject node
 		String source = "(A) {\"name\": \"Alice\"}";
 		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
@@ -134,7 +123,6 @@ public class IncludeRelationshipIndexEntryTest {
 
 	@Test
 	public void testLoadingRelationshipIndexInclusionRuleWithLoadParameter() throws Exception {
-		db = new ImpermanentGraphDatabase();
 		// perform first call to inject relationship
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +

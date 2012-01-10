@@ -19,31 +19,29 @@
  */
 package org.neo4j.geoff.test;
 
-import org.junit.Before;
+import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Rule;
 import org.neo4j.geoff.tokens.NodeToken;
 import org.neo4j.geoff.tokens.RelationshipToken;
 import org.neo4j.geoff.tokens.Token;
-import org.neo4j.graphdb.*;
-import org.neo4j.test.ImpermanentGraphDatabase;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
 
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.*;
-
-public class DeleteRelationshipsTest {
-
-	private ImpermanentGraphDatabase db;
-
-	@Before
-	public void setUp() throws Exception {
-		db = new ImpermanentGraphDatabase();
-	}
+public class DeleteRelationshipsTest extends TestBase{
 
 	@Test
 	public void testRelationshipExclusionByNameRule() throws Exception {

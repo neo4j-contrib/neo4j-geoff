@@ -19,28 +19,26 @@
  */
 package org.neo4j.geoff.test;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.except.GeoffLoadException;
-import org.neo4j.graphdb.*;
-import org.neo4j.test.ImpermanentGraphDatabase;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Map;
 
-import static junit.framework.Assert.*;
+import org.junit.Test;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.except.GeoffLoadException;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
 
-public class OverlappingFileTest {
+public class OverlappingFileTest extends TestBase {
 
-	private ImpermanentGraphDatabase db;
-
-	@Before
-	public void setUp() throws Exception {
-		db = new ImpermanentGraphDatabase();
-	}
 
 	private static Reader readerForResource(String name) {
 		return new InputStreamReader(ClassLoader.getSystemResourceAsStream(name));
@@ -52,7 +50,6 @@ public class OverlappingFileTest {
 	 */
 	@Test
 	public void canLoadOverlappingFiles() throws GeoffLoadException, IOException {
-		db = new ImpermanentGraphDatabase();
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity v2.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Life On Mars.geoff"), db, null);
@@ -79,7 +76,6 @@ public class OverlappingFileTest {
 
 	@Test
 	public void canLoadFilesMultipleTimes() throws GeoffLoadException, IOException {
-		db = new ImpermanentGraphDatabase();
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity.geoff"), db, null);
 		Geoff.loadIntoNeo4j(readerForResource("music/David Bowie - Space Oddity v2.geoff"), db, null);

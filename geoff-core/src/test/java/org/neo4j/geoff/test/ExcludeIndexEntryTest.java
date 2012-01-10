@@ -19,7 +19,15 @@
  */
 package org.neo4j.geoff.test;
 
-import org.junit.Before;
+import static junit.framework.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Rule;
@@ -31,24 +39,9 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
-import org.neo4j.test.ImpermanentGraphDatabase;
 
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.*;
-
-public class ExcludeIndexEntryTest {
-
-	private ImpermanentGraphDatabase db;
-
-	@Before
-	public void setUp() throws Exception {
-		db = new ImpermanentGraphDatabase();
-	}
-
+public class ExcludeIndexEntryTest extends TestBase{
+    
 	@Test
 	public void testNodeIndexExclusionRule() throws Exception {
 		String source = "(A)!=|People| {\"name\": \"Alice\"}";

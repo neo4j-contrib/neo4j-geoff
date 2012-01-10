@@ -19,6 +19,7 @@
  */
 package org.neo4j.geoff.test;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Rule;
@@ -33,8 +34,13 @@ import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 import static org.neo4j.geoff.test.TestDatabase.*;
 
-public class CreateOrUpdateNodeTest {
+public class CreateOrUpdateNodeTest extends TestBase{
 
+    @Before
+    public void setUp(){
+        db = new TestDatabase();
+        
+    }
 	@Test
 	public void canParseCreateOrUpdateNodeRule() throws Exception {
 		String source = "(A) {\"name\": \"Alice\"}";
@@ -52,7 +58,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canCreateNode() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
@@ -63,7 +68,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canUpdateNodeProperties() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.append("(A) {\"foo\": \"bar\"}");
 		geoff.appendAlice();
@@ -77,7 +81,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canUpdateNodeToEraseProperties() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		geoff.append("(A) {}");
@@ -96,7 +99,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canUpdateNodeWithoutErasingProperties() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		geoff.append("(A)");
@@ -108,7 +110,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canCreateMultipleNodes() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		geoff.appendBob();
@@ -123,7 +124,6 @@ public class CreateOrUpdateNodeTest {
 
 	@Test
 	public void canCreateMultipleAnonymousNodes() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.append("() {\"name\": \"Alice Allison\"}");
 		geoff.append("() {\"name\": \"Bob Robertson\"}");
