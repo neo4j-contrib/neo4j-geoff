@@ -19,12 +19,14 @@
  */
 package org.neo4j.geoff.test;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.Rule;
-import org.neo4j.graphdb.*;
-import org.neo4j.test.ImpermanentGraphDatabase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.neo4j.geoff.test.TestDatabase.assertAlice;
+import static org.neo4j.geoff.test.TestDatabase.assertBob;
+import static org.neo4j.geoff.test.TestDatabase.assertNodesExist;
+import static org.neo4j.geoff.test.TestDatabase.assertRelationshipsExist;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -32,12 +34,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-import static org.neo4j.geoff.test.TestDatabase.*;
+import org.junit.Test;
+import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.Rule;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 
-public class MiscellaneousTest {
+public class MiscellaneousTest extends TestBase{
 
-	private ImpermanentGraphDatabase db;
 
 	@Test
 	public void canCreateGraphFromSingleString() throws Exception {
@@ -170,11 +178,6 @@ public class MiscellaneousTest {
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
-	
-	@Before
-	public void setUp() throws Exception {
-		db = new ImpermanentGraphDatabase();
 	}
 
 	@Test

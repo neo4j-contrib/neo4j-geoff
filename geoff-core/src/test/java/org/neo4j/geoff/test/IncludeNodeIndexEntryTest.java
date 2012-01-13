@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.neo4j.geoff.test.TestDatabase.assertNodesExist;
 
-public class IncludeNodeIndexEntryTest {
+public class IncludeNodeIndexEntryTest extends TestBase{
 
 	@Test
 	public void canParseIncludeNodeIndexEntryRule() throws Exception {
@@ -61,7 +61,6 @@ public class IncludeNodeIndexEntryTest {
 
 	@Test
 	public void willCreateNodeAndAddIndexEntryWhenNeitherExist() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.append("(A)<=|People| {\"name\": \"Allison, Alice\"}");
 		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
@@ -77,7 +76,6 @@ public class IncludeNodeIndexEntryTest {
 
 	@Test
 	public void willAddIndexEntryWhenOnlyNodeExists() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		geoff.append("(A)<=|People| {\"name\": \"Allison, Alice\"}");
@@ -94,7 +92,6 @@ public class IncludeNodeIndexEntryTest {
 
 	@Test
 	public void willReflectNodeWhenOnlyEntryExists() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Node alice = db.createAlice();
 		Transaction tx = db.beginTx();
 		db.index().forNodes("People").add(alice, "name", "Allison, Alice");
@@ -115,7 +112,6 @@ public class IncludeNodeIndexEntryTest {
 
 	@Test
 	public void willDoNothingWhenBothExist() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Node alice = db.createAlice();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("(A)", alice);
