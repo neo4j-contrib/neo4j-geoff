@@ -336,21 +336,15 @@ public class Neo4jNamespace implements Namespace {
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			IndexHits<Node> hits = index.get(key, value);
 			if (nodeStore.contains(a)) {
 				Node node = nodeStore.get(a).get(0);
-				boolean indexed = false;
-				for (Node hit : hits) {
-					indexed = indexed || (node.getId() == hit.getId());
-				}
-				if (!indexed) {
-					index.add(node, key, value);
-				}
+				index.putIfAbsent(node, key, value);
 			} else {
 				Node node;
+				IndexHits<Node> hits = index.get(key, value);
 				if (hits.size() == 0) {
 					node = this.graphDB.createNode();
-					index.add(node, key, value);
+					index.putIfAbsent(node, key, value);
 				} else {
 					node = hits.getSingle();
 				}
@@ -377,19 +371,13 @@ public class Neo4jNamespace implements Namespace {
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			IndexHits<Relationship> hits = index.get(key, value);
 			if (relationshipStore.contains(r)) {
 				Relationship relationship = relationshipStore.get(r).get(0);
-				boolean indexed = false;
-				for (Relationship hit : hits) {
-					indexed = indexed || (relationship.getId() == hit.getId());
-				}
-				if (!indexed) {
-					index.add(relationship, key, value);
-				}
+				index.putIfAbsent(relationship, key, value);
 			} else if (r.hasType()) {
 				RelationshipType type = DynamicRelationshipType.withName(r.getType());
 				Relationship relationship = null;
+				IndexHits<Relationship> hits = index.get(key, value);
 				for (Relationship hit : hits) {
 					if (hit.isType(type)) {
 						relationship = hit;
@@ -400,6 +388,7 @@ public class Neo4jNamespace implements Namespace {
 				relationshipStore.put(r, relationship);
 			} else {
 				Relationship relationship = null;
+				IndexHits<Relationship> hits = index.get(key, value);
 				for (Relationship hit : hits) {
 					relationship = hit;
 					break;
