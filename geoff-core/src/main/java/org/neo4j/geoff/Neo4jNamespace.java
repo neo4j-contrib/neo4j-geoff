@@ -201,19 +201,17 @@ public class Neo4jNamespace implements Namespace {
 	)
 			throws RuleApplicationException
 	{
-		if (r.hasType()) {
-			Relationship relationship;
-			Node startNode = createOrUpdateNodes(a, null).get(0);
-			Node endNode = createOrUpdateNodes(b, null).get(0);
-			relationship = startNode.createRelationshipTo(endNode, DynamicRelationshipType.withName(r.getType()));
-			setProperties(relationship, properties);
-			relationshipStore.put(r, relationship);
-			ArrayList<Relationship> relationships = new ArrayList<Relationship>();
-			relationships.add(relationship);
-			return relationships;
-		} else {
-			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationship");
+		if (!r.hasType()) {
+			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationships");
 		}
+		Node startNode = createOrUpdateNodes(a, null).get(0);
+		Node endNode = createOrUpdateNodes(b, null).get(0);
+		Relationship relationship = startNode.createRelationshipTo(endNode, DynamicRelationshipType.withName(r.getType()));
+		setProperties(relationship, properties);
+		relationshipStore.put(r, relationship);
+		ArrayList<Relationship> relationships = new ArrayList<Relationship>();
+		relationships.add(relationship);
+		return relationships;
 	}
 
 	private List<Relationship> updateRelationships(
