@@ -220,11 +220,11 @@ public class Neo4jNamespace implements Namespace {
 			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
 	)
 	{
+		ArrayList<Relationship> relationships = new ArrayList<Relationship>();
 		if (isIncorrectlyTyped(r, 0)) {
 			return new ArrayList<Relationship>();
 		}
-		Relationship relationship;
-		relationship = relationshipStore.get(r).get(0);
+		Relationship relationship = relationshipStore.get(r).get(0);
 		if (nodeStore.contains(a)) {
 			if (!areEqual(nodeStore.get(a).get(0), relationship.getStartNode())) {
 				// start node mismatch
@@ -233,7 +233,7 @@ public class Neo4jNamespace implements Namespace {
 		}
 		if (nodeStore.contains(b)) {
 			if (!areEqual(nodeStore.get(b).get(0), relationship.getEndNode())) {
-				// start node mismatch
+				// end node mismatch
 				return new ArrayList<Relationship>();
 			}
 		}
@@ -241,7 +241,6 @@ public class Neo4jNamespace implements Namespace {
 		nodeStore.put(b, relationship.getEndNode());
 		setProperties(relationship, properties);
 		relationshipStore.put(r, relationship);
-		ArrayList<Relationship> relationships = new ArrayList<Relationship>();
 		relationships.add(relationship);
 		return relationships;
 	}
