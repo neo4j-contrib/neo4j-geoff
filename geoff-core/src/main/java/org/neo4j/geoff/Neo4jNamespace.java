@@ -116,7 +116,7 @@ public class Neo4jNamespace implements Namespace {
 					rule.getData()
 			);
 		} else if ("N=R=>N".equals(pattern)) {
-			reflectRelationships(
+			reflectOrUpdateRelationships(
 					(NodeToken) rule.getDescriptor().getToken(0),
 					(RelationshipToken) rule.getDescriptor().getToken(2),
 					(NodeToken) rule.getDescriptor().getToken(5),
@@ -183,7 +183,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties properties to be assigned to the node
 	 * @return the Node
 	 */
-	private List<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties) {
+	public List<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties) {
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		if (nodeStore.contains(a)) {
 			nodes.addAll(nodeStore.get(a));
@@ -196,78 +196,127 @@ public class Neo4jNamespace implements Namespace {
 		return nodes;
 	}
 
-	/**
-	 * Create or update relationship
-	 *
-	 * @param a start node token
-	 * @param r relationship token
-	 * @param b end node token
-	 * @param properties properties to be assigned to the relationship
-	 * @return the Relationship
-	 * @throws RuleApplicationException if start node, end node or type are invalid
-	 */
-	private List<Relationship> createOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-			throws RuleApplicationException {
-		if (isIncorrectlyTyped(r, 0)) {
-			return new ArrayList<Relationship>();
-		}
-		Relationship relationship;
-		if (relationshipStore.contains(r)) {
-			relationship = relationshipStore.get(r).get(0);
-			if (nodeStore.contains(a)) {
-				if (!areEqual(nodeStore.get(a).get(0), relationship.getStartNode())) {
-					// start node mismatch
-					return new ArrayList<Relationship>();
-				}
-			}
-			if (nodeStore.contains(b)) {
-				if (!areEqual(nodeStore.get(b).get(0), relationship.getEndNode())) {
-					// start node mismatch
-					return new ArrayList<Relationship>();
-				}
-			}
-			nodeStore.put(a, relationship.getStartNode());
-			nodeStore.put(b, relationship.getEndNode());
-			setProperties(relationship, properties);
-		} else if (r.hasType()) {
+	private List<Relationship> createRelationships(
+			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
+	)
+			throws RuleApplicationException
+	{
+		if (r.hasType()) {
+			Relationship relationship;
 			Node startNode = createOrUpdateNodes(a, null).get(0);
 			Node endNode = createOrUpdateNodes(b, null).get(0);
 			relationship = startNode.createRelationshipTo(endNode, DynamicRelationshipType.withName(r.getType()));
 			setProperties(relationship, properties);
+			relationshipStore.put(r, relationship);
+			ArrayList<Relationship> relationships = new ArrayList<Relationship>();
+			relationships.add(relationship);
+			return relationships;
 		} else {
 			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationship");
 		}
+	}
+
+	private List<Relationship> updateRelationships(
+			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
+	)
+	{
+		if (isIncorrectlyTyped(r, 0)) {
+			return new ArrayList<Relationship>();
+		}
+		Relationship relationship;
+		relationship = relationshipStore.get(r).get(0);
+		if (nodeStore.contains(a)) {
+			if (!areEqual(nodeStore.get(a).get(0), relationship.getStartNode())) {
+				// start node mismatch
+				return new ArrayList<Relationship>();
+			}
+		}
+		if (nodeStore.contains(b)) {
+			if (!areEqual(nodeStore.get(b).get(0), relationship.getEndNode())) {
+				// start node mismatch
+				return new ArrayList<Relationship>();
+			}
+		}
+		nodeStore.put(a, relationship.getStartNode());
+		nodeStore.put(b, relationship.getEndNode());
+		setProperties(relationship, properties);
 		relationshipStore.put(r, relationship);
 		ArrayList<Relationship> relationships = new ArrayList<Relationship>();
 		relationships.add(relationship);
 		return relationships;
 	}
 
-	/**
-	 * Create or update relationship
-	 *
-	 * @param r relationship token
-	 * @param properties properties to be assigned to the relationship
-	 * @return the Relationship
-	 * @throws RuleApplicationException if type is invalid
-	 */
-	private List<Relationship> createOrUpdateRelationships(RelationshipToken r, Map<String, Object> properties)
-			throws RuleApplicationException {
-		return createOrUpdateRelationships(new NodeToken(""), r, new NodeToken(""), properties);
-	}
-
-	private void reflectRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-			throws RuleApplicationException {
+	private List<Relationship> reflectRelationships(
+			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
+	)
+	{
 		List<Relationship> relationships;
-		if (relationshipStore.contains(r)) {
-			relationships = relationshipStore.get(r);
-		} else if (r.hasType()) {
+		if (r.hasType()) {
 			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
 		} else {
 			relationships = match(a, b);
 		}
 		setProperties(relationships, properties);
 		relationshipStore.put(r, relationships);
+		return relationships;
+	}
+
+	/**
+	 * Create or update relationships
+	 *
+	 * @param a start node token
+	 * @param r relationship token
+	 * @param b end node token
+	 * @param properties properties to be assigned to the relationships
+	 * @return the Relationships
+	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
+	 */
+	public List<Relationship> createOrUpdateRelationships(
+			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
+	)
+			throws RuleApplicationException
+	{
+		if (relationshipStore.contains(r)) {
+			return updateRelationships(a, r, b, properties);
+		} else {
+			return createRelationships(a, r, b, properties);
+		}
+	}
+
+	/**
+	 * Create or update relationships
+	 *
+	 * @param r relationship token
+	 * @param properties properties to be assigned to the relationships
+	 * @return the Relationships
+	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
+	 */
+	public List<Relationship> createOrUpdateRelationships(
+			RelationshipToken r, Map<String, Object> properties
+	)
+			throws RuleApplicationException
+	{
+		return createOrUpdateRelationships(new NodeToken(""), r, new NodeToken(""), properties);
+	}
+
+	/**
+	 * Reflect or update relationships
+	 *
+	 * @param a start node token
+	 * @param r relationship token
+	 * @param b end node token
+	 * @param properties properties to be assigned to the relationships
+	 * @return the Relationships
+	 */
+	public List<Relationship> reflectOrUpdateRelationships(
+			NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties
+	)
+	{
+		if (relationshipStore.contains(r)) {
+			return updateRelationships(a, r, b, properties);
+		} else {
+			return reflectRelationships(a, r, b, properties);
+		}
 	}
 
 	/**
@@ -277,8 +326,9 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties
 	 * @throws RuleApplicationException if node is undefined
 	 */
-	private void deleteNodes(NodeToken a, Map<String, Object> properties)
-			throws RuleApplicationException {
+	public void deleteNodes(NodeToken a, Map<String, Object> properties)
+			throws RuleApplicationException
+	{
 		failIfNotDefined(a, "Cannot exclude undefined node");
 		for (Node node : nodeStore.remove(a)) {
 			node.delete();
@@ -294,7 +344,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties
 	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
-	private void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	public void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 			throws RuleApplicationException {
 		List<Relationship> relationships;
 		if (relationshipStore.contains(r)) {
@@ -316,7 +366,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties
 	 * @throws RuleApplicationException if type is invalid
 	 */
-	private void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
+	public void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
 			throws RuleApplicationException {
 		deleteRelationships(new NodeToken(""), r, new NodeToken(""), properties);
 	}
@@ -329,7 +379,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs the key:value pairs against which to create index entries
 	 * @throws RuleApplicationException if index is not named
 	 */
-	private void includeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+	public void includeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -361,7 +411,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void includeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+	public void includeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		if (isIncorrectlyTyped(r, 0)) {
@@ -410,7 +460,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void excludeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+	public void excludeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -444,7 +494,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param keyValuePairs
 	 * @throws RuleApplicationException
 	 */
-	private void excludeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+	public void excludeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
 			throws RuleApplicationException {
 		failIfNotNamed(i, "Index must be named");
 		if (isIncorrectlyTyped(r, 0)) {
