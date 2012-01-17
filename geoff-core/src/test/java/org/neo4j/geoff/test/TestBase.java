@@ -21,6 +21,9 @@ package org.neo4j.geoff.test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.neo4j.graphdb.PropertyContainer;
+
+import java.util.Map;
 
 public class TestBase
 {
@@ -36,4 +39,20 @@ public class TestBase
     public void tearDown() throws Exception {
         db.shutdown();
     }
+	
+	public void dumpParams(Map<String, PropertyContainer> params) {
+		for (Map.Entry<String, PropertyContainer> entry : params.entrySet()) {
+			StringBuilder str = new StringBuilder(entry.getKey());
+			PropertyContainer entity = entry.getValue();
+			str.append(": ");
+			for (String key : entity.getPropertyKeys()) {
+				str.append(' ');
+				str.append(key);
+				str.append('=');
+				str.append(entity.getProperty(key));
+			}
+			System.out.println(str.toString());
+		}
+	}
+	
 }

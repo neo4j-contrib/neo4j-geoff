@@ -133,4 +133,20 @@ public class CreateOrUpdateNodeTest extends TestBase{
 		db.assertNodeCount(4);
 	}
 
+	@Test
+	public void canCreateAndUpdateNodeSet() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(N.1) {\"name\": \"Alice Allison\"}");
+		geoff.append("(N.2) {\"name\": \"Bob Robertson\"}");
+		geoff.append("(N.3) {\"name\": \"Carol Carlson\"}");
+		geoff.append("(N)   {\"name\": \"Bob Robertson\"}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		//dumpParams(out);
+		assertBob((Node) out.get("(N.1)"));
+		assertBob((Node) out.get("(N.2)"));
+		assertBob((Node) out.get("(N.3)"));
+		db.assertNodeCount(4);
+	}
+
 }

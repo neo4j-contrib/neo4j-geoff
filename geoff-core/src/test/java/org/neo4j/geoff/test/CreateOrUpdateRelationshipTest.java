@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.neo4j.geoff.test.TestDatabase.*;
 
-public class CreateOrUpdateRelationshipTest {
+public class CreateOrUpdateRelationshipTest extends TestBase {
 
 	@Test
 	public void canParseShortCreateOrUpdateRelationshipRule() throws Exception {
@@ -400,7 +400,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void ignoresNamedIncorrectlyTypedRelationship() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("()-[R:HATES]->() {\"foo\": \"bar\"}");
@@ -414,7 +413,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void ignoresNamedIncorrectlyTypedRelationshipA() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("(A)-[R:HATES]->() {\"foo\": \"bar\"}");
@@ -428,7 +426,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void ignoresNamedIncorrectlyTypedRelationshipAB() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("(A)-[R:HATES]->(B) {\"foo\": \"bar\"}");
@@ -442,7 +439,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void ignoresNamedIncorrectlyTypedRelationshipB() throws Exception {
-		TestDatabase db = new TestDatabase();
 		Map<String, PropertyContainer> params = new HashMap<String, PropertyContainer>();
 		params.put("[R]", db.createAliceKnowsBob());
 		TestGeoffBuilder geoff = new TestGeoffBuilder("()-[R:HATES]->(B) {\"foo\": \"bar\"}");
@@ -458,7 +454,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void canCreateMultipleRelationshipsWithImplicitNodeCreation() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.append("(A)-[R_AB:LOVES]->(B)");
 		geoff.append("(B)-[R_BC:LOVES]->(C)");
@@ -471,7 +466,6 @@ public class CreateOrUpdateRelationshipTest {
 
 	@Test
 	public void canCreateMultipleRelationshipsWithExplicitNodeCreation() throws Exception {
-		TestDatabase db = new TestDatabase();
 		TestGeoffBuilder geoff = new TestGeoffBuilder();
 		geoff.appendAlice();
 		geoff.appendBob();
@@ -483,6 +477,23 @@ public class CreateOrUpdateRelationshipTest {
 		assertRelationshipsExist(out, "[R_AB]", "[R_BC]", "[R_AC]");
 		assertNodesExist(out, "(A)", "(B)", "(C)");
 		db.assertCounts(4, 3);
+	}
+
+	@Test
+	public void canCreateRelationshipsFromNodeSets() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(A.1) {\"name\": \"Alice Allison\"}");
+		geoff.append("(A.2) {\"name\": \"Amanda Allison\"}");
+		geoff.append("(B.1) {\"name\": \"Bob Robertson\"}");
+		geoff.append("(B.2) {\"name\": \"Bert Robertson\"}");
+		geoff.append("(B.3) {\"name\": \"Bill Robertson\"}");
+		geoff.append("(C)   {\"name\": \"Carol Carlson\"}");
+		geoff.append("(A)-[R_AB:KNOWS]->(B) {\"status\": \"friends\"}");
+		geoff.append("(B)-[R_BC:KNOWS]->(C) {\"status\": \"colleagues\"}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		//dumpParams(out);
+		db.assertCounts(7, 9);
 	}
 
 }
