@@ -19,10 +19,7 @@
  */
 package org.neo4j.geoff.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class SparseArray<T> {
 	
@@ -37,10 +34,11 @@ public class SparseArray<T> {
 		this.items.put(1, item);
 	}
 
-	public SparseArray(List<T> items) {
+	public SparseArray(Set<T> items) {
 		this();
-		for (int i = 0; i < items.size(); i++) {
-			this.items.put(i + 1, items.get(i));
+		ArrayList<T> itemList = new ArrayList<T>(items);
+		for (int i = 0; i < itemList.size(); i++) {
+			this.items.put(i + 1, itemList.get(i));
 		}
 	}
 

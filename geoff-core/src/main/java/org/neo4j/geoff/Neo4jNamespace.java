@@ -185,9 +185,9 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties properties to be assigned to the node
 	 * @return the Node
 	 */
-	public List<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties)
+	public Set<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties)
 	{
-		ArrayList<Node> nodes = new ArrayList<Node>();
+		HashSet<Node> nodes = new HashSet<Node>();
 		if (nodeStore.contains(a)) {
 			nodes.addAll(nodeStore.get(a));
 		} else {
@@ -200,16 +200,16 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// will be called iff r is undefined
-	private List<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	throws RuleApplicationException
 	{
 		if (!r.hasType()) {
 			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationships");
 		}
 		RelationshipType type = DynamicRelationshipType.withName(r.getType());
-		ArrayList<Relationship> relationships = new ArrayList<Relationship>();
-		List<Node> startNodes = createOrUpdateNodes(a, null);
-		List<Node> endNodes = createOrUpdateNodes(b, null);
+		HashSet<Relationship> relationships = new HashSet<Relationship>();
+		Set<Node> startNodes = createOrUpdateNodes(a, null);
+		Set<Node> endNodes = createOrUpdateNodes(b, null);
 		for (Node startNode : startNodes) {
 			for (Node endNode : endNodes) {
 				relationships.add(startNode.createRelationshipTo(endNode, type));
@@ -221,13 +221,13 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// will be called iff r is defined
-	private List<Relationship> updateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> updateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	{
-		List<Relationship> relationships = relationshipStore.get(r);
+		Set<Relationship> relationships = relationshipStore.get(r);
 		boolean aIsDefined = nodeStore.contains(a);
 		boolean bIsDefined = nodeStore.contains(b);
-		List<Node> startNodes = aIsDefined ? nodeStore.get(a) : new ArrayList<Node>(relationships.size());
-		List<Node> endNodes = bIsDefined ? nodeStore.get(b) : new ArrayList<Node>(relationships.size());
+		Set<Node> startNodes = aIsDefined ? nodeStore.get(a) : new HashSet<Node>(relationships.size());
+		Set<Node> endNodes = bIsDefined ? nodeStore.get(b) : new HashSet<Node>(relationships.size());
 		RelationshipType type = r.hasType() ? DynamicRelationshipType.withName(r.getType()) : null;
 		Iterator<Relationship> relationshipIterator = relationships.iterator();
 		while (relationshipIterator.hasNext()) {
@@ -252,9 +252,9 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	// will be called iff r is undefined
-	private List<Relationship> reflectRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> reflectRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	{
-		List<Relationship> relationships;
+		Set<Relationship> relationships;
 		if (r.hasType()) {
 			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
 		} else {
@@ -275,7 +275,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @return the Relationships
 	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
 	 */
-	public List<Relationship> createOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	public Set<Relationship> createOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	throws RuleApplicationException
 	{
 		if (relationshipStore.contains(r)) {
@@ -293,7 +293,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @return the Relationships
 	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
 	 */
-	public List<Relationship> createOrUpdateRelationships(RelationshipToken r, Map<String, Object> properties)
+	public Set<Relationship> createOrUpdateRelationships(RelationshipToken r, Map<String, Object> properties)
 	throws RuleApplicationException
 	{
 		return createOrUpdateRelationships(NodeToken.anon(), r, NodeToken.anon(), properties);
@@ -308,7 +308,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @param properties properties to be assigned to the relationships
 	 * @return the Relationships
 	 */
-	public List<Relationship> reflectOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	public Set<Relationship> reflectOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	{
 		if (relationshipStore.contains(r)) {
 			return updateRelationships(a, r, b, properties);
@@ -341,7 +341,7 @@ public class Neo4jNamespace implements Namespace {
 	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
 	public void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
-		List<Relationship> relationships;
+		Set<Relationship> relationships;
 		if (relationshipStore.contains(r)) {
 			relationships = relationshipStore.remove(r);
 		} else if (r.hasType()) {
@@ -387,7 +387,7 @@ public class Neo4jNamespace implements Namespace {
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
 		boolean aIsDefined = nodeStore.contains(a);
-		List<Node> nodes = aIsDefined ? nodeStore.get(a) : new ArrayList<Node>(keyValuePairs.size());
+		HashSet<Node> nodes = aIsDefined ? new HashSet<Node>(nodeStore.get(a)) : new HashSet<Node>(keyValuePairs.size());
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
@@ -426,7 +426,7 @@ public class Neo4jNamespace implements Namespace {
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
 		RelationshipType type = r.hasType() ? DynamicRelationshipType.withName(r.getType()) : null;
 		boolean rIsDefined = relationshipStore.contains(r);
-		List<Relationship> relationships = rIsDefined ? relationshipStore.get(r) : new ArrayList<Relationship>(keyValuePairs.size());
+		HashSet<Relationship> relationships = rIsDefined ? new HashSet<Relationship>(relationshipStore.get(r)) : new HashSet<Relationship>(keyValuePairs.size());
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
@@ -463,7 +463,7 @@ public class Neo4jNamespace implements Namespace {
 	/**
 	 * Exclude Node Index Entry
 	 * ========================
-	 * <p/>
+	 *
 	 * (A)!=|I| {...}
 	 *
 	 * @param a             node token
@@ -476,15 +476,15 @@ public class Neo4jNamespace implements Namespace {
 	{
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
-		if (nodeStore.contains(a)) {
-			List<Node> nodes = nodeStore.get(a);
+		boolean aIsDefined = nodeStore.contains(a);
+		HashSet<Node> nodes = aIsDefined ? new HashSet<Node>(nodeStore.get(a)) : new HashSet<Node>(keyValuePairs.size());
+		if (aIsDefined) {
 			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				for(Node node : nodes) {
 					index.remove(node, entry.getKey(), entry.getValue());
 				}
 			}
 		} else {
-			List<Node> nodes = new ArrayList<Node>(keyValuePairs.size());
 			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
@@ -494,14 +494,14 @@ public class Neo4jNamespace implements Namespace {
 					index.remove(node, key, value);
 				}
 			}
-			nodeStore.put(a, nodes);
 		}
+		nodeStore.put(a, nodes);
 	}
 
 	/**
 	 * Exclude Relationship Index Entry
 	 * ================================
-	 * <p/>
+	 *
 	 * [R]!=|I|   {...}
 	 * [R:T]!=|I| {...}
 	 *
@@ -516,8 +516,9 @@ public class Neo4jNamespace implements Namespace {
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
 		RelationshipType type = r.hasType() ? DynamicRelationshipType.withName(r.getType()) : null;
-		if (relationshipStore.contains(r)) {
-			List<Relationship> relationships = relationshipStore.get(r);
+		boolean rIsDefined = relationshipStore.contains(r);
+		HashSet<Relationship> relationships = rIsDefined ? new HashSet<Relationship>(relationshipStore.get(r)) : new HashSet<Relationship>(keyValuePairs.size());
+		if (rIsDefined) {
 			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				for (Relationship relationship : relationships) {
 					if (type == null || relationship.isType(type)) {
@@ -526,7 +527,6 @@ public class Neo4jNamespace implements Namespace {
 				}
 			}
 		} else if (r.hasType()) {
-			List<Relationship> relationships = new ArrayList<Relationship>(keyValuePairs.size());
 			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
@@ -538,9 +538,7 @@ public class Neo4jNamespace implements Namespace {
 					}
 				}
 			}
-			relationshipStore.put(r, relationships);
 		} else {
-			List<Relationship> relationships = new ArrayList<Relationship>(keyValuePairs.size());
 			for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
@@ -550,8 +548,8 @@ public class Neo4jNamespace implements Namespace {
 					index.remove(relationship, key, value);
 				}
 			}
-			relationshipStore.put(r, relationships);
 		}
+		relationshipStore.put(r, relationships);
 	}
 
 	/**
@@ -564,12 +562,12 @@ public class Neo4jNamespace implements Namespace {
 	 * @param b end node token
 	 * @return list of matching relationships
 	 */
-	private List<Relationship> match(NodeToken a, NodeToken b) {
-		final ArrayList<Relationship> matches = new ArrayList<Relationship>();
+	private Set<Relationship> match(NodeToken a, NodeToken b) {
+		final HashSet<Relationship> matches = new HashSet<Relationship>();
 		if (nodeStore.contains(a)) {
-			List<Node> startNodes = nodeStore.get(a);
+			Set<Node> startNodes = nodeStore.get(a);
 			if (nodeStore.contains(b)) {
-				List<Node> endNodes = nodeStore.get(b);
+				Set<Node> endNodes = nodeStore.get(b);
 				for (Node startNode : startNodes) {
 					for (Relationship candidate : startNode.getRelationships(Direction.OUTGOING)) {
 						if (endNodes.contains(candidate.getEndNode())) {
@@ -585,7 +583,7 @@ public class Neo4jNamespace implements Namespace {
 				}
 			}
 		} else if (nodeStore.contains(b)) {
-			List<Node> endNodes = nodeStore.get(b);
+			Set<Node> endNodes = nodeStore.get(b);
 			for (Node endNode : endNodes) {
 				for (Relationship candidate : endNode.getRelationships(Direction.INCOMING)) {
 					matches.add(candidate);
@@ -606,12 +604,12 @@ public class Neo4jNamespace implements Namespace {
 	 * @param type type of matching relationships
 	 * @return list of matching relationships
 	 */
-	private List<Relationship> match(NodeToken a, NodeToken b, RelationshipType type) {
-		final ArrayList<Relationship> matches = new ArrayList<Relationship>();
+	private Set<Relationship> match(NodeToken a, NodeToken b, RelationshipType type) {
+		final HashSet<Relationship> matches = new HashSet<Relationship>();
 		if (nodeStore.contains(a)) {
-			List<Node> startNodes = nodeStore.get(a);
+			Set<Node> startNodes = nodeStore.get(a);
 			if (nodeStore.contains(b)) {
-				List<Node> endNodes = nodeStore.get(b);
+				Set<Node> endNodes = nodeStore.get(b);
 				for (Node startNode : startNodes) {
 					for (Relationship candidate : startNode.getRelationships(Direction.OUTGOING, type)) {
 						if (endNodes.contains(candidate.getEndNode())) {
@@ -627,7 +625,7 @@ public class Neo4jNamespace implements Namespace {
 				}
 			}
 		} else if (nodeStore.contains(b)) {
-			List<Node> endNodes = nodeStore.get(b);
+			Set<Node> endNodes = nodeStore.get(b);
 			for (Node endNode : endNodes) {
 				for (Relationship candidate : endNode.getRelationships(Direction.INCOMING, type)) {
 					matches.add(candidate);
@@ -637,7 +635,7 @@ public class Neo4jNamespace implements Namespace {
 		return matches;
 	}
 
-	private void setProperties(List<? extends PropertyContainer> entities, Map<String, Object> properties) {
+	private void setProperties(Set<? extends PropertyContainer> entities, Map<String, Object> properties) {
 		if (properties != null) {
 			for (PropertyContainer entity : entities) {
 				setProperties(entity, properties);

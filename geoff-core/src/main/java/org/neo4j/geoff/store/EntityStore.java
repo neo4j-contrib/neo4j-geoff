@@ -21,10 +21,7 @@ package org.neo4j.geoff.store;
 
 import org.neo4j.geoff.util.SparseArray;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class EntityStore<K extends EntityToken, V> {
 
@@ -56,7 +53,7 @@ public class EntityStore<K extends EntityToken, V> {
 		}
 	}
 
-	public boolean put(K token, List<V> items) {
+	public boolean put(K token, Set<V> items) {
 		if (token.hasName() && items != null && !items.isEmpty()) {
 			String key = token.getName();
 			if (this.items.containsKey(key)) {
@@ -70,8 +67,8 @@ public class EntityStore<K extends EntityToken, V> {
 		}
 	}
 
-	public List<V> get(K token) {
-		List<V> n = new ArrayList<V>();
+	public Set<V> get(K token) {
+		HashSet<V> n = new HashSet<V>();
 		String key = token.getName();
 		int index = token.getIndex();
 		if (index == 0) {
@@ -82,8 +79,8 @@ public class EntityStore<K extends EntityToken, V> {
 		return n;
 	}
 
-	public List<V> remove(K token) {
-		List<V> n = new ArrayList<V>();
+	public Set<V> remove(K token) {
+		HashSet<V> n = new HashSet<V>();
 		if (token.hasName()) {
 			String key = token.getName();
 			int index = token.getIndex();
