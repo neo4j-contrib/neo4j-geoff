@@ -17,21 +17,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff.tokens;
+package org.neo4j.geoff.store;
 
-public class NodeToken extends EntityToken {
+public class Token {
 
-	public NodeToken(String name) {
-		super(Type.NODE, name);
+	public static enum Type {
+
+		NODE('N'),
+		REL('R'),
+		INDEX('I'),
+		SINGLE_LINE('-'),
+		ARROW('>'),
+		BANG('!'),
+		DOUBLE_LINE('='),
+		INCLUDED_IN('^'),
+		EXCLUDED_FROM('\'');
+
+		private final char symbol;
+
+		private Type(char symbol) {
+			this.symbol = symbol;
+		}
+
+		public char getSymbol() {
+			return this.symbol;
+		}
+
+	}
+
+	private final Type tokenType;
+
+	public Token(Type tokenType) {
+		this.tokenType = tokenType;
+	}
+
+	public Type getTokenType() {
+		return this.tokenType;
 	}
 
 	@Override
 	public String toString() {
-		if (this.index == 0) {
-			return String.format("(%s)", this.name);
-		} else {
-			return String.format("(%s.%d)", this.name, this.index);
-		}
+		return this.tokenType.name();
 	}
-
 }

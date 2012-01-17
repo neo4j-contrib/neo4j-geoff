@@ -21,9 +21,9 @@ package org.neo4j.geoff.test;
 
 import org.junit.Test;
 import org.neo4j.geoff.Rule;
-import org.neo4j.geoff.tokens.NodeToken;
-import org.neo4j.geoff.tokens.RelationshipToken;
-import org.neo4j.geoff.tokens.Token;
+import org.neo4j.geoff.store.NodeToken;
+import org.neo4j.geoff.store.RelationshipToken;
+import org.neo4j.geoff.store.Token;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

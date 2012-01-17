@@ -17,9 +17,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff.tokens;
+package org.neo4j.geoff.store;
+
+import java.util.HashMap;
 
 public class RelationshipToken extends EntityToken {
+
+	private static final HashMap<String, RelationshipToken> ANONYMOUS = new HashMap<String, RelationshipToken>();
+
+	public static RelationshipToken anon(String type) {
+		if (!ANONYMOUS.containsKey(type)) {
+			ANONYMOUS.put(type, new RelationshipToken("", type));
+		}
+		return ANONYMOUS.get(type);
+	}
 
 	protected final String type;
 

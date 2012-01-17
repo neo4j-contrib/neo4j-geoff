@@ -20,8 +20,8 @@
 package org.neo4j.geoff;
 
 import org.neo4j.geoff.except.SyntaxError;
-import org.neo4j.geoff.tokens.Token;
-import org.neo4j.geoff.tokens.TokenReader;
+import org.neo4j.geoff.store.Token;
+import org.neo4j.geoff.store.TokenReader;
 
 import java.io.IOException;
 import java.io.StringReader;

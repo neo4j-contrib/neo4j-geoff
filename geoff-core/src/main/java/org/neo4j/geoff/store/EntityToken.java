@@ -17,17 +17,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff.tokens;
+package org.neo4j.geoff.store;
 
-public class IndexToken extends NameableToken {
+public abstract class EntityToken extends NameableToken {
 
-	public IndexToken(String name) {
-		super(Type.INDEX, name);
+	private static String beforeDot(String name) {
+		int dot = name.indexOf('.');
+		if (dot >= 0) {
+			return name.substring(0, dot);
+		} else {
+			return name;
+		}
 	}
 
-	@Override
-	public String toString() {
-		return String.format("|%s|", this.name);
+	private static int afterDot(String name, int defaultValue) {
+		int dot = name.indexOf('.');
+		if (dot >= 0) {
+			return Integer.parseInt(name.substring(dot + 1));
+		} else {
+			return defaultValue;
+		}
+	}
+
+	protected final int index;
+	
+	public EntityToken(Type tokenType, String name) {
+		super(tokenType, beforeDot(name));
+		this.index = afterDot(name, 0);
+	}
+
+	public int getIndex() {
+		return this.index;
 	}
 
 }
