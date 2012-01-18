@@ -20,20 +20,24 @@
 package org.neo4j.geoff.test;
 
 import org.junit.Test;
+import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Rule;
 import org.neo4j.geoff.store.NodeToken;
 import org.neo4j.geoff.store.RelationshipToken;
 import org.neo4j.geoff.store.Token;
+import org.neo4j.graphdb.PropertyContainer;
+
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class SelectRelationshipsTest {
+public class ReflectRelationshipsTest extends TestBase {
 
 	@Test
-	public void canParseSelectRelationshipsRule() throws Exception {
+	public void canParseReflectRelationshipsRule() throws Exception {
 		String source = "(A)=[:KNOWS]=>(B) {\"since\": 1977}";
 		Rule rule = Rule.from(source);
 		assertNotNull(rule);
@@ -56,6 +60,23 @@ public class SelectRelationshipsTest {
 		assertEquals("B", endToken.getName());
 		assertTrue(rule.getData().containsKey("since"));
 		assertEquals(1977, rule.getData().get("since"));
+	}
+
+	@Test
+	public void canReflectRelationshipSet() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(A) {\"name\": \"Alice Allison\"}");
+		geoff.append("(B) {\"name\": \"Bob Robertson\"}");
+		geoff.append("(C)   {\"name\": \"Carol Carlson\"}");
+		geoff.append("(A)-[:KNOWS]->(B) {\"status\": \"friends\"}");
+		geoff.append("(C)-[:KNOWS]->(B) {\"status\": \"colleagues\"}");
+		geoff.append("()=[R:KNOWS]=>(B)");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		//dumpParams(out);
+		assertTrue(out.containsKey("[R.1]"));
+		assertTrue(out.containsKey("[R.2]"));
+		db.assertCounts(4, 2);
 	}
 
 }
