@@ -36,9 +36,9 @@ public class SparseArray<T> {
 
 	public SparseArray(Set<T> items) {
 		this();
-		ArrayList<T> itemList = new ArrayList<T>(items);
-		for (int i = 0; i < itemList.size(); i++) {
-			this.items.put(i + 1, itemList.get(i));
+		int i = 1;
+		for (T item : items) {
+			this.items.put(i++, item);
 		}
 	}
 
