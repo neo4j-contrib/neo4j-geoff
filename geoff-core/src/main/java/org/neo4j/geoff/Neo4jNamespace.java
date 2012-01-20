@@ -322,10 +322,9 @@ public class Neo4jNamespace implements Namespace {
 	 *
 	 * @param a          node token
 	 * @param properties
-	 * @throws RuleApplicationException if node is undefined
 	 */
 	public void deleteNodes(NodeToken a, Map<String, Object> properties)
-	throws RuleApplicationException {
+	{
 		for (Node node : nodeStore.remove(a)) {
 			node.delete();
 		}
@@ -338,7 +337,6 @@ public class Neo4jNamespace implements Namespace {
 	 * @param r          relationship token
 	 * @param b          end node token
 	 * @param properties
-	 * @throws RuleApplicationException if start node, end node or type are invalid
 	 */
 	public void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
 		Set<Relationship> relationships;
@@ -359,10 +357,9 @@ public class Neo4jNamespace implements Namespace {
 	 *
 	 * @param r          relationship token
 	 * @param properties
-	 * @throws RuleApplicationException if type is invalid
 	 */
 	public void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
-	throws RuleApplicationException {
+	{
 		deleteRelationships(NodeToken.anon(), r, NodeToken.anon(), properties);
 	}
 

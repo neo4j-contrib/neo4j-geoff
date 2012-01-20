@@ -51,7 +51,7 @@ public class TokenReader extends UeberReader {
 					tokens.add(readNodeToken());
 					break;
 				case '[':
-					tokens.add(readRelToken());
+					tokens.add(readRelationshipToken());
 					break;
 				case '|':
 					tokens.add(readIndexToken());
@@ -103,7 +103,7 @@ public class TokenReader extends UeberReader {
 		return token;
 	}
 
-	public RelationshipToken readRelToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+	public RelationshipToken readRelationshipToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
 		read('[');
 		String name = readName();
 		String type = "";

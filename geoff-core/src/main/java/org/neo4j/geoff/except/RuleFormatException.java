@@ -21,8 +21,8 @@ package org.neo4j.geoff.except;
 
 public class RuleFormatException extends GeoffLoadException {
 
-	public RuleFormatException(int ruleNumber, String s, Throwable throwable) {
-		super(ruleNumber, s, throwable);
+	public RuleFormatException(String s, Throwable throwable) {
+		super(s, throwable);
 	}
 
 }

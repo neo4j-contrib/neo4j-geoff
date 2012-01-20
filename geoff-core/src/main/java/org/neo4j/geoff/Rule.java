@@ -55,9 +55,9 @@ public class Rule {
 				return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
 			}
 		} catch (SyntaxError e) {
-			throw new RuleFormatException(0, "Syntax error in rule", e);
+			throw new RuleFormatException("Syntax error in rule", e);
 		} catch (JSONException e) {
-			throw new RuleFormatException(0, "Unparsable JSON in rule", e);
+			throw new RuleFormatException("Unparsable JSON in rule", e);
 		}
 	}
 
@@ -70,7 +70,7 @@ public class Rule {
 			}
 			return rules;
 		} catch (JSONException e) {
-			throw new RuleFormatException(0, "Cannot parse JSON list", e);
+			throw new RuleFormatException("Cannot parse JSON list", e);
 		}
 	}
 

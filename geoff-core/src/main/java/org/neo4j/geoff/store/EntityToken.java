@@ -30,12 +30,12 @@ public abstract class EntityToken extends NameableToken {
 		}
 	}
 
-	private static int afterDot(String name, int defaultValue) {
+	private static int afterDot(String name) {
 		int dot = name.indexOf('.');
 		if (dot >= 0) {
 			return Integer.parseInt(name.substring(dot + 1));
 		} else {
-			return defaultValue;
+			return 0;
 		}
 	}
 
@@ -43,7 +43,7 @@ public abstract class EntityToken extends NameableToken {
 	
 	public EntityToken(Type tokenType, String name) {
 		super(tokenType, beforeDot(name));
-		this.index = afterDot(name, 0);
+		this.index = afterDot(name);
 	}
 
 	public int getIndex() {

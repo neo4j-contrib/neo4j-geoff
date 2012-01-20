@@ -29,9 +29,9 @@ public class GeoffLoadException extends Exception {
 		this.ruleNumber = ruleNumber;
 	}
 
-	public GeoffLoadException(int ruleNumber, String s, Throwable throwable) {
+	public GeoffLoadException(String s, Throwable throwable) {
 		super(s, throwable);
-		this.ruleNumber = ruleNumber;
+		this.ruleNumber = null;
 	}
 
 }
