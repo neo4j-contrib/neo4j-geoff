@@ -16,7 +16,7 @@
   <properties>
     <!-- Jar Versions -->
     <junit.version>4.8.2</junit.version>
-    <jackson.version>1.5.2</jackson.version>
+    <jackson.version>1.8.3</jackson.version>
     <servlet-api.version>2.5</servlet-api.version>
     <neo4j.version>1.7-SNAPSHOT</neo4j.version>
     <jersey.server.version>1.6</jersey.server.version>
@@ -165,28 +165,6 @@ the relevant Commercial Agreement.
         <filtering>false</filtering>
       </resource>
     </resources>
-    <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <descriptors>
-            <descriptor>src/main/assembly/server-plugin.xml</descriptor>
-            <descriptor>src/main/assembly/docs-assembly.xml</descriptor>
-          </descriptors>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <!-- this is used for inheritance merges -->
-            <phase>package</phase>
-            <!-- bind to the packaging phase -->
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
   <repositories>
     <repository>
