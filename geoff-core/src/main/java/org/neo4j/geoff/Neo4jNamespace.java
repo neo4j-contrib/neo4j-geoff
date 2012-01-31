@@ -21,15 +21,11 @@ package org.neo4j.geoff;
 
 
 import org.neo4j.geoff.except.RuleApplicationException;
-import org.neo4j.geoff.store.EntityStore;
-import org.neo4j.geoff.store.IndexToken;
-import org.neo4j.geoff.store.NodeToken;
-import org.neo4j.geoff.store.RelationshipToken;
+import org.neo4j.geoff.store.*;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -318,16 +314,47 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
+	private void removeProperties(Set<? extends PropertyContainer> entities, Map<String, Object> properties) {
+		if (properties.isEmpty()) {
+			// for each entity, remove all properties
+			for (PropertyContainer entity : entities) {
+				for (String key : entity.getPropertyKeys()) {
+					entity.removeProperty(key);
+				}
+			}
+		} else {
+			// for each entity, remove only matching (or null) properties
+			for (Map.Entry<String, Object> entry : properties.entrySet()) {
+				for (PropertyContainer entity : entities) {
+					String key = entry.getKey();
+					if (entity.hasProperty(key)) {
+						Object value = entry.getValue();
+						if (value == null || value.equals(entity.getProperty(key))) {
+							entity.removeProperty(key);
+						}
+					}
+				}
+			}
+		}
+
+	}
+	
 	/**
 	 * Delete specific node
 	 *
 	 * @param a          node token
-	 * @param properties
+	 * @param properties properties to remove or null to delete node
 	 */
 	public void deleteNodes(NodeToken a, Map<String, Object> properties)
 	{
-		for (Node node : nodeStore.remove(a)) {
-			node.delete();
+		if (nodeStore.contains(a)) {
+			if (properties == null) {
+				for (Node node : nodeStore.remove(a)) {
+					node.delete();
+				}
+			} else {
+				removeProperties(nodeStore.get(a), properties);
+			}
 		}
 	}
 
@@ -337,19 +364,27 @@ public class Neo4jNamespace implements Namespace {
 	 * @param a          start node token
 	 * @param r          relationship token
 	 * @param b          end node token
-	 * @param properties
+	 * @param properties properties to remove or null to delete relationship
 	 */
 	public void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
 		Set<Relationship> relationships;
 		if (relationshipStore.contains(r)) {
-			relationships = relationshipStore.remove(r);
+			if (properties == null) {
+				relationships = relationshipStore.remove(r);
+			} else {
+				relationships = relationshipStore.get(r);
+			}
 		} else if (r.hasType()) {
 			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
 		} else {
 			relationships = match(a, b);
 		}
-		for (Relationship relationship : relationships) {
-			relationship.delete();
+		if (properties == null) {
+			for (Relationship relationship : relationships) {
+				relationship.delete();
+			}
+		} else {
+			removeProperties(relationships, properties);
 		}
 	}
 
@@ -357,7 +392,7 @@ public class Neo4jNamespace implements Namespace {
 	 * Delete specific relationship
 	 *
 	 * @param r          relationship token
-	 * @param properties
+	 * @param properties properties to remove or null to delete relationship
 	 */
 	public void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
 	{
@@ -694,7 +729,7 @@ public class Neo4jNamespace implements Namespace {
 							throw new IllegalArgumentException("Illegal property type: " + value.getClass().getName());
 						}
 					} catch (ClassCastException ex) {
-						throw new IllegalArgumentException("Illegal combination of list item types");
+						throw new IllegalArgumentException("Illegal combination of list item types", ex);
 					}
 				}
 				entity.setProperty(key, value);

@@ -58,7 +58,7 @@ public class DeleteNodeTest {
 	}
 
 	@Test
-	public void testLoadingNodeExclusionRule() throws Exception {
+	public void canDeleteNode() throws Exception {
 		// perform call to add and remove node
 		String source =
 				"(A) {\"name\": \"Alice\"}\n" +
@@ -68,6 +68,68 @@ public class DeleteNodeTest {
 		// check results
 		assertNotNull(out);
 		assertEquals(0, out.size());
+	}
+
+	@Test
+	public void canRemoveAllPropertiesFromNode() throws Exception {
+		String source =
+		"(A) {\"name\": \"Alice\", \"age\": 900}\n" +
+		"!(A) {}\n" +
+		"";
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		Node a = (Node) out.get("(A)");
+		for (String key : a.getPropertyKeys()) {
+			assertFalse(true);
+		}
+		assertEquals(1, out.size());
+	}
+
+	@Test
+	public void canRemoveNamedPropertiesFromNode() throws Exception {
+		String source =
+		"(A) {\"name\": \"Alice\", \"age\": 900}\n" +
+		"!(A) {\"name\": null}\n" +
+		"";
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		Node a = (Node) out.get("(A)");
+		for (String key : a.getPropertyKeys()) {
+			assertFalse("name".equals(key));
+		}
+		assertEquals(1, out.size());
+	}
+
+	@Test
+	public void canRemoveMatchingPropertiesFromNode() throws Exception {
+		String source =
+		"(A) {\"name\": \"Alice\", \"age\": 900}\n" +
+		"!(A) {\"name\": \"Alice\"}\n" +
+		"";
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		Node a = (Node) out.get("(A)");
+		for (String key : a.getPropertyKeys()) {
+			assertFalse("name".equals(key));
+		}
+		assertEquals(1, out.size());
+	}
+
+	@Test
+	public void willNotRemoveNonMatchingPropertiesFromNode() throws Exception {
+		String source =
+		"(A) {\"name\": \"Alice\", \"age\": 900}\n" +
+		"!(A) {\"name\": \"Ada\"}\n" +
+		"";
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(new StringReader(source), db, null);
+		// check results
+		assertNotNull(out);
+		Node a = (Node) out.get("(A)");
+		assertTrue(a.hasProperty("name"));
+		assertEquals(1, out.size());
 	}
 
 	@Test
