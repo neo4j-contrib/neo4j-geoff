@@ -29,6 +29,7 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -660,14 +661,42 @@ public class Neo4jNamespace implements Namespace {
 				if (value == null) {
 					continue;
 				}
-				//			if (value instanceof List) {
-				//				List listValue = (List) value;
-				//				if (listValue.isEmpty()) {
-				//					continue;
-				//				} else {
-				//					Array a  = listValue.toArray();
-				//				}
-				//			}
+				if (value instanceof List) {
+					try {
+						List listValue = (List) value;
+						if (listValue.isEmpty()) {
+							continue;
+						} else if (listValue.get(0) instanceof Boolean) {
+							boolean[] values = new boolean[listValue.size()];
+							for (int i = 0; i < values.length; i++) {
+								values[i] = (Boolean) listValue.get(i);
+							}
+							value = values;
+						} else if (listValue.get(0) instanceof Integer) {
+							int[] values = new int[listValue.size()];
+							for (int i = 0; i < values.length; i++) {
+								values[i] = (Integer) listValue.get(i);
+							}
+							value = values;
+						} else if (listValue.get(0) instanceof Double) {
+							double[] values = new double[listValue.size()];
+							for (int i = 0; i < values.length; i++) {
+								values[i] = (Double) listValue.get(i);
+							}
+							value = values;
+						} else if (listValue.get(0) instanceof String) {
+							String[] values = new String[listValue.size()];
+							for (int i = 0; i < values.length; i++) {
+								values[i] = listValue.get(i).toString();
+							}
+							value = values;
+						} else {
+							throw new IllegalArgumentException("Illegal property type: " + value.getClass().getName());
+						}
+					} catch (ClassCastException ex) {
+						throw new IllegalArgumentException("Illegal combination of list item types");
+					}
+				}
 				entity.setProperty(key, value);
 			}
 			if (entity instanceof Node) {

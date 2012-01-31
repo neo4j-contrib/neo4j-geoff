@@ -30,17 +30,18 @@ import org.neo4j.graphdb.PropertyContainer;
 
 import java.util.Map;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.*;
 import static org.neo4j.geoff.test.TestDatabase.*;
 
 public class CreateOrUpdateNodeTest extends TestBase{
 
-    @Before
-    public void setUp(){
-        db = new TestDatabase();
-        
-    }
+	@Before
+	public void setUp(){
+		db = new TestDatabase();
+	}
+
 	@Test
 	public void canParseCreateOrUpdateNodeRule() throws Exception {
 		String source = "(A) {\"name\": \"Alice\"}";
@@ -64,6 +65,110 @@ public class CreateOrUpdateNodeTest extends TestBase{
 		assertNotNull(out);
 		assertAlice((Node) out.get("(A)"));
 		db.assertNodeCount(2);
+	}
+
+	@Test
+	public void canCreateNodeWithBooleanListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(a) {\"sequence\": [false, false, true, true, false]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		Node node = (Node) out.get("(a)");
+		boolean[] seq = (boolean[]) node.getProperty("sequence");
+		assertEquals(5, seq.length);
+		assertEquals(false, seq[0]);
+		assertEquals(false, seq[1]);
+		assertEquals(true, seq[2]);
+		assertEquals(true, seq[3]);
+		assertEquals(false, seq[4]);
+		db.assertNodeCount(2);
+	}
+
+	@Test
+	public void canCreateNodeWithIntegerListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(fib) {\"sequence\": [1,1,2,3,5,8,13,21,35]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		Node node = (Node) out.get("(fib)");
+		int[] seq = (int[]) node.getProperty("sequence");
+		assertEquals(9, seq.length);
+		assertEquals(1, seq[0]);
+		assertEquals(1, seq[1]);
+		assertEquals(2, seq[2]);
+		assertEquals(3, seq[3]);
+		assertEquals(5, seq[4]);
+		assertEquals(8, seq[5]);
+		assertEquals(13, seq[6]);
+		assertEquals(21, seq[7]);
+		assertEquals(35, seq[8]);
+		db.assertNodeCount(2);
+	}
+
+	@Test
+	public void canCreateNodeWithDoubleListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(a) {\"sequence\": [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		Node node = (Node) out.get("(a)");
+		double[] seq = (double[]) node.getProperty("sequence");
+		assertEquals(6, seq.length);
+		assertEquals(1.0, seq[0]);
+		assertEquals(1.2, seq[1]);
+		assertEquals(1.4, seq[2]);
+		assertEquals(1.6, seq[3]);
+		assertEquals(1.8, seq[4]);
+		assertEquals(2.0, seq[5]);
+		db.assertNodeCount(2);
+	}
+
+	@Test
+	public void canCreateNodeWithStringListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(fib) {\"sequence\": [\"one\",\"one\",\"two\",\"three\",\"five\",\"eight\",\"thirteen\"]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		Node node = (Node) out.get("(fib)");
+		String[] seq = (String[]) node.getProperty("sequence");
+		assertEquals(7, seq.length);
+		assertEquals("one", seq[0]);
+		assertEquals("one", seq[1]);
+		assertEquals("two", seq[2]);
+		assertEquals("three", seq[3]);
+		assertEquals("five", seq[4]);
+		assertEquals("eight", seq[5]);
+		assertEquals("thirteen", seq[6]);
+		db.assertNodeCount(2);
+	}
+
+	@Test
+	public void canCreateNodeWithCastStringListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(fib) {\"sequence\": [\"one\",\"one\",\"two\",\"three\",\"five\",\"eight\",\"thirteen\",21,35]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
+		Node node = (Node) out.get("(fib)");
+		String[] seq = (String[]) node.getProperty("sequence");
+		assertEquals(9, seq.length);
+		assertEquals("one", seq[0]);
+		assertEquals("one", seq[1]);
+		assertEquals("two", seq[2]);
+		assertEquals("three", seq[3]);
+		assertEquals("five", seq[4]);
+		assertEquals("eight", seq[5]);
+		assertEquals("thirteen", seq[6]);
+		assertEquals("21", seq[7]);
+		assertEquals("35", seq[8]);
+		db.assertNodeCount(2);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void failsOnIllegalListProperty() throws Exception {
+		TestGeoffBuilder geoff = new TestGeoffBuilder();
+		geoff.append("(fib) {\"sequence\": [1,1.0,\"two\",3,5,8,13,21,35]}");
+		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		assertNotNull(out);
 	}
 
 	@Test
