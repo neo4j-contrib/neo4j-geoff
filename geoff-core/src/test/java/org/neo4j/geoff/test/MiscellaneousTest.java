@@ -19,43 +19,31 @@
  */
 package org.neo4j.geoff.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.neo4j.geoff.test.TestDatabase.assertAlice;
-import static org.neo4j.geoff.test.TestDatabase.assertBob;
-import static org.neo4j.geoff.test.TestDatabase.assertNodesExist;
-import static org.neo4j.geoff.test.TestDatabase.assertRelationshipsExist;
-
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.Rule;
-import org.neo4j.graphdb.Direction;
+import org.neo4j.geoff.Subgraph;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
+import static org.neo4j.geoff.test.TestDatabase.*;
 
 public class MiscellaneousTest extends TestBase{
 
 
 	@Test
 	public void canCreateGraphFromSingleString() throws Exception {
-		Reader reader = new StringReader("" +
+		Subgraph subgraph = new Subgraph("" +
 				"(doc) {\"name\": \"doctor\"}\n" +
 				"(dal) {\"name\": \"dalek\"}\n" +
 				"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
 				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
 				"");
-		Geoff.loadIntoNeo4j(reader, db, null);
+		Geoff.insertIntoNeo4j(subgraph, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -63,7 +51,7 @@ public class MiscellaneousTest extends TestBase{
 
 	@Test
 	public void canCreateGraphWithHookToReferenceNode() throws Exception {
-		Reader reader = new StringReader("[" +
+		Subgraph subgraph = new Subgraph("[" +
 				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
 				"\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
 				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
@@ -72,7 +60,7 @@ public class MiscellaneousTest extends TestBase{
 				"]");
 		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);
 		hooks.put("ref", db.getReferenceNode());
-		Geoff.loadIntoNeo4j(reader, db, hooks);
+		Geoff.insertIntoNeo4j(subgraph, db, hooks);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -80,101 +68,11 @@ public class MiscellaneousTest extends TestBase{
 	}
 
 	@Test
-	public void canCreateGraphWithAllRelationshipTypes() throws Exception {
-		/*
-		 * Creates a graph with the following shape where (one) and (two) already exist:
-		 *
-		 *   (one)-[:EAST]->(foo)
-		 *     ^              |
-		 *     |              |
-		 * [:NORTH]        [:SOUTH]
-		 *     |              |
-		 *     |              v
-		 *   (two)<-[:WEST]-(bar)
-		 */
-		Reader reader = new StringReader(
-				"(foo) {\"position\": \"north-east\"}\r\n" +
-				"(bar) {\"position\": \"south-east\"}\r\n" +
-				"(one) {\"position\": \"north-west\"}\r\n" +
-				"(two) {\"position\": \"south-west\"}\r\n" +
-				"[\"(foo)-[:SOUTH]->(bar)\", \"(bar)-[:WEST]->(two)\", \"(two)-[:NORTH]->(one)\", \"(one)-[:EAST]->(foo)\"]\r\n"
-		);
-		Transaction tx = db.beginTx();
-		Node nodeOne = db.createNode();
-		Node nodeTwo = db.createNode();
-		tx.success();
-		tx.finish();
-		HashMap<String,Node> params = new HashMap<String,Node>(1);
-		params.put("one", nodeOne);
-		params.put("two", nodeTwo);
-		Map<String,PropertyContainer> entities = Geoff.loadIntoNeo4j(reader, db, params);
-		Node nodeFoo = (Node) entities.get("(foo)");
-		Node nodeBar = (Node) entities.get("(bar)");
-		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.OUTGOING));
-		assertTrue(nodeOne.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.INCOMING));
-		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("NORTH"), Direction.OUTGOING));
-		assertTrue(nodeTwo.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.INCOMING));
-		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.OUTGOING));
-		assertTrue(nodeFoo.hasRelationship(DynamicRelationshipType.withName("EAST"), Direction.INCOMING));
-		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("WEST"), Direction.OUTGOING));
-		assertTrue(nodeBar.hasRelationship(DynamicRelationshipType.withName("SOUTH"), Direction.INCOMING));
-		assertEquals(nodeOne.getProperty("position"), "north-west");
-		assertEquals(nodeTwo.getProperty("position"), "south-west");
-		assertEquals(nodeFoo.getProperty("position"), "north-east");
-		assertEquals(nodeBar.getProperty("position"), "south-east");
-	}
-
-	@Test
-	public void canCreateGraphWithNodeIndexEntryReflection() throws Exception {
-		Reader reader = new StringReader("" +
-				"(doc) {\"name\": \"doctor\"}\n" +
-				"(dal) {\"name\": \"dalek\"}\n" +
-				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
-				"(dal)<=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
-				"");
-		Geoff.loadIntoNeo4j(reader, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-		assertTrue(db.index().existsForNodes("Baddies"));
-		assertTrue(db.index().forNodes("Baddies").get("name", "Dalek Sec").hasNext());
-		assertEquals("dalek", db.index().forNodes("Baddies").get("name", "Dalek Sec").getSingle().getProperty("name"));
-		reader = new StringReader("" +
-				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
-				"(dal)<=|Baddies|    {\"name\": \"Dalek Sec\"}\n" +
-				"(doc)-[enemy:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
-				"");
-		Map<String, PropertyContainer> stuff = Geoff.loadIntoNeo4j(reader, db, null);
-		Relationship enemy = (Relationship) stuff.get("[enemy]");
-		assertNotNull(enemy);
-		assertEquals("doctor", enemy.getStartNode().getProperty("name"));
-		assertEquals("dalek", enemy.getEndNode().getProperty("name"));
-	}
-
-	@Test
-	public void canCreateGraphWithIndexExclusionRule() throws Exception {
-		Reader reader = new StringReader("" +
-				"(doc) {\"name\": \"doctor\"}\n" +
-				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
-				"");
-		Geoff.loadIntoNeo4j(reader, db, null);
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-		reader = new StringReader("" +
-				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
-				"(doc)!=|People|     {\"name\": \"The Doctor\"}\n" +
-				"");
-		Geoff.loadIntoNeo4j(reader, db, null);
-		assertFalse(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-	}
-
-	@Test
 	public void canLoadRulesCreatedFromValues() throws Exception {
-		ArrayList<Rule> rules = new ArrayList<Rule>();
-		rules.add(Rule.fromValues("(doc)", "name", "doctor", "age", 991));
-		rules.add(Rule.fromValues("(doc)<=|People|", "name", "The Doctor"));
-		Geoff.loadIntoNeo4j(rules, db, null);
+		Subgraph rules = new Subgraph();
+		rules.add(Subgraph.Rule.fromValues("(doc)", "name", "doctor", "age", 991));
+		rules.add(Subgraph.Rule.fromValues("(doc)<=|People|", "name", "The Doctor"));
+		Geoff.insertIntoNeo4j(rules, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
 		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
@@ -183,11 +81,11 @@ public class MiscellaneousTest extends TestBase{
 	@Test
 	public void canCreateNodesBeforeRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
-		TestGeoffBuilder geoff = new TestGeoffBuilder();
-		geoff.append("(A)                {\"name\": \"Alice Allison\"}");
-		geoff.append("(B)                {\"name\": \"Bob Robertson\"}");
-		geoff.append("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
-		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		Subgraph geoff = new Subgraph();
+		geoff.add("(A)                {\"name\": \"Alice Allison\"}");
+		geoff.add("(B)                {\"name\": \"Bob Robertson\"}");
+		geoff.add("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
+		Map<String, PropertyContainer> out = Geoff.insertIntoNeo4j(geoff, db, null);
 		assertNodesExist(out, "(A)", "(B)");
 		assertAlice((Node) out.get("(A)"));
 		assertBob((Node) out.get("(B)"));
@@ -200,11 +98,11 @@ public class MiscellaneousTest extends TestBase{
 	@Test
 	public void canCreateRelationshipBeforeNodes() throws Exception {
 		TestDatabase db = new TestDatabase();
-		TestGeoffBuilder geoff = new TestGeoffBuilder();
-		geoff.append("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
-		geoff.append("(A)                {\"name\": \"Alice Allison\"}");
-		geoff.append("(B)                {\"name\": \"Bob Robertson\"}");
-		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(geoff.getReader(), db, null);
+		Subgraph geoff = new Subgraph();
+		geoff.add("(A)-[R:KNOWS]->(B) {\"since\": 1977}");
+		geoff.add("(A)                {\"name\": \"Alice Allison\"}");
+		geoff.add("(B)                {\"name\": \"Bob Robertson\"}");
+		Map<String, PropertyContainer> out = Geoff.insertIntoNeo4j(geoff, db, null);
 		assertNodesExist(out, "(A)", "(B)");
 		assertAlice((Node) out.get("(A)"));
 		assertBob((Node) out.get("(B)"));

@@ -19,9 +19,11 @@
  */
 package org.neo4j.geoff;
 
-
 import org.neo4j.geoff.except.RuleApplicationException;
-import org.neo4j.geoff.store.*;
+import org.neo4j.geoff.store.EntityStore;
+import org.neo4j.geoff.store.IndexToken;
+import org.neo4j.geoff.store.NodeToken;
+import org.neo4j.geoff.store.RelationshipToken;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
@@ -29,30 +31,45 @@ import org.neo4j.graphdb.index.IndexHits;
 import java.util.*;
 
 /**
- * Provides context for items to be added to a Neo4j database and retained by name
- * so that they may be referred to from within the same context
+ * GraphProxy for use with Neo4j
  *
  * @author Nigel Small
  */
-public class Neo4jNamespace implements Namespace {
-
-	private final GraphDatabaseService graphDB;
-	private final EntityStore<NodeToken, Node> nodeStore;
-	private final EntityStore<RelationshipToken, Relationship> relationshipStore;
-
-	private int ruleNumber = 0;
-	private final ArrayList<String> info = new ArrayList<String>(1);
+public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 
 	/**
-	 * Set up a new Namespace attached to the supplied GraphDatabaseService
+	 * Used for ordering relationships by ID within a TreeSet
+	 */
+	private static class RelationshipComparator implements Comparator<Relationship> {
+
+		@Override
+		public int compare(Relationship rel1, Relationship rel2) {
+			long id1 = rel1.getId();
+			long id2 = rel2.getId();
+			return id1 < id2 ? -1 : id1 > id2 ? 1 : 0;
+		}
+
+	}
+
+	protected final GraphDatabaseService graphDB;
+	protected final EntityStore<NodeToken, Node> nodeStore;
+	protected final EntityStore<RelationshipToken, Relationship> relationshipStore;
+
+	protected int ruleNumber = 0;
+
+	/**
+	 * Set up a new proxy for the supplied GraphDatabaseService
 	 *
 	 * @param graphDB the database in which to store items
-	 * @param params  set of pre-existing Nodes and Relationships accessible within this namespace
 	 */
-	public Neo4jNamespace(GraphDatabaseService graphDB, Map<String, ? extends PropertyContainer> params) {
+	public Neo4jGraphProxy(GraphDatabaseService graphDB) {
 		this.graphDB = graphDB;
 		this.nodeStore = new EntityStore<NodeToken, Node>();
 		this.relationshipStore = new EntityStore<RelationshipToken, Relationship>();
+	}
+
+	@Override
+	public void inputParams(Map<String, PropertyContainer> params) {
 		if (params != null) {
 			// separate params into nodes and relationships
 			for (Map.Entry<String, ? extends PropertyContainer> param : params.entrySet()) {
@@ -74,11 +91,8 @@ public class Neo4jNamespace implements Namespace {
 		}
 	}
 
-	public List<String> getInfo() {
-		return this.info;
-	}
-
-	public Map<String, PropertyContainer> getEntities() {
+	@Override
+	public Map<String, PropertyContainer> outputParams() {
 		Map<String, PropertyContainer> entities = new HashMap<String, PropertyContainer>();
 		for (Map.Entry<String, Node> entry : nodeStore.toMap().entrySet()) {
 			entities.put('(' + entry.getKey() + ')', entry.getValue());
@@ -90,99 +104,150 @@ public class Neo4jNamespace implements Namespace {
 	}
 
 	@Override
-	public void apply(Rule rule) throws RuleApplicationException {
-		this.ruleNumber++;
-		this.info.clear();
-		if (Geoff.DEBUG) System.out.println(String.format("Applying rule #%d: %s", this.ruleNumber, rule));
-		String pattern = rule.getDescriptor().getPattern();
-		if ("N".equals(pattern)) {
-			createOrUpdateNodes(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			rule.getData()
-			);
-		} else if ("N-R->N".equals(pattern)) {
-			createOrUpdateRelationships(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			(RelationshipToken) rule.getDescriptor().getToken(2),
-			(NodeToken) rule.getDescriptor().getToken(5),
-			rule.getData()
-			);
-		} else if ("R".equals(pattern)) {
-			createOrUpdateRelationships(
-			(RelationshipToken) rule.getDescriptor().getToken(0),
-			rule.getData()
-			);
-		} else if ("N=R=>N".equals(pattern)) {
-			reflectOrUpdateRelationships(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			(RelationshipToken) rule.getDescriptor().getToken(2),
-			(NodeToken) rule.getDescriptor().getToken(5),
-			rule.getData()
-			);
-		} else if ("!N".equals(pattern)) {
-			deleteNodes(
-			(NodeToken) rule.getDescriptor().getToken(1),
-			rule.getData()
-			);
-		} else if ("N-R-!N".equals(pattern)) {
-			deleteRelationships(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			(RelationshipToken) rule.getDescriptor().getToken(2),
-			(NodeToken) rule.getDescriptor().getToken(5),
-			rule.getData()
-			);
-		} else if ("!R".equals(pattern)) {
-			deleteRelationships(
-			(RelationshipToken) rule.getDescriptor().getToken(1),
-			rule.getData()
-			);
-		} else if ("N^I".equals(pattern)) {
-			includeIndexEntries(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			(IndexToken) rule.getDescriptor().getToken(2),
-			rule.getData()
-			);
-		} else if ("R^I".equals(pattern)) {
-			includeIndexEntries(
-			(RelationshipToken) rule.getDescriptor().getToken(0),
-			(IndexToken) rule.getDescriptor().getToken(2),
-			rule.getData()
-			);
-		} else if ("N'I".equals(pattern)) {
-			excludeIndexEntries(
-			(NodeToken) rule.getDescriptor().getToken(0),
-			(IndexToken) rule.getDescriptor().getToken(2),
-			rule.getData()
-			);
-		} else if ("R'I".equals(pattern)) {
-			excludeIndexEntries(
-			(RelationshipToken) rule.getDescriptor().getToken(0),
-			(IndexToken) rule.getDescriptor().getToken(2),
-			rule.getData()
-			);
-		} else {
-			throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+	public void merge(Subgraph subgraph) throws RuleApplicationException {
+		Transaction tx = graphDB.beginTx();
+		try {
+			for (Subgraph.Rule rule : subgraph) {
+				this.ruleNumber++;
+				String pattern = rule.getDescriptor().getPattern();
+				if ("N".equals(pattern)) {
+					createOrUpdateNodes(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						rule.getData()
+					);
+				} else if ("R".equals(pattern)) {
+					mergeRelationships(
+						NodeToken.anon(),
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						NodeToken.anon(),
+						rule.getData()
+					);
+				} else if ("N-R->N".equals(pattern)) {
+					mergeRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(2),
+						(NodeToken) rule.getDescriptor().getToken(5),
+						rule.getData()
+					);
+				} else if ("N^I".equals(pattern)) {
+					mergeIndexEntries(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else if ("R^I".equals(pattern)) {
+					mergeIndexEntries(
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else {
+					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+				}
+			}
+			tx.success();
+		} finally {
+			tx.finish();
 		}
 	}
 
 	@Override
-	public void apply(Iterable<Rule> rules)
-	throws RuleApplicationException
-	{
-		if (Geoff.DEBUG) System.out.println("Applying multiple rules");
-		for (Rule rule : rules) {
-			apply(rule);
+	public void insert(Subgraph subgraph) throws RuleApplicationException {
+		Transaction tx = graphDB.beginTx();
+		try {
+			for (Subgraph.Rule rule : subgraph) {
+				this.ruleNumber++;
+				String pattern = rule.getDescriptor().getPattern();
+				if ("N".equals(pattern)) {
+					createOrUpdateNodes(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						rule.getData()
+					);
+				} else if ("R".equals(pattern)) {
+					insertRelationships(
+						NodeToken.anon(),
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						NodeToken.anon(),
+						rule.getData()
+					);
+				} else if ("N-R->N".equals(pattern)) {
+					insertRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(2),
+						(NodeToken) rule.getDescriptor().getToken(5),
+						rule.getData()
+					);
+				} else if ("N^I".equals(pattern)) {
+					insertIndexEntries(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else if ("R^I".equals(pattern)) {
+					insertIndexEntries(
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else {
+					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+				}
+			}
+			tx.success();
+		} finally {
+			tx.finish();
 		}
 	}
 
-	/**
-	 * Create or update node
-	 *
-	 * @param a          node token
-	 * @param properties properties to be assigned to the node
-	 * @return the Node
-	 */
-	public Set<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties)
+	@Override
+	public void delete(Subgraph subgraph) throws RuleApplicationException {
+		Transaction tx = graphDB.beginTx();
+		try {
+			for (Subgraph.Rule rule : subgraph.reverse()) {
+				this.ruleNumber++;
+				String pattern = rule.getDescriptor().getPattern();
+				if ("N".equals(pattern)) {
+					deleteNodes(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						rule.getData()
+					);
+				} else if ("R".equals(pattern)) {
+					deleteRelationships(
+						NodeToken.anon(),
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						NodeToken.anon(),
+						rule.getData()
+					);
+				} else if ("N-R->N".equals(pattern)) {
+					deleteRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(2),
+						(NodeToken) rule.getDescriptor().getToken(5),
+						rule.getData()
+					);
+				} else if ("N^I".equals(pattern)) {
+					deleteIndexEntries(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else if ("R^I".equals(pattern)) {
+					deleteIndexEntries(
+						(RelationshipToken) rule.getDescriptor().getToken(0),
+						(IndexToken) rule.getDescriptor().getToken(2),
+						rule.getData()
+					);
+				} else {
+					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+				}
+			}
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+	}
+
+	private Set<Node> createOrUpdateNodes(NodeToken a, Map<String, Object> properties)
 	{
 		HashSet<Node> nodes = new HashSet<Node>();
 		if (nodeStore.contains(a)) {
@@ -196,10 +261,10 @@ public class Neo4jNamespace implements Namespace {
 		return nodes;
 	}
 
-	// will be called iff r is undefined
 	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-	throws RuleApplicationException
+		throws RuleApplicationException
 	{
+		assert !relationshipStore.contains(r);
 		if (!r.hasType()) {
 			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationships");
 		}
@@ -217,9 +282,9 @@ public class Neo4jNamespace implements Namespace {
 		return relationships;
 	}
 
-	// will be called iff r is defined
 	private Set<Relationship> updateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
 	{
+		assert relationshipStore.contains(r);
 		Set<Relationship> relationships = relationshipStore.get(r);
 		boolean aIsDefined = nodeStore.contains(a);
 		boolean bIsDefined = nodeStore.contains(b);
@@ -248,175 +313,38 @@ public class Neo4jNamespace implements Namespace {
 		return relationships;
 	}
 
-	// will be called iff r is undefined
-	private Set<Relationship> reflectRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-	{
-		Set<Relationship> relationships;
-		if (r.hasType()) {
-			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
-		} else {
-			relationships = match(a, b);
-		}
-		setProperties(relationships, properties);
-		relationshipStore.put(r, relationships);
-		return relationships;
-	}
-
-	/**
-	 * Create or update relationships
-	 *
-	 * @param a          start node token
-	 * @param r          relationship token
-	 * @param b          end node token
-	 * @param properties properties to be assigned to the relationships
-	 * @return the Relationships
-	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
-	 */
-	public Set<Relationship> createOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-	throws RuleApplicationException
+	private void mergeRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+		throws RuleApplicationException
 	{
 		if (relationshipStore.contains(r)) {
-			return updateRelationships(a, r, b, properties);
+			updateRelationships(a, r, b, properties);
 		} else {
-			return createRelationships(a, r, b, properties);
-		}
-	}
-
-	/**
-	 * Create or update relationships
-	 *
-	 * @param r          relationship token
-	 * @param properties properties to be assigned to the relationships
-	 * @return the Relationships
-	 * @throws RuleApplicationException if an attempt is made to create an untyped relationship
-	 */
-	public Set<Relationship> createOrUpdateRelationships(RelationshipToken r, Map<String, Object> properties)
-	throws RuleApplicationException
-	{
-		return createOrUpdateRelationships(NodeToken.anon(), r, NodeToken.anon(), properties);
-	}
-
-	/**
-	 * Reflect or update relationships
-	 *
-	 * @param a          start node token
-	 * @param r          relationship token
-	 * @param b          end node token
-	 * @param properties properties to be assigned to the relationships
-	 * @return the Relationships
-	 */
-	public Set<Relationship> reflectOrUpdateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-	{
-		if (relationshipStore.contains(r)) {
-			return updateRelationships(a, r, b, properties);
-		} else {
-			return reflectRelationships(a, r, b, properties);
-		}
-	}
-
-	private void removeProperties(Set<? extends PropertyContainer> entities, Map<String, Object> properties) {
-		if (properties.isEmpty()) {
-			// for each entity, remove all properties
-			for (PropertyContainer entity : entities) {
-				for (String key : entity.getPropertyKeys()) {
-					entity.removeProperty(key);
-				}
-			}
-		} else {
-			// for each entity, remove only matching (or null) properties
-			for (Map.Entry<String, Object> entry : properties.entrySet()) {
-				for (PropertyContainer entity : entities) {
-					String key = entry.getKey();
-					if (entity.hasProperty(key)) {
-						Object value = entry.getValue();
-						if (value == null || value.equals(entity.getProperty(key))) {
-							entity.removeProperty(key);
-						}
-					}
-				}
-			}
-		}
-
-	}
-	
-	/**
-	 * Delete specific node
-	 *
-	 * @param a          node token
-	 * @param properties properties to remove or null to delete node
-	 */
-	public void deleteNodes(NodeToken a, Map<String, Object> properties)
-	{
-		if (nodeStore.contains(a)) {
-			if (properties == null) {
-				for (Node node : nodeStore.remove(a)) {
-					node.delete();
-				}
+			TreeSet<Relationship> relationships;
+			if (r.hasType()) {
+				relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
 			} else {
-				removeProperties(nodeStore.get(a), properties);
+				relationships = match(a, b);
 			}
-		}
-	}
-
-	/**
-	 * Delete one or more relationships
-	 *
-	 * @param a          start node token
-	 * @param r          relationship token
-	 * @param b          end node token
-	 * @param properties properties to remove or null to delete relationship
-	 */
-	public void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
-		Set<Relationship> relationships;
-		if (relationshipStore.contains(r)) {
-			if (properties == null) {
-				relationships = relationshipStore.remove(r);
-			} else {
-				relationships = relationshipStore.get(r);
-			}
-		} else if (r.hasType()) {
-			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
-		} else {
-			relationships = match(a, b);
-		}
-		if (properties == null) {
+			int index = r.getIndex();
+			int currentIndex = 0;
+			boolean found = false;
 			for (Relationship relationship : relationships) {
-				relationship.delete();
+				currentIndex++;
+				if (index == 0 || index == currentIndex) {
+					found = true;
+					setProperties(relationship, properties);
+				}
 			}
-		} else {
-			removeProperties(relationships, properties);
+			if (!found) {
+				relationships.addAll(createRelationships(a, r, b, properties));
+			}
+			relationshipStore.put(r, relationships);
 		}
 	}
 
-	/**
-	 * Delete specific relationship
-	 *
-	 * @param r          relationship token
-	 * @param properties properties to remove or null to delete relationship
-	 */
-	public void deleteRelationships(RelationshipToken r, Map<String, Object> properties)
-	{
-		deleteRelationships(NodeToken.anon(), r, NodeToken.anon(), properties);
-	}
-
-	private void assertIndexHasName(IndexToken token)
+	private void mergeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
 	throws RuleApplicationException
 	{
-		if (!token.hasName()) {
-			throw new RuleApplicationException(this.ruleNumber, "Index must be named");
-		}
-	}
-
-	/**
-	 * Ensure entry is included within node index
-	 *
-	 * @param a             node token
-	 * @param i             index token
-	 * @param keyValuePairs the key:value pairs against which to create index entries
-	 * @throws RuleApplicationException if index is not named
-	 */
-	public void includeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-	throws RuleApplicationException {
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
 		boolean aIsDefined = nodeStore.contains(a);
@@ -444,16 +372,8 @@ public class Neo4jNamespace implements Namespace {
 		nodeStore.put(a, nodes);
 	}
 
-	/**
-	 * Ensure entry is included within relationship index
-	 *
-	 * @param r             relationship token
-	 * @param i             index token
-	 * @param keyValuePairs
-	 * @throws RuleApplicationException
-	 */
-	public void includeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
-	throws RuleApplicationException
+	private void mergeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+		throws RuleApplicationException
 	{
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
@@ -493,19 +413,95 @@ public class Neo4jNamespace implements Namespace {
 		relationshipStore.put(r, relationships);
 	}
 
+	private Set<Relationship> insertRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+		throws RuleApplicationException
+	{
+		if (relationshipStore.contains(r)) {
+			return updateRelationships(a, r, b, properties);
+		} else {
+			return createRelationships(a, r, b, properties);
+		}
+	}
+
+	private void insertIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+		throws RuleApplicationException
+	{
+		assertIndexHasName(i);
+		Index<Node> index = this.graphDB.index().forNodes(i.getName());
+		boolean aIsDefined = nodeStore.contains(a);
+		HashSet<Node> nodes = aIsDefined ? new HashSet<Node>(nodeStore.get(a)) : new HashSet<Node>(keyValuePairs.size());
+		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			if (aIsDefined) {
+				for (Node node : nodes) {
+					index.add(node, key, value);
+				}
+			} else {
+				Node node = this.graphDB.createNode();
+				index.add(node, key, value);
+				nodes.add(node);
+			}
+		}
+		nodeStore.put(a, nodes);
+	}
+
+	private void insertIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+		throws RuleApplicationException
+	{
+		assertIndexHasName(i);
+		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
+		Set<Relationship> relationships;
+		if (relationshipStore.contains(r)) {
+			relationships = relationshipStore.get(r);
+		} else {
+			relationships = createRelationships(NodeToken.anon(), r, NodeToken.anon(), null);
+		}
+		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			for (Relationship relationship : relationships) {
+				index.add(relationship, key, value);
+			}
+		}
+		relationshipStore.put(r, relationships);
+	}
+
+	private void deleteNodes(NodeToken a, Map<String, Object> properties)
+	{
+		if (nodeStore.contains(a)) {
+			for (Node node : nodeStore.remove(a)) {
+				node.delete();
+			}
+		}
+	}
+
 	/**
-	 * Exclude Node Index Entry
-	 * ========================
+	 * Delete one or more relationships
 	 *
-	 * (A)!=|I| {...}
-	 *
-	 * @param a             node token
-	 * @param i             index token
-	 * @param keyValuePairs
-	 * @throws RuleApplicationException
+	 * @param a          start node token
+	 * @param r          relationship token
+	 * @param b          end node token
+	 * @param properties
 	 */
-	public void excludeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-	throws RuleApplicationException
+	private void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
+		Set<Relationship> relationships;
+		if (relationshipStore.contains(r)) {
+			relationships = relationshipStore.remove(r);
+		} else if (r.hasType()) {
+			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
+		} else {
+			relationships = match(a, b);
+		}
+		for (Relationship relationship : relationships) {
+			this.nodeStore.put(a, relationship.getStartNode());
+			this.nodeStore.put(b, relationship.getEndNode());
+			relationship.delete();
+		}
+	}
+
+	private void deleteIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
+		throws RuleApplicationException
 	{
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -531,20 +527,8 @@ public class Neo4jNamespace implements Namespace {
 		nodeStore.put(a, nodes);
 	}
 
-	/**
-	 * Exclude Relationship Index Entry
-	 * ================================
-	 *
-	 * [R]!=|I|   {...}
-	 * [R:T]!=|I| {...}
-	 *
-	 * @param r             relationship token
-	 * @param i             index token
-	 * @param keyValuePairs
-	 * @throws RuleApplicationException
-	 */
-	public void excludeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
-	throws RuleApplicationException
+	private void deleteIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
+		throws RuleApplicationException
 	{
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
@@ -585,6 +569,14 @@ public class Neo4jNamespace implements Namespace {
 		relationshipStore.put(r, relationships);
 	}
 
+	private void assertIndexHasName(IndexToken token)
+	throws RuleApplicationException
+	{
+		if (!token.hasName()) {
+			throw new RuleApplicationException(this.ruleNumber, "Index must be named");
+		}
+	}
+
 	/**
 	 * If A and B are both defined, match all relationships between A and B
 	 * If only A is defined, match all outgoing relationships from A
@@ -595,8 +587,8 @@ public class Neo4jNamespace implements Namespace {
 	 * @param b end node token
 	 * @return list of matching relationships
 	 */
-	private Set<Relationship> match(NodeToken a, NodeToken b) {
-		final HashSet<Relationship> matches = new HashSet<Relationship>();
+	private TreeSet<Relationship> match(NodeToken a, NodeToken b) {
+		final TreeSet<Relationship> matches = new TreeSet<Relationship>(new RelationshipComparator());
 		if (nodeStore.contains(a)) {
 			Set<Node> startNodes = nodeStore.get(a);
 			if (nodeStore.contains(b)) {
@@ -637,8 +629,8 @@ public class Neo4jNamespace implements Namespace {
 	 * @param type type of matching relationships
 	 * @return list of matching relationships
 	 */
-	private Set<Relationship> match(NodeToken a, NodeToken b, RelationshipType type) {
-		final HashSet<Relationship> matches = new HashSet<Relationship>();
+	private TreeSet<Relationship> match(NodeToken a, NodeToken b, RelationshipType type) {
+		final TreeSet<Relationship> matches = new TreeSet<Relationship>(new RelationshipComparator());
 		if (nodeStore.contains(a)) {
 			Set<Node> startNodes = nodeStore.get(a);
 			if (nodeStore.contains(b)) {
@@ -682,13 +674,6 @@ public class Neo4jNamespace implements Namespace {
 			for (String key : entity.getPropertyKeys()) {
 				entity.removeProperty(key);
 				count++;
-			}
-			if (count > 0) {
-				if (entity instanceof Node) {
-					info.add(String.format("%d properties removed from node %d", count, ((Node) entity).getId()));
-				} else if (entity instanceof Relationship) {
-					info.add(String.format("%d properties removed from relationship %d", count, ((Relationship) entity).getId()));
-				}
 			}
 			for (Map.Entry<String, Object> entry : properties.entrySet()) {
 				String key = entry.getKey();
@@ -734,12 +719,6 @@ public class Neo4jNamespace implements Namespace {
 				}
 				entity.setProperty(key, value);
 			}
-			if (entity instanceof Node) {
-				info.add(String.format("%d properties set on node %d", properties.size(), ((Node) entity).getId()));
-			} else if (entity instanceof Relationship) {
-				info.add(String.format("%d properties set on relationship %d", properties.size(), ((Relationship) entity).getId()));
-			}
-
 		}
 	}
 

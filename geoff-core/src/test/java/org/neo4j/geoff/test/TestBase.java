@@ -21,25 +21,33 @@ package org.neo4j.geoff.test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.neo4j.geoff.except.RuleFormatException;
 import org.neo4j.graphdb.PropertyContainer;
 
+import java.io.IOException;
 import java.util.Map;
 
-public class TestBase
-{
+import static org.junit.Assert.assertNotNull;
 
-    protected TestDatabase db;
+public class TestBase {
 
-    @Before
-    public void setUp() throws Exception {
-        db = new TestDatabase();
-    }
+	public final String ALICE = "(A) {\"name\": \"Alice Allison\"}";
+	public final String BOB   = "(B) {\"name\": \"Bob Robertson\"}";
+	public final String CAROL = "(C) {\"name\": \"Carol Carlson\"}";
+	public final String ALICE_KNOWS_BOB = "(A)-[AB:KNOWS]->(B) {\"since\": 1977}";
 
-    @After
-    public void tearDown() throws Exception {
-        db.shutdown();
-    }
-	
+	protected TestDatabase db;
+
+	@Before
+	public void setUp() throws Exception {
+		db = new TestDatabase();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		db.shutdown();
+	}
+
 	public void dumpParams(Map<String, PropertyContainer> params) {
 		for (Map.Entry<String, PropertyContainer> entry : params.entrySet()) {
 			StringBuilder str = new StringBuilder(entry.getKey());
@@ -54,5 +62,13 @@ public class TestBase
 			System.out.println(str.toString());
 		}
 	}
-	
+
+	public static TestTransaction[] getTestTransactions(int count) throws IOException, RuleFormatException {
+		TestTransaction[] transactions = new TestTransaction[count];
+		for (int i = 0; i < count; i++) {
+			transactions[i] = new TestTransaction(1000001 + i);
+		}
+		return transactions;
+	}
+
 }

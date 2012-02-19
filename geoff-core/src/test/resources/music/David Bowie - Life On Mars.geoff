@@ -26,5 +26,4 @@
 (mars)          {"name": "Life On Mars?"}
 
 # Release history
-(bowie)=[mars:RELEASED]=>(mars)
 (bowie)-[mars.1:RELEASED]->(mars) {"release_date": "1973-06-30", "uk_position": 3, "uk_weeks": 13}

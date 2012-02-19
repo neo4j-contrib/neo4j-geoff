@@ -22,71 +22,47 @@ package org.neo4j.server.plugin.geoff;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.server.plugins.*;
 import org.neo4j.server.rest.repr.Representation;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.util.Arrays;
 import java.util.Map;
 
 @Description("Plugin to handle Geoff data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
-	@Name("load_from_string")
-	@Description("Load Geoff rules into the database from a newline-delimited string")
+	@Name("merge_from_string")
+	@Description("Merge Geoff subgraph into the database from a newline-delimited string")
 	@PluginTarget(GraphDatabaseService.class)
-	public Representation loadFromString(
+	public Representation mergeFromString(
 			@Source GraphDatabaseService graphDB,
-			@Description("Geoff rules to load")
-			@Parameter(name = "rules", optional = false) String rules,
-			@Description("Named entity references to pass into load routine")
+			@Description("Geoff subgraph to merge")
+			@Parameter(name = "subgraph", optional = false) String subgraph,
+			@Description("Named entity references to pass into merge routine")
 			@Parameter(name = "params", optional = true) Map params
 	)
-			throws GeoffLoadException, IOException {
-		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(
-				new StringReader(rules), graphDB, GeoffParams.toEntities(params, graphDB)
+	throws GeoffLoadException, IOException
+	{
+		return new GeoffResultRepresentation(
+			Geoff.mergeIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
 		);
-		return new GeoffResultRepresentation(out);
 	}
 
-	@Name("load_from_list")
-	@Description("Load Geoff rules into the database from a list of rule strings")
+	@Name("merge_from_list")
+	@Description("Merge Geoff subgraph into the database from a list of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
-	public Representation loadFromList(
+	public Representation mergeFromList(
 			@Source GraphDatabaseService graphDB,
-			@Description("Geoff rules to load")
-			@Parameter(name = "rules", optional = false) String[] rules,
-			@Description("Named entity references to pass into load routine")
+			@Description("Geoff subgraph to merge")
+			@Parameter(name = "subgraph", optional = false) String[] subgraph,
+			@Description("Named entity references to pass into merge routine")
 			@Parameter(name = "params", optional = true) Map params
 	)
-			throws GeoffLoadException, IOException {
-		Map<String, PropertyContainer> out = Geoff.loadIntoNeo4j(
-				Arrays.asList(rules), graphDB, GeoffParams.toEntities(params, graphDB)
+	throws GeoffLoadException, IOException
+	{
+		return new GeoffResultRepresentation(
+			Geoff.mergeIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
 		);
-		return new GeoffResultRepresentation(out);
 	}
-
-//	@Name("load_from_map")
-//	@Description("Load GEOFF rules into the database from a set of descriptor:data pairs")
-//	@PluginTarget(GraphDatabaseService.class)
-//	public Representation loadFromMap(
-//			@Source GraphDatabaseService graphDB,
-//			@Description("GEOFF rules to load")
-//			@Parameter(name = "rules", optional = false) Map rules,
-//			@Description("Named entity references to pass into load routine")
-//			@Parameter(name = "params", optional = true) Map params
-//	)
-//			throws GEOFFLoadException, IOException {
-//		try {
-//			Map<String, PropertyContainer> out = GEOFF.loadIntoNeo4j(
-//					(Map<String, Map<String, Object>>) rules, graphDB, GeoffParams.toEntities(params, graphDB)
-//			);
-//			return new GeoffResultRepresentation(out);
-//		} catch (ClassCastException e) {
-//			throw new GEOFFLoadException("Unable to cast rules to named map");
-//		}
-//	}
 
 }

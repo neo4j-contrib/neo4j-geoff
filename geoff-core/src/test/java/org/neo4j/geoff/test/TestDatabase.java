@@ -28,6 +28,10 @@ import static org.junit.Assert.*;
 
 class TestDatabase extends ImpermanentGraphDatabase {
 
+	static final String ALICE = "Alice Allison";
+	static final String BOB   = "Bob Robertson";
+	static final String CAROL = "Carol Carlson";
+
 	TestDatabase() {
 		super();
 	}
@@ -64,7 +68,7 @@ class TestDatabase extends ImpermanentGraphDatabase {
 	Node createAlice() {
 		Transaction tx = this.beginTx();
 		Node node = this.createNode();
-		node.setProperty("name", TestName.ALICE);
+		node.setProperty("name", ALICE);
 		tx.success();
 		tx.finish();
 		return node;
@@ -73,7 +77,7 @@ class TestDatabase extends ImpermanentGraphDatabase {
 	Node createBob() {
 		Transaction tx = this.beginTx();
 		Node node = this.createNode();
-		node.setProperty("name", TestName.BOB);
+		node.setProperty("name", BOB);
 		tx.success();
 		tx.finish();
 		return node;
@@ -82,7 +86,7 @@ class TestDatabase extends ImpermanentGraphDatabase {
 	Node createCarol() {
 		Transaction tx = this.beginTx();
 		Node node = this.createNode();
-		node.setProperty("name", TestName.CAROL);
+		node.setProperty("name", CAROL);
 		tx.success();
 		tx.finish();
 		return node;
@@ -102,19 +106,19 @@ class TestDatabase extends ImpermanentGraphDatabase {
 	static void assertAlice(Node node) {
 		assertNotNull(node);
 		assertTrue(node.hasProperty("name"));
-		assertEquals(TestName.ALICE, node.getProperty("name"));
+		assertEquals(ALICE, node.getProperty("name"));
 	}
 
 	static void assertBob(Node node) {
 		assertNotNull(node);
 		assertTrue(node.hasProperty("name"));
-		assertEquals(TestName.BOB, node.getProperty("name"));
+		assertEquals(BOB, node.getProperty("name"));
 	}
 
 	static void assertCarol(Node node) {
 		assertNotNull(node);
 		assertTrue(node.hasProperty("name"));
-		assertEquals(TestName.CAROL, node.getProperty("name"));
+		assertEquals(CAROL, node.getProperty("name"));
 	}
 
 	static void assertNodesExist(Map<String, PropertyContainer> params, String... keys) {

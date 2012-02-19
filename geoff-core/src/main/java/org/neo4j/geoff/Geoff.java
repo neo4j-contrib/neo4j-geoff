@@ -22,10 +22,9 @@ package org.neo4j.geoff;
 import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Geoff {
@@ -34,61 +33,78 @@ public class Geoff {
 	static final boolean DEBUG = false;
 
 	/**
-	 * Load a stream of GEOFF data from a Reader into a Neo4j GraphDatabaseService instance.
+	 * Merge a subgraph into a graph database
 	 *
-	 * @param ruleReader the Reader from which to read GEOFF rules
-	 * @param graphDB the database instance to load into
-	 * @param params named Nodes and Relationships which can be referenced by Rules
-	 * @return set of named entities used during load
-	 * @throws GeoffLoadException if a parsing error occurs
-	 * @throws IOException if a read failure occurs
+	 * @param subgraph the subgraph to merge
+	 * @param graphDB the database into which to merge
+	 * @param params the input parameters for the merge operation
+	 * @return the output parameters from the merge operation
+	 * @throws GeoffLoadException
+	 * @throws IOException
 	 */
-	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Reader ruleReader,
-			GraphDatabaseService graphDB,
-			Map<String, ? extends PropertyContainer> params
+	public static Map<String, PropertyContainer> mergeIntoNeo4j(
+		Subgraph subgraph,
+		GraphDatabaseService graphDB,
+		Map<String, ? extends PropertyContainer> params
 	)
-			throws GeoffLoadException, IOException {
-		Transaction tx = graphDB.beginTx();
-		try {
-			GeoffLoader<Neo4jNamespace> loader = new GeoffLoader<Neo4jNamespace>(
-					ruleReader,
-					new Neo4jNamespace(graphDB, params)
-			);
-			tx.success();
-			return loader.getNamespace().getEntities();
-		} finally {
-			tx.finish();
+	throws GeoffLoadException, IOException
+	{
+		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
+		if (params != null) {
+			graph.inputParams(new HashMap<String, PropertyContainer>(params));
 		}
+		graph.merge(subgraph);
+		return graph.outputParams();
 	}
 
 	/**
-	 * Load GEOFF data from an iterable list of Rules into a Neo4j GraphDatabaseService instance.
+	 * Insert a subgraph into a graph database
 	 *
-	 * @param rules the GEOFF rules to load
-	 * @param graphDB the database instance to load into
-	 * @param params named Nodes and Relationships which can be referenced by Rules
-	 * @return set of named entities used during load
-	 * @throws GeoffLoadException if a parsing error occurs
-	 * @throws IOException if a read failure occurs
+	 * @param subgraph the subgraph to insert
+	 * @param graphDB the database into which to insert
+	 * @param params the input parameters for the insert operation
+	 * @return the output parameters from the insert operation
+	 * @throws GeoffLoadException
+	 * @throws IOException
 	 */
-	public static Map<String, PropertyContainer> loadIntoNeo4j(
-			Iterable<?> rules,
-			GraphDatabaseService graphDB,
-			Map<String, ? extends PropertyContainer> params
+	public static Map<String, PropertyContainer> insertIntoNeo4j(
+		Subgraph subgraph,
+		GraphDatabaseService graphDB,
+		Map<String, ? extends PropertyContainer> params
 	)
-			throws GeoffLoadException, IOException {
-		Transaction tx = graphDB.beginTx();
-		try {
-			GeoffLoader<Neo4jNamespace> loader = new GeoffLoader<Neo4jNamespace>(
-					rules,
-					new Neo4jNamespace(graphDB, params)
-			);
-			tx.success();
-			return loader.getNamespace().getEntities();
-		} finally {
-			tx.finish();
+	throws GeoffLoadException, IOException
+	{
+		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
+		if (params != null) {
+			graph.inputParams(new HashMap<String, PropertyContainer>(params));
 		}
+		graph.insert(subgraph);
+		return graph.outputParams();
+	}
+
+	/**
+	 * Delete a subgraph from a graph database
+	 *
+	 * @param subgraph the subgraph to delete
+	 * @param graphDB the database from which to delete
+	 * @param params the input parameters for the delete operation
+	 * @return the output parameters from the delete operation
+	 * @throws GeoffLoadException
+	 * @throws IOException
+	 */
+	public static Map<String, PropertyContainer> deleteFromNeo4j(
+		Subgraph subgraph,
+		GraphDatabaseService graphDB,
+		Map<String, ? extends PropertyContainer> params
+	)
+	throws GeoffLoadException, IOException
+	{
+		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
+		if (params != null) {
+			graph.inputParams(new HashMap<String, PropertyContainer>(params));
+		}
+		graph.delete(subgraph);
+		return graph.outputParams();
 	}
 
 }

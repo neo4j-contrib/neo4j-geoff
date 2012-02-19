@@ -26,7 +26,6 @@
 (oddity)          {"name": "Space Oddity"}
 
 # Release history
-(bowie)=[oddity:RELEASED]=>(oddity)
 (bowie)-[oddity.1:RELEASED]->(oddity) {"release_date": "1969-09-06", "uk_position": 5, "uk_weeks": 14}
 (bowie)-[oddity.2:RELEASED]->(oddity) {"release_date": "1975-10-11", "uk_position": 1, "uk_weeks": 10}
 

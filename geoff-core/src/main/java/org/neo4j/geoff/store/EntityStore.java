@@ -21,7 +21,10 @@ package org.neo4j.geoff.store;
 
 import org.neo4j.geoff.util.SparseArray;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class EntityStore<K extends EntityToken, V> {
 
@@ -56,11 +59,20 @@ public class EntityStore<K extends EntityToken, V> {
 	public boolean put(K token, Set<V> items) {
 		if (token.hasName() && items != null && !items.isEmpty()) {
 			String key = token.getName();
-			if (this.items.containsKey(key)) {
-				return false;
+			int index = token.getIndex();
+			if (index == 0) {
+				if (this.items.containsKey(key)) {
+					return false;
+				} else {
+					this.items.put(key, new SparseArray<V>(items));
+					return true;
+				}
 			} else {
-				this.items.put(key, new SparseArray<V>(items));
-				return true;
+				// just put single item into slot
+				for (V item : items) {
+					return put(token, item);
+				}
+				return false;
 			}
 		} else {
 			return false;

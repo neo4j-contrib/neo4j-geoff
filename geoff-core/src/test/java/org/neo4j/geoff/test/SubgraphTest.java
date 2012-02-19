@@ -17,34 +17,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.geoff;
+package org.neo4j.geoff.test;
 
-import java.io.Reader;
-import java.io.StringReader;
+import org.junit.Test;
+import org.neo4j.geoff.Subgraph;
+import org.neo4j.geoff.except.RuleFormatException;
 
-public class GeoffBuilder {
-	
-	private final StringBuilder builder;
-	
-	public GeoffBuilder(String... ruleStrings) {
-		this.builder = new StringBuilder();
-		for (String ruleString : ruleStrings) {
-			this.append(ruleString);
-		}
-	}
-	
-	public void append(String ruleString) {
-		this.builder.append(ruleString);
-		this.builder.append("\n");
-	}
+import java.io.IOException;
 
-	@Override
-	public String toString() {
-		return this.builder.toString();
-	}
+import static org.junit.Assert.assertEquals;
+
+public class SubgraphTest {
 	
-	public Reader getReader() {
-		return new StringReader(this.toString());
+	@Test
+	public void canBuildSimpleSubgraph() throws IOException, RuleFormatException {
+		Subgraph subgraph = new Subgraph();
+		subgraph.add("(A) {\"name\": \"Alice Allison\"}");
+		assertEquals(1, subgraph.size());
 	}
 	
 }

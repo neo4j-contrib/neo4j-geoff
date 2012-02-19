@@ -19,43 +19,33 @@
  */
 package org.neo4j.geoff.test.shell;
 
-import org.neo4j.geoff.Neo4jNamespace;
-import org.neo4j.geoff.Rule;
-import org.neo4j.geoff.except.RuleApplicationException;
-import org.neo4j.geoff.except.RuleFormatException;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.test.ImpermanentGraphDatabase;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 public class GeoffShell {
 	
-	public static void main(String... args) throws Exception {
-		ImpermanentGraphDatabase graphDB = new ImpermanentGraphDatabase();
-		Neo4jNamespace namespace = new Neo4jNamespace(graphDB, null);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		Transaction tx = graphDB.beginTx();
-		try {
-			System.out.print(">>> ");
-			String line = reader.readLine();
-			while (line != null) {
-				try {
-					Rule rule = Rule.from(line);
-					namespace.apply(rule);
-					System.out.println(namespace.getInfo());
-				} catch (RuleFormatException e) {
-					System.out.println(e.getMessage());
-				} catch (RuleApplicationException e) {
-					System.out.println(e.getMessage());
-				}
-				System.out.print(">>> ");
-				line = reader.readLine();
-			}
-			tx.success();
-		} finally {
-			tx.finish();
-		}
-	}
+//	public static void main(String... args) throws Exception {
+//		ImpermanentGraphDatabase graphDB = new ImpermanentGraphDatabase();
+//		Neo4jNamespace namespace = new Neo4jNamespace(graphDB, null);
+//		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//		Transaction tx = graphDB.beginTx();
+//		try {
+//			System.out.print(">>> ");
+//			String line = reader.readLine();
+//			while (line != null) {
+//				try {
+//					Rule rule = Rule.from(line);
+//					namespace.apply(rule);
+//					System.out.println(namespace.getInfo());
+//				} catch (RuleFormatException e) {
+//					System.out.println(e.getMessage());
+//				} catch (RuleApplicationException e) {
+//					System.out.println(e.getMessage());
+//				}
+//				System.out.print(">>> ");
+//				line = reader.readLine();
+//			}
+//			tx.success();
+//		} finally {
+//			tx.finish();
+//		}
+//	}
 	
 }
