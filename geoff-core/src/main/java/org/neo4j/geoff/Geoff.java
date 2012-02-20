@@ -27,13 +27,47 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Main entry point for high-level functions. A {@link Subgraph} may be merged into,
+ * inserted into or deleted from a Neo4j graph database using one of the static
+ * methods contained within this class.
+ */
 public class Geoff {
 
 	// debug switch used for conditional compilation
 	static final boolean DEBUG = false;
 
+	private Geoff() { }
+
 	/**
-	 * Merge a subgraph into a graph database
+	 * Merge a subgraph into a graph database. The following rules describe specific behaviour:
+	 *
+	 * <h3>Nodes</h3>
+	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
+	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>(A) defined</th><th>(A) undefined</th></tr>
+	 *     <tr><td>(A)</td><td>update (A)</td><td>define (A) as new node</td></tr>
+	 * </table>
+	 *
+	 * <h3>Named Relationships</h3>
+	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
+	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>[R] defined</th><th>[R] undefined</th></tr>
+	 *     <tr><td>[R]</td><td>update [R]</td><td>~</td></tr>
+	 *     <tr><td>(A)-[R]->(B)</td><td>update [R]</td><td>define and update [R] as existing relationship between
+	 *     (A) and (B) if one exists</td></tr>
+	 *     <tr><td>[R:TYPE]</td><td>update [R]</td><td>define [R] as new relationship of type TYPE between two new
+	 *     nodes</td></tr>
+	 *     <tr><td>(A)-[R:TYPE]->(B)</td><td>update [R]</td><td>define and update [R] as existing relationship of type TYPE
+	 *     between (A) and (B) if one exists, or create new relationship otherwise</td></tr>
+	 * </table>
+	 *
+	 * <h3>Unnamed Relationships</h3>
+	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
+	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>Behaviour</th></tr>
+	 *     <tr><td>[]</td><td>~</td></tr>
+	 *     <tr><td>(A)-[]->(B)</td><td>~</td></tr>
+	 *     <tr><td>[:TYPE]</td><td>create relationship of type TYPE between two new nodes</td></tr>
+	 *     <tr><td>(A)-[:TYPE]->(B)</td><td>create relationship of type TYPE between (A) and (B)</td></tr>
+	 * </table>
 	 *
 	 * @param subgraph the subgraph to merge
 	 * @param graphDB the database into which to merge
@@ -58,7 +92,7 @@ public class Geoff {
 	}
 
 	/**
-	 * Insert a subgraph into a graph database
+	 * Insert a subgraph into a graph database. The following rules describe specific behaviour:
 	 *
 	 * @param subgraph the subgraph to insert
 	 * @param graphDB the database into which to insert
@@ -83,7 +117,7 @@ public class Geoff {
 	}
 
 	/**
-	 * Delete a subgraph from a graph database
+	 * Delete a subgraph from a graph database. The following rules describe specific behaviour:
 	 *
 	 * @param subgraph the subgraph to delete
 	 * @param graphDB the database from which to delete

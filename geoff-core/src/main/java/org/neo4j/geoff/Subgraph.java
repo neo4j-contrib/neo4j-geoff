@@ -149,22 +149,123 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 
 	private final ArrayList<Rule> rules = new ArrayList<Rule>();
 
-	private Subgraph() { }
-	
+	/**
+	 * Create an empty subgraph.
+	 */
+	public Subgraph() { }
+
+	/**
+	 * Create a subgraph from one or more {@link Rule} objects.
+	 *
+	 * @param rules initial rules to add
+	 */
+	public Subgraph(Rule... rules) {
+		this.add(rules);
+	}
+
+	/**
+	 * Create a subgraph from one or more String formatted rules.
+	 *
+	 * @param rules initial rules to add
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
+	public Subgraph(String... rules) throws RuleFormatException {
+		this.add(rules);
+	}
+
+	/**
+	 * Create a subgraph by reading through String formatted rules.
+	 *
+	 * @param reader Reader object to read initial rules from
+	 * @throws IOException if a read failure occurs
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
+	public Subgraph(Reader reader) throws IOException, RuleFormatException {
+		this.add(reader);
+	}
+
+	/**
+	 * Create a subgraph from a variable collection of objects.
+	 *
+	 * @param rules objects from which to obtain initial rules
+	 * @throws IOException if a read failure occurs
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
 	public Subgraph(Iterable<?> rules) throws IOException, RuleFormatException {
 		this.add(rules);
 	}
 
-	public Subgraph(Reader ruleReader) throws IOException, RuleFormatException {
-		this.add(ruleReader);
+	/**
+	 * Add one or more {@link Rule} objects.
+	 *
+	 * @param rules rules to add
+	 */
+	public void add(Rule... rules) {
+		this.rules.addAll(Arrays.asList(rules));
 	}
 
-	public Subgraph(String... ruleStrings) throws IOException, RuleFormatException {
-		for (String ruleString : ruleStrings) {
-			this.add(ruleString);
+	/**
+	 * Add one or more String formatted rules.
+	 *
+	 * @param rules rules to add
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
+	public void add(String... rules) throws RuleFormatException {
+		for (String ruleString : rules) {
+			if (ruleString.contains("\n")) {
+				StringReader reader = new StringReader(ruleString);
+				try {
+					this.add(reader);
+				} catch (IOException ex) {
+					//
+				} finally {
+					reader.close();
+				}
+			} else {
+				if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
+					// empty line or comment
+				} else if (ruleString.startsWith("[\"")) {
+					try {
+						for(String string : JSON.toListOfStrings(ruleString)) {
+							this.rules.add(Rule.from(string));
+						}
+					} catch (JSONException e) {
+						throw new RuleFormatException("Cannot parse JSON list", e);
+					}
+				} else {
+					this.rules.add(Rule.from(ruleString));
+				}
+			}
 		}
 	}
 
+	/**
+	 * Add to subgraph by reading through String formatted rules.
+	 *
+	 * @param reader Reader object to read rules from
+	 * @throws IOException if a read failure occurs
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
+	public void add(Reader reader) throws IOException, RuleFormatException {
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		try {
+			String ruleString = bufferedReader.readLine();
+			while (ruleString != null) {
+				this.add(ruleString);
+				ruleString = bufferedReader.readLine();
+			}
+		} finally {
+			bufferedReader.close();
+		}
+	}
+
+	/**
+	 * Add to subgraph from a variable collection of objects.
+	 *
+	 * @param rules objects from which to obtain rules
+	 * @throws IOException if a read failure occurs
+	 * @throws RuleFormatException if a rule string is badly formatted
+	 */
 	public void add(Iterable<?> rules) throws IOException, RuleFormatException {
 		StringReader reader;
 		for(Object item : rules) {
@@ -183,53 +284,6 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 				}
 			} else {
 				throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
-			}
-		}
-	}
-
-	public void add(Reader ruleReader) throws IOException, RuleFormatException {
-		BufferedReader bufferedReader = new BufferedReader(ruleReader);
-		try {
-			String ruleString = bufferedReader.readLine();
-			while (ruleString != null) {
-				this.add(ruleString);
-				ruleString = bufferedReader.readLine();
-			}
-		} finally {
-			bufferedReader.close();
-		}
-	}
-
-	public void add(Rule rule) throws RuleFormatException {
-		this.rules.add(rule);
-	}
-	
-	public void add(String... ruleStrings) throws IOException, RuleFormatException {
-		for (String ruleString : ruleStrings) {
-			if (ruleString.contains("\n")) {
-				StringReader reader = new StringReader(ruleString);
-				try {
-					this.add(reader);
-				} finally {
-					reader.close();
-				}
-			} else {
-				if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
-					// empty line or comment
-				} else if (ruleString.startsWith("[\"")) {
-					try {
-						List<String> strings = JSON.toListOfStrings(ruleString);
-						ArrayList<Rule> rules = new ArrayList<Rule>(strings.size());
-						for(String string : strings) {
-							rules.add(Rule.from(string));
-						}
-						this.add(rules);
-					} catch (JSONException e) {
-						throw new RuleFormatException("Cannot parse JSON list", e);
-					}
-				} else {
-					this.rules.add(Rule.from(ruleString));
-				}
 			}
 		}
 	}

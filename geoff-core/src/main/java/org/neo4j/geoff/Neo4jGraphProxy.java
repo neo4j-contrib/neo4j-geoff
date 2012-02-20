@@ -31,7 +31,7 @@ import org.neo4j.graphdb.index.IndexHits;
 import java.util.*;
 
 /**
- * GraphProxy for use with Neo4j
+ * Implementation of {@link GraphProxy} for use with Neo4j.
  *
  * @author Nigel Small
  */
@@ -51,11 +51,11 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 
 	}
 
-	protected final GraphDatabaseService graphDB;
-	protected final EntityStore<NodeToken, Node> nodeStore;
-	protected final EntityStore<RelationshipToken, Relationship> relationshipStore;
+	private final GraphDatabaseService graphDB;
+	private final EntityStore<NodeToken, Node> nodeStore;
+	private final EntityStore<RelationshipToken, Relationship> relationshipStore;
 
-	protected int ruleNumber = 0;
+	private int ruleNumber = 0;
 
 	/**
 	 * Set up a new proxy for the supplied GraphDatabaseService
@@ -85,7 +85,9 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 				} else if (param.getValue() instanceof Relationship && (isRelKey || isUntypedKey)) {
 					relationshipStore.put(new RelationshipToken(key), (Relationship) param.getValue());
 				} else {
-					throw new IllegalArgumentException(String.format("Illegal parameter '%s':%s ", key, param.getValue().getClass().getName()));
+					throw new IllegalArgumentException(String.format(
+						"Illegal parameter '%s':%s ", key, param.getValue().getClass().getName()
+					));
 				}
 			}
 		}
