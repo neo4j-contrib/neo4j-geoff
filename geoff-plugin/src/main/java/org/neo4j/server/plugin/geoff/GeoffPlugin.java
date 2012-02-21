@@ -20,6 +20,7 @@
 package org.neo4j.server.plugin.geoff;
 
 import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.Subgraph;
 import org.neo4j.geoff.except.GeoffLoadException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.*;
@@ -31,27 +32,10 @@ import java.util.Map;
 @Description("Plugin to handle Geoff data insertion and emits")
 public class GeoffPlugin extends ServerPlugin {
 
-	@Name("merge_from_string")
-	@Description("Merge Geoff subgraph into the database from a newline-delimited string")
-	@PluginTarget(GraphDatabaseService.class)
-	public Representation mergeFromString(
-			@Source GraphDatabaseService graphDB,
-			@Description("Geoff subgraph to merge")
-			@Parameter(name = "subgraph", optional = false) String subgraph,
-			@Description("Named entity references to pass into merge routine")
-			@Parameter(name = "params", optional = true) Map params
-	)
-	throws GeoffLoadException, IOException
-	{
-		return new GeoffResultRepresentation(
-			Geoff.mergeIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
-		);
-	}
-
-	@Name("merge_from_list")
+	@Name("merge")
 	@Description("Merge Geoff subgraph into the database from a list of rule strings")
 	@PluginTarget(GraphDatabaseService.class)
-	public Representation mergeFromList(
+	public Representation merge(
 			@Source GraphDatabaseService graphDB,
 			@Description("Geoff subgraph to merge")
 			@Parameter(name = "subgraph", optional = false) String[] subgraph,
@@ -62,6 +46,40 @@ public class GeoffPlugin extends ServerPlugin {
 	{
 		return new GeoffResultRepresentation(
 			Geoff.mergeIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
+		);
+	}
+
+	@Name("insert")
+	@Description("Insert Geoff subgraph into the database from a list of rule strings")
+	@PluginTarget(GraphDatabaseService.class)
+	public Representation insert(
+		@Source GraphDatabaseService graphDB,
+		@Description("Geoff subgraph to insert")
+		@Parameter(name = "subgraph", optional = false) String[] subgraph,
+		@Description("Named entity references to pass into insert routine")
+		@Parameter(name = "params", optional = true) Map params
+	)
+	throws GeoffLoadException, IOException
+	{
+		return new GeoffResultRepresentation(
+			Geoff.insertIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
+		);
+	}
+
+	@Name("delete")
+	@Description("Delete Geoff subgraph from the database as defined by a list of rule strings")
+	@PluginTarget(GraphDatabaseService.class)
+	public Representation delete(
+		@Source GraphDatabaseService graphDB,
+		@Description("Geoff subgraph to delete")
+		@Parameter(name = "subgraph", optional = false) String[] subgraph,
+		@Description("Named entity references to pass into delete routine")
+		@Parameter(name = "params", optional = true) Map params
+	)
+	throws GeoffLoadException, IOException
+	{
+		return new GeoffResultRepresentation(
+			Geoff.deleteFromNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
 		);
 	}
 

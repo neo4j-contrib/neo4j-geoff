@@ -81,7 +81,7 @@ the relevant Commercial Agreement.
     </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-geoff</artifactId>
+      <artifactId>neo4j-geoff-core</artifactId>
       <version>${neo4j.version}</version>
     </dependency>
     <dependency>
