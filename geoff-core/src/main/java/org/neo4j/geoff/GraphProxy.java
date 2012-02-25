@@ -19,7 +19,7 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.except.RuleApplicationException;
+import org.neo4j.geoff.except.SubgraphError;
 
 import java.util.Map;
 
@@ -49,24 +49,24 @@ public interface GraphProxy<T> {
 	 * Merge a subgraph into the attached graph
 	 *
 	 * @param subgraph the subgraph to merge
-	 * @throws RuleApplicationException
+	 * @throws SubgraphError if an error occurs while processing the subgraph
 	 */
-	public void merge(Subgraph subgraph) throws RuleApplicationException;
+	public void merge(Subgraph subgraph) throws SubgraphError;
 
 	/**
 	 * Insert a subgraph into the attached graph
 	 *
 	 * @param subgraph the subgraph to insert
-	 * @throws RuleApplicationException
+	 * @throws SubgraphError if an error occurs while processing the subgraph
 	 */
-	public void insert(Subgraph subgraph) throws RuleApplicationException;
+	public void insert(Subgraph subgraph) throws SubgraphError;
 
 	/**
 	 * Delete a subgraph from the attached graph
 	 *
 	 * @param subgraph the subgraph to delete
-	 * @throws RuleApplicationException
+	 * @throws SubgraphError if an error occurs while processing the subgraph
 	 */
-	public void delete(Subgraph subgraph) throws RuleApplicationException;
+	public void delete(Subgraph subgraph) throws SubgraphError;
 
 }

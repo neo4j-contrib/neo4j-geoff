@@ -19,11 +19,10 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.except.GeoffLoadException;
+import org.neo4j.geoff.except.SubgraphError;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.PropertyContainer;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,15 +72,14 @@ public class Geoff {
 	 * @param graphDB the database into which to merge
 	 * @param params the input parameters for the merge operation
 	 * @return the output parameters from the merge operation
-	 * @throws GeoffLoadException
-	 * @throws IOException
+	 * @throws SubgraphError if there is an error processing the subgraph provided
 	 */
 	public static Map<String, PropertyContainer> mergeIntoNeo4j(
 		Subgraph subgraph,
 		GraphDatabaseService graphDB,
 		Map<String, ? extends PropertyContainer> params
 	)
-	throws GeoffLoadException, IOException
+	throws SubgraphError
 	{
 		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
 		if (params != null) {
@@ -98,15 +96,14 @@ public class Geoff {
 	 * @param graphDB the database into which to insert
 	 * @param params the input parameters for the insert operation
 	 * @return the output parameters from the insert operation
-	 * @throws GeoffLoadException
-	 * @throws IOException
+	 * @throws SubgraphError if there is an error processing the subgraph provided
 	 */
 	public static Map<String, PropertyContainer> insertIntoNeo4j(
 		Subgraph subgraph,
 		GraphDatabaseService graphDB,
 		Map<String, ? extends PropertyContainer> params
 	)
-	throws GeoffLoadException, IOException
+	throws SubgraphError
 	{
 		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
 		if (params != null) {
@@ -123,15 +120,14 @@ public class Geoff {
 	 * @param graphDB the database from which to delete
 	 * @param params the input parameters for the delete operation
 	 * @return the output parameters from the delete operation
-	 * @throws GeoffLoadException
-	 * @throws IOException
+	 * @throws SubgraphError if there is an error processing the subgraph provided
 	 */
 	public static Map<String, PropertyContainer> deleteFromNeo4j(
 		Subgraph subgraph,
 		GraphDatabaseService graphDB,
 		Map<String, ? extends PropertyContainer> params
 	)
-	throws GeoffLoadException, IOException
+	throws SubgraphError
 	{
 		Neo4jGraphProxy graph = new Neo4jGraphProxy(graphDB);
 		if (params != null) {

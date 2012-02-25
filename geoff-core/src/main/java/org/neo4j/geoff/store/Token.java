@@ -26,12 +26,9 @@ public class Token {
 		NODE('N'),
 		REL('R'),
 		INDEX('I'),
-		SINGLE_LINE('-'),
-		ARROW('>'),
-		BANG('!'),
-		DOUBLE_LINE('='),
-		INCLUDED_IN('^'),
-		EXCLUDED_FROM('\'');
+		CONNECTS('-'),
+		TO('>'),
+		IS_ENTRY_IN('^');
 
 		private final char symbol;
 

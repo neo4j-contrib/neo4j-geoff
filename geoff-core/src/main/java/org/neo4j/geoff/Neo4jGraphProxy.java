@@ -19,7 +19,7 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.except.RuleApplicationException;
+import org.neo4j.geoff.except.SubgraphError;
 import org.neo4j.geoff.store.EntityStore;
 import org.neo4j.geoff.store.IndexToken;
 import org.neo4j.geoff.store.NodeToken;
@@ -106,7 +106,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	@Override
-	public void merge(Subgraph subgraph) throws RuleApplicationException {
+	public void merge(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
 			for (Subgraph.Rule rule : subgraph) {
@@ -144,7 +144,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						rule.getData()
 					);
 				} else {
-					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+					throw new SubgraphError(this.ruleNumber, "Unknown rule: " + rule.toString());
 				}
 			}
 			tx.success();
@@ -154,7 +154,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	@Override
-	public void insert(Subgraph subgraph) throws RuleApplicationException {
+	public void insert(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
 			for (Subgraph.Rule rule : subgraph) {
@@ -192,7 +192,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						rule.getData()
 					);
 				} else {
-					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+					throw new SubgraphError(this.ruleNumber, "Unknown rule: " + rule.toString());
 				}
 			}
 			tx.success();
@@ -202,7 +202,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	@Override
-	public void delete(Subgraph subgraph) throws RuleApplicationException {
+	public void delete(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
 			for (Subgraph.Rule rule : subgraph.reverse()) {
@@ -240,7 +240,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						rule.getData()
 					);
 				} else {
-					throw new RuleApplicationException(this.ruleNumber, "Unknown rule: " + rule.toString());
+					throw new SubgraphError(this.ruleNumber, "Unknown rule: " + rule.toString());
 				}
 			}
 			tx.success();
@@ -264,11 +264,11 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assert !relationshipStore.contains(r);
 		if (!r.hasType()) {
-			throw new RuleApplicationException(this.ruleNumber, "Cannot create untyped relationships");
+			throw new SubgraphError(this.ruleNumber, "Cannot create untyped relationships");
 		}
 		RelationshipType type = DynamicRelationshipType.withName(r.getType());
 		HashSet<Relationship> relationships = new HashSet<Relationship>();
@@ -316,7 +316,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void mergeRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		if (relationshipStore.contains(r)) {
 			updateRelationships(a, r, b, properties);
@@ -345,7 +345,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void mergeIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-	throws RuleApplicationException
+	throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -375,7 +375,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void mergeIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
@@ -416,7 +416,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private Set<Relationship> insertRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		if (relationshipStore.contains(r)) {
 			return updateRelationships(a, r, b, properties);
@@ -426,7 +426,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void insertIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -449,7 +449,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void insertIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
@@ -503,7 +503,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void deleteIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Node> index = this.graphDB.index().forNodes(i.getName());
@@ -530,7 +530,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void deleteIndexEntries(RelationshipToken r, IndexToken i, Map<String, Object> keyValuePairs)
-		throws RuleApplicationException
+		throws SubgraphError
 	{
 		assertIndexHasName(i);
 		Index<Relationship> index = this.graphDB.index().forRelationships(i.getName());
@@ -572,10 +572,10 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	}
 
 	private void assertIndexHasName(IndexToken token)
-	throws RuleApplicationException
+	throws SubgraphError
 	{
 		if (!token.hasName()) {
-			throw new RuleApplicationException(this.ruleNumber, "Index must be named");
+			throw new SubgraphError(this.ruleNumber, "Index must be named");
 		}
 	}
 

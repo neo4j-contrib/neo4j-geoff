@@ -22,8 +22,8 @@ package org.neo4j.geoff.test;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
-import org.neo4j.geoff.except.GeoffLoadException;
-import org.neo4j.geoff.except.RuleFormatException;
+import org.neo4j.geoff.except.SubgraphError;
+import org.neo4j.geoff.except.SyntaxError;
 
 import java.io.IOException;
 
@@ -31,12 +31,12 @@ public class Neo4jGraphDeleteTest extends TestBase {
 
 	private final TestTransaction[] testTransactions;
 	
-	public Neo4jGraphDeleteTest() throws IOException, RuleFormatException {
+	public Neo4jGraphDeleteTest() throws IOException, SyntaxError {
 		this.testTransactions = getTestTransactions(50);
 	}
 	
 	@Before
-	public void setUp() throws IOException, GeoffLoadException {
+	public void setUp() throws IOException, SubgraphError {
 		db = new TestDatabase();
 		for (TestTransaction txn : this.testTransactions) {
 			Geoff.insertIntoNeo4j(txn, db, null);
@@ -44,7 +44,7 @@ public class Neo4jGraphDeleteTest extends TestBase {
 	}
 
 	@Test
-	public void canDeleteAllTestTransactions() throws IOException, GeoffLoadException {
+	public void canDeleteAllTestTransactions() throws IOException, SubgraphError {
 		for (TestTransaction txn : this.testTransactions) {
 			Geoff.deleteFromNeo4j(txn, db, null);
 		}

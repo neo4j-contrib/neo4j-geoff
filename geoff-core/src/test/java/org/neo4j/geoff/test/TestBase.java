@@ -21,13 +21,11 @@ package org.neo4j.geoff.test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.neo4j.geoff.except.RuleFormatException;
+import org.neo4j.geoff.except.SyntaxError;
 import org.neo4j.graphdb.PropertyContainer;
 
 import java.io.IOException;
 import java.util.Map;
-
-import static org.junit.Assert.assertNotNull;
 
 public class TestBase {
 
@@ -63,7 +61,7 @@ public class TestBase {
 		}
 	}
 
-	public static TestTransaction[] getTestTransactions(int count) throws IOException, RuleFormatException {
+	public static TestTransaction[] getTestTransactions(int count) throws IOException, SyntaxError {
 		TestTransaction[] transactions = new TestTransaction[count];
 		for (int i = 0; i < count; i++) {
 			transactions[i] = new TestTransaction(1000001 + i);

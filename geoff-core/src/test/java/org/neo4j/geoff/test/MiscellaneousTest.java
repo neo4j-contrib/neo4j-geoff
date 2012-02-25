@@ -29,7 +29,8 @@ import org.neo4j.graphdb.PropertyContainer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.neo4j.geoff.test.TestDatabase.*;
 
 public class MiscellaneousTest extends TestBase{

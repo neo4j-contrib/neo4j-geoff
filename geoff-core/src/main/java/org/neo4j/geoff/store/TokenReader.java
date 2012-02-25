@@ -58,30 +58,17 @@ public class TokenReader extends UeberReader {
 					break;
 				case '-':
 					read('-');
-					tokens.add(new Token(Token.Type.SINGLE_LINE));
+					tokens.add(new Token(Token.Type.CONNECTS));
 					break;
 				case '>':
 					read('>');
-					tokens.add(new Token(Token.Type.ARROW));
+					tokens.add(new Token(Token.Type.TO));
 					break;
 				case '<':
 					read('<');
 					read('=');
-					tokens.add(new Token(Token.Type.INCLUDED_IN));
+					tokens.add(new Token(Token.Type.IS_ENTRY_IN));
 					break;
-//				case '!':
-//					read('!');
-//					if(peek() == '=') {
-//						read('=');
-//						tokens.add(new Token(Token.Type.EXCLUDED_FROM));
-//					} else {
-//						tokens.add(new Token(Token.Type.BANG));
-//					}
-//					break;
-//				case '=':
-//					read('=');
-//					tokens.add(new Token(Token.Type.DOUBLE_LINE));
-//					break;
 				default:
 					throw new UnexpectedCharacterException(ch);
 				}

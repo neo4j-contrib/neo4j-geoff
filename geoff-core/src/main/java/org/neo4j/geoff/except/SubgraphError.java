@@ -19,19 +19,13 @@
  */
 package org.neo4j.geoff.except;
 
-
-public class GeoffLoadException extends Exception {
+public class SubgraphError extends Exception {
 
 	protected final Integer ruleNumber;
 
-	public GeoffLoadException(int ruleNumber, String s) {
+	public SubgraphError(int ruleNumber, String s) {
 		super(s);
 		this.ruleNumber = ruleNumber;
-	}
-
-	public GeoffLoadException(String s, Throwable throwable) {
-		super(s, throwable);
-		this.ruleNumber = null;
 	}
 
 }

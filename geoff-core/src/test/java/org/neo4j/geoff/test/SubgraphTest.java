@@ -21,7 +21,7 @@ package org.neo4j.geoff.test;
 
 import org.junit.Test;
 import org.neo4j.geoff.Subgraph;
-import org.neo4j.geoff.except.RuleFormatException;
+import org.neo4j.geoff.except.SyntaxError;
 
 import java.io.IOException;
 
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 public class SubgraphTest {
 	
 	@Test
-	public void canBuildSimpleSubgraph() throws IOException, RuleFormatException {
+	public void canBuildSimpleSubgraph() throws IOException, SyntaxError {
 		Subgraph subgraph = new Subgraph();
 		subgraph.add("(A) {\"name\": \"Alice Allison\"}");
 		assertEquals(1, subgraph.size());

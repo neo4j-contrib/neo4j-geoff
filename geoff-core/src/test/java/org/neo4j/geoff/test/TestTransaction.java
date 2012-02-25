@@ -20,7 +20,7 @@
 package org.neo4j.geoff.test;
 
 import org.neo4j.geoff.Subgraph;
-import org.neo4j.geoff.except.RuleFormatException;
+import org.neo4j.geoff.except.SyntaxError;
 
 import java.io.IOException;
 
@@ -55,7 +55,7 @@ public class TestTransaction extends Subgraph {
 		return (int) Math.floor(PRODUCTS.length * Math.random());
 	}
 
-	public TestTransaction(int transactionID) throws IOException, RuleFormatException {
+	public TestTransaction(int transactionID) throws IOException, SyntaxError {
 		this.add("(customer) {\"name\": \"" + getRandomName() + "\"}");
 		int productID = getRandomProductID();
 		String productDescription = PRODUCTS[productID];

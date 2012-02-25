@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.Subgraph;
-import org.neo4j.geoff.except.RuleApplicationException;
+import org.neo4j.geoff.except.SubgraphError;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.IndexHits;
 
@@ -227,35 +227,35 @@ public class Neo4jGraphInsertTest extends TestBase {
 		db.assertNodeCount(4);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateShortAnonymousUntypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("[]");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateAnonymousUntypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("()-[]->()");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateAnonymousUntypedRelationshipA() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("(A)-[]->()");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateAnonymousUntypedRelationshipAB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("(A)-[]->(B)");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateAnonymousUntypedRelationshipB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("()-[]->(B)");
@@ -311,35 +311,35 @@ public class Neo4jGraphInsertTest extends TestBase {
 
 	/////////////////////
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateShortNamedUntypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("[R]");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateNamedUntypedRelationship() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("()-[R]->()");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateNamedUntypedRelationshipA() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("(A)-[R]->()");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateNamedUntypedRelationshipAB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("(A)-[R]->(B)");
 		Geoff.insertIntoNeo4j(geoff, db, null);
 	}
 
-	@Test(expected = RuleApplicationException.class)
+	@Test(expected = SubgraphError.class)
 	public void cannotCreateNamedUntypedRelationshipB() throws Exception {
 		TestDatabase db = new TestDatabase();
 		Subgraph geoff = new Subgraph("()-[R]->(B)");

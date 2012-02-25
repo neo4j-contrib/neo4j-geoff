@@ -19,7 +19,6 @@
  */
 package org.neo4j.geoff;
 
-import org.neo4j.geoff.except.RuleFormatException;
 import org.neo4j.geoff.except.SyntaxError;
 import org.neo4j.geoff.store.Token;
 import org.neo4j.geoff.store.TokenReader;
@@ -106,7 +105,7 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 			return new Rule(new Descriptor(descriptor), dataMap);
 		}
 
-		public static Rule from(String text) throws RuleFormatException {
+		public static Rule from(String text) throws SyntaxError {
 			if (Geoff.DEBUG) {
 				System.out.println("Parsing rule: " + text);
 			}
@@ -117,10 +116,8 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 				} else {
 					return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
 				}
-			} catch (SyntaxError e) {
-				throw new RuleFormatException("Syntax error in rule", e);
 			} catch (JSONException e) {
-				throw new RuleFormatException("Unparsable JSON in rule", e);
+				throw new SyntaxError("Unparsable JSON in rule", e);
 			}
 		}
 
@@ -167,9 +164,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 * Create a subgraph from one or more String formatted rules.
 	 *
 	 * @param rules initial rules to add
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public Subgraph(String... rules) throws RuleFormatException {
+	public Subgraph(String... rules) throws SyntaxError {
 		this.add(rules);
 	}
 
@@ -178,9 +175,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 *
 	 * @param reader Reader object to read initial rules from
 	 * @throws IOException if a read failure occurs
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public Subgraph(Reader reader) throws IOException, RuleFormatException {
+	public Subgraph(Reader reader) throws IOException, SyntaxError {
 		this.add(reader);
 	}
 
@@ -189,9 +186,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 *
 	 * @param rules objects from which to obtain initial rules
 	 * @throws IOException if a read failure occurs
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public Subgraph(Iterable<?> rules) throws IOException, RuleFormatException {
+	public Subgraph(Iterable<?> rules) throws IOException, SyntaxError {
 		this.add(rules);
 	}
 
@@ -208,9 +205,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 * Add one or more String formatted rules.
 	 *
 	 * @param rules rules to add
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public void add(String... rules) throws RuleFormatException {
+	public void add(String... rules) throws SyntaxError {
 		for (String ruleString : rules) {
 			if (ruleString.contains("\n")) {
 				StringReader reader = new StringReader(ruleString);
@@ -230,7 +227,7 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 							this.rules.add(Rule.from(string));
 						}
 					} catch (JSONException e) {
-						throw new RuleFormatException("Cannot parse JSON list", e);
+						throw new SyntaxError("Cannot parse JSON list", e);
 					}
 				} else {
 					this.rules.add(Rule.from(ruleString));
@@ -244,9 +241,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 *
 	 * @param reader Reader object to read rules from
 	 * @throws IOException if a read failure occurs
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public void add(Reader reader) throws IOException, RuleFormatException {
+	public void add(Reader reader) throws IOException, SyntaxError {
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		try {
 			String ruleString = bufferedReader.readLine();
@@ -264,9 +261,9 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 	 *
 	 * @param rules objects from which to obtain rules
 	 * @throws IOException if a read failure occurs
-	 * @throws RuleFormatException if a rule string is badly formatted
+	 * @throws SyntaxError if a rule string is badly formatted
 	 */
-	public void add(Iterable<?> rules) throws IOException, RuleFormatException {
+	public void add(Iterable<?> rules) throws IOException, SyntaxError {
 		StringReader reader;
 		for(Object item : rules) {
 			if (item instanceof Rule) {
