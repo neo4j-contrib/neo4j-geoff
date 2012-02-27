@@ -29,8 +29,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
-	private static final String STRING_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_string";
-	private static final String LIST_ENDPOINT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/load_from_list";
+
+	private static final String GEOFF_INSERT = "http://localhost:7474/db/data/ext/GeoffPlugin/graphdb/insert";
 
 	@Test
 	public void canLoadGeoffRuleList() {
@@ -41,11 +41,11 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
 				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
 				"\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
 				"]";
-		String payload = "{\"rules\":" + geoff + "}";
+		String payload = "{\"subgraph\":" + geoff + "}";
 		RESTDocsGenerator rdgen = gen.get();
 		rdgen.expectedStatus(ClientResponse.Status.OK);
 		rdgen.payload(payload);
-		RESTDocsGenerator.ResponseEntity re = rdgen.post(LIST_ENDPOINT);
+		RESTDocsGenerator.ResponseEntity re = rdgen.post(GEOFF_INSERT);
 		String response = re.entity();
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
