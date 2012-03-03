@@ -394,14 +394,21 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 			int index = r.getIndex();
 			int currentIndex = 0;
 			boolean found = false;
+			HashSet<Node> startNodes = new HashSet<Node>();
+			HashSet<Node> endNodes = new HashSet<Node>();
 			for (Relationship relationship : relationships) {
 				currentIndex++;
 				if (index == 0 || index == currentIndex) {
 					found = true;
+					startNodes.add(relationship.getStartNode());
+					endNodes.add(relationship.getEndNode());
 					setProperties(relationship, properties);
 				}
 			}
-			if (!found) {
+			if (found) {
+				this.nodeStore.put(a, startNodes);
+				this.nodeStore.put(b, endNodes);
+			} else {
 				relationships.addAll(createRelationships(a, r, b, properties, bothWays));
 			}
 			relationshipStore.put(r, relationships);
