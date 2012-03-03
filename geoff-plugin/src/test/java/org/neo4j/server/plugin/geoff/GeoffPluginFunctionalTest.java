@@ -42,10 +42,10 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
 				"\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
 				"]";
 		String payload = "{\"subgraph\":" + geoff + "}";
-		RESTDocsGenerator rdgen = gen.get();
-		rdgen.expectedStatus(ClientResponse.Status.OK);
-		rdgen.payload(payload);
-		RESTDocsGenerator.ResponseEntity re = rdgen.post(GEOFF_INSERT);
+		RESTDocsGenerator generator = gen.get();
+		generator.expectedStatus(ClientResponse.Status.OK);
+		generator.payload(payload);
+		RESTDocsGenerator.ResponseEntity re = generator.post(GEOFF_INSERT);
 		String response = re.entity();
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());

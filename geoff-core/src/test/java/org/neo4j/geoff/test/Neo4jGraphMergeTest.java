@@ -629,6 +629,36 @@ public class Neo4jGraphMergeTest extends TestBase {
 	}
 
 	@Test
+	public void canMergeTwoWayRelationships() throws Exception {
+		Subgraph geoff = new Subgraph();
+		geoff.add(ALICE);
+		geoff.add(BOB);
+		geoff.add(CAROL);
+		Map<String, PropertyContainer> in = Geoff.mergeIntoNeo4j(geoff, db, null);
+		geoff.add("(A)<-[AB:KNOWS]->(B)");
+		geoff.add("(A)<-[BC:KNOWS]->(C)");
+		geoff.add("(B)<-[AC:KNOWS]->(C)");
+		for (int i = 0; i < 10; i++) {
+			Map<String, PropertyContainer> out = Geoff.mergeIntoNeo4j(geoff, db, in);
+			db.assertCounts(4, 6);
+			assertRelationshipsExist(out, "[AB.1]", "[AC.1]", "[BC.1]", "[AB.2]", "[AC.2]", "[BC.2]");
+			assertNodesExist(out, "(A)", "(B)", "(C)");
+			Assert.assertEquals(
+				((Relationship) out.get("[AB.1]")).getStartNode(),
+				((Relationship) out.get("[AB.2]")).getEndNode()
+			);
+			Assert.assertEquals(
+				((Relationship) out.get("[AB.1]")).getEndNode(),
+				((Relationship) out.get("[AB.2]")).getStartNode()
+			);
+			Assert.assertEquals(
+				((Relationship) out.get("[AB.1]")).getType(),
+				((Relationship) out.get("[AB.2]")).getType()
+			);
+		}
+	}
+
+	@Test
 	public void canCreateRelationshipsFromNodeSets() throws Exception {
 		Subgraph geoff = new Subgraph();
 		geoff.add("(A.1) {\"name\": \"Alice Allison\"}");

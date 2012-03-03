@@ -122,21 +122,32 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						NodeToken.anon(),
 						(RelationshipToken) rule.getDescriptor().getToken(0),
 						NodeToken.anon(),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N-R->N".equals(pattern)) {
 					mergeRelationships(
 						(NodeToken) rule.getDescriptor().getToken(0),
 						(RelationshipToken) rule.getDescriptor().getToken(2),
 						(NodeToken) rule.getDescriptor().getToken(5),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N<-R-N".equals(pattern)) {
 					mergeRelationships(
 						(NodeToken) rule.getDescriptor().getToken(5),
 						(RelationshipToken) rule.getDescriptor().getToken(3),
 						(NodeToken) rule.getDescriptor().getToken(0),
-						rule.getData()
+						rule.getData(),
+						false
+					);
+				} else if ("N<-R->N".equals(pattern)) {
+					mergeRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(6),
+						rule.getData(),
+						true
 					);
 				} else if ("N^I".equals(pattern)) {
 					mergeIndexEntries(
@@ -177,21 +188,32 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						NodeToken.anon(),
 						(RelationshipToken) rule.getDescriptor().getToken(0),
 						NodeToken.anon(),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N-R->N".equals(pattern)) {
 					insertRelationships(
 						(NodeToken) rule.getDescriptor().getToken(0),
 						(RelationshipToken) rule.getDescriptor().getToken(2),
 						(NodeToken) rule.getDescriptor().getToken(5),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N<-R-N".equals(pattern)) {
 					insertRelationships(
 						(NodeToken) rule.getDescriptor().getToken(5),
 						(RelationshipToken) rule.getDescriptor().getToken(3),
 						(NodeToken) rule.getDescriptor().getToken(0),
-						rule.getData()
+						rule.getData(),
+						false
+					);
+				} else if ("N<-R->N".equals(pattern)) {
+					insertRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(6),
+						rule.getData(),
+						true
 					);
 				} else if ("N^I".equals(pattern)) {
 					insertIndexEntries(
@@ -232,21 +254,32 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						NodeToken.anon(),
 						(RelationshipToken) rule.getDescriptor().getToken(0),
 						NodeToken.anon(),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N-R->N".equals(pattern)) {
 					deleteRelationships(
 						(NodeToken) rule.getDescriptor().getToken(0),
 						(RelationshipToken) rule.getDescriptor().getToken(2),
 						(NodeToken) rule.getDescriptor().getToken(5),
-						rule.getData()
+						rule.getData(),
+						false
 					);
 				} else if ("N<-R-N".equals(pattern)) {
 					deleteRelationships(
 						(NodeToken) rule.getDescriptor().getToken(5),
 						(RelationshipToken) rule.getDescriptor().getToken(3),
 						(NodeToken) rule.getDescriptor().getToken(0),
-						rule.getData()
+						rule.getData(),
+						false
+					);
+				} else if ("N<-R->N".equals(pattern)) {
+					deleteRelationships(
+						(NodeToken) rule.getDescriptor().getToken(0),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(6),
+						rule.getData(),
+						true
 					);
 				} else if ("N^I".equals(pattern)) {
 					deleteIndexEntries(
@@ -284,7 +317,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		return nodes;
 	}
 
-	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays)
 		throws SubgraphError
 	{
 		assert !relationshipStore.contains(r);
@@ -298,6 +331,9 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		for (Node startNode : startNodes) {
 			for (Node endNode : endNodes) {
 				relationships.add(startNode.createRelationshipTo(endNode, type));
+				if (bothWays) {
+					relationships.add(endNode.createRelationshipTo(startNode, type));
+				}
 			}
 		}
 		setProperties(relationships, properties);
@@ -305,7 +341,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		return relationships;
 	}
 
-	private Set<Relationship> updateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> updateRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays)
 	{
 		assert relationshipStore.contains(r);
 		Set<Relationship> relationships = relationshipStore.get(r);
@@ -320,6 +356,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 			Node startNode = relationship.getStartNode();
 			Node endNode = relationship.getEndNode();
 			if (type == null || relationship.isType(type)) {
+				// TODO: adapt mismatch checking for two-way relationships
 				if ((aIsDefined && !startNodes.contains(startNode)) || (bIsDefined && !endNodes.contains(endNode))) {
 					relationshipIterator.remove();                // start or end node mismatch
 				} else {
@@ -336,17 +373,23 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		return relationships;
 	}
 
-	private void mergeRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private void mergeRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays)
 		throws SubgraphError
 	{
 		if (relationshipStore.contains(r)) {
-			updateRelationships(a, r, b, properties);
+			updateRelationships(a, r, b, properties, bothWays);
 		} else {
 			TreeSet<Relationship> relationships;
 			if (r.hasType()) {
 				relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
+				if (bothWays) {
+					relationships.addAll(match(b, a, DynamicRelationshipType.withName(r.getType())));
+				}
 			} else {
 				relationships = match(a, b);
+				if (bothWays) {
+					relationships.addAll(match(b, a));
+				}
 			}
 			int index = r.getIndex();
 			int currentIndex = 0;
@@ -359,7 +402,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 				}
 			}
 			if (!found) {
-				relationships.addAll(createRelationships(a, r, b, properties));
+				relationships.addAll(createRelationships(a, r, b, properties, bothWays));
 			}
 			relationshipStore.put(r, relationships);
 		}
@@ -415,7 +458,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 			} else if (r.hasType()) {
 				IndexHits<Relationship> hits = index.get(key, value);
 				if (hits.size() == 0) {
-					for (Relationship relationship : createRelationships(NodeToken.anon(), RelationshipToken.anon(r.getType()), NodeToken.anon(), null)) {
+					for (Relationship relationship : createRelationships(NodeToken.anon(), RelationshipToken.anon(r.getType()), NodeToken.anon(), null, false)) {
 						index.putIfAbsent(relationship, key, value);
 						relationships.add(relationship);
 					}
@@ -436,13 +479,13 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		relationshipStore.put(r, relationships);
 	}
 
-	private Set<Relationship> insertRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties)
+	private Set<Relationship> insertRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays)
 		throws SubgraphError
 	{
 		if (relationshipStore.contains(r)) {
-			return updateRelationships(a, r, b, properties);
+			return updateRelationships(a, r, b, properties, bothWays);
 		} else {
-			return createRelationships(a, r, b, properties);
+			return createRelationships(a, r, b, properties, bothWays);
 		}
 	}
 
@@ -478,7 +521,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		if (relationshipStore.contains(r)) {
 			relationships = relationshipStore.get(r);
 		} else {
-			relationships = createRelationships(NodeToken.anon(), r, NodeToken.anon(), null);
+			relationships = createRelationships(NodeToken.anon(), r, NodeToken.anon(), null, false);
 		}
 		for (Map.Entry<String, Object> entry : keyValuePairs.entrySet()) {
 			String key = entry.getKey();
@@ -507,20 +550,30 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	 * @param b          end node token
 	 * @param properties
 	 */
-	private void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties) {
+	private void deleteRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays) {
 		Set<Relationship> relationships;
 		if (relationshipStore.contains(r)) {
 			relationships = relationshipStore.remove(r);
 		} else if (r.hasType()) {
 			relationships = match(a, b, DynamicRelationshipType.withName(r.getType()));
+			if (bothWays) {
+				relationships.addAll(match(b, a, DynamicRelationshipType.withName(r.getType())));
+			}
 		} else {
 			relationships = match(a, b);
+			if (bothWays) {
+				relationships.addAll(match(b, a));
+			}
 		}
+		TreeSet<Node> startNodes = new TreeSet<Node>();
+		TreeSet<Node> endNodes = new TreeSet<Node>();
 		for (Relationship relationship : relationships) {
-			this.nodeStore.put(a, relationship.getStartNode());
-			this.nodeStore.put(b, relationship.getEndNode());
+			startNodes.add(relationship.getStartNode());
+			endNodes.add(relationship.getEndNode());
 			relationship.delete();
 		}
+		this.nodeStore.put(a, startNodes);
+		this.nodeStore.put(b, endNodes);
 	}
 
 	private void deleteIndexEntries(NodeToken a, IndexToken i, Map<String, Object> keyValuePairs)
