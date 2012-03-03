@@ -117,7 +117,7 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 					return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
 				}
 			} catch (JSONException e) {
-				throw new SyntaxError("Unparsable JSON in rule", e);
+				throw new SyntaxError("Unparsable JSON in rule: " + text, e);
 			}
 		}
 

@@ -622,6 +622,21 @@ public class Neo4jGraphInsertTest extends TestBase {
 	}
 
 	@Test
+	public void canCreateMultipleRelationshipsWithExplicitNodeCreationInReverse() throws Exception {
+		Subgraph geoff = new Subgraph();
+		geoff.add(ALICE);
+		geoff.add(BOB);
+		geoff.add(CAROL);
+		geoff.add("(B)<-[AB:LOVES]-(A)");
+		geoff.add("(C)<-[BC:LOVES]-(B)");
+		geoff.add("(C)<-[AC:HATES]-(A)");
+		Map<String, PropertyContainer> out = Geoff.insertIntoNeo4j(geoff, db, null);
+		assertRelationshipsExist(out, "[AB]", "[BC]", "[AC]");
+		assertNodesExist(out, "(A)", "(B)", "(C)");
+		db.assertCounts(4, 3);
+	}
+
+	@Test
 	public void canCreateRelationshipsFromNodeSets() throws Exception {
 		Subgraph geoff = new Subgraph();
 		geoff.add("(A.1) {\"name\": \"Alice Allison\"}");

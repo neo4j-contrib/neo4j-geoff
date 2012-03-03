@@ -131,6 +131,13 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						(NodeToken) rule.getDescriptor().getToken(5),
 						rule.getData()
 					);
+				} else if ("N<-R-N".equals(pattern)) {
+					mergeRelationships(
+						(NodeToken) rule.getDescriptor().getToken(5),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(0),
+						rule.getData()
+					);
 				} else if ("N^I".equals(pattern)) {
 					mergeIndexEntries(
 						(NodeToken) rule.getDescriptor().getToken(0),
@@ -179,6 +186,13 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						(NodeToken) rule.getDescriptor().getToken(5),
 						rule.getData()
 					);
+				} else if ("N<-R-N".equals(pattern)) {
+					insertRelationships(
+						(NodeToken) rule.getDescriptor().getToken(5),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(0),
+						rule.getData()
+					);
 				} else if ("N^I".equals(pattern)) {
 					insertIndexEntries(
 						(NodeToken) rule.getDescriptor().getToken(0),
@@ -225,6 +239,13 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 						(NodeToken) rule.getDescriptor().getToken(0),
 						(RelationshipToken) rule.getDescriptor().getToken(2),
 						(NodeToken) rule.getDescriptor().getToken(5),
+						rule.getData()
+					);
+				} else if ("N<-R-N".equals(pattern)) {
+					deleteRelationships(
+						(NodeToken) rule.getDescriptor().getToken(5),
+						(RelationshipToken) rule.getDescriptor().getToken(3),
+						(NodeToken) rule.getDescriptor().getToken(0),
 						rule.getData()
 					);
 				} else if ("N^I".equals(pattern)) {

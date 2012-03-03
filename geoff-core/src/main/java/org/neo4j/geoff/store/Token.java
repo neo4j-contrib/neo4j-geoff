@@ -28,6 +28,7 @@ public class Token {
 		INDEX('I'),
 		CONNECTS('-'),
 		TO('>'),
+		FROM('<'),
 		IS_ENTRY_IN('^');
 
 		private final char symbol;
