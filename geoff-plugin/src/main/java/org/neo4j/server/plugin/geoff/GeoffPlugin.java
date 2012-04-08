@@ -27,7 +27,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.plugins.*;
 import org.neo4j.server.rest.repr.Representation;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Description("Plugin to handle Geoff data insertion and emits")
@@ -43,7 +42,7 @@ public class GeoffPlugin extends ServerPlugin {
 			@Description("Named entity references to pass into merge routine")
 			@Parameter(name = "params", optional = true) Map params
 	)
-	throws IOException, SubgraphError, SyntaxError
+	throws SubgraphError, SyntaxError
 	{
 		return new GeoffResultRepresentation(
 			Geoff.mergeIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
@@ -60,7 +59,7 @@ public class GeoffPlugin extends ServerPlugin {
 		@Description("Named entity references to pass into insert routine")
 		@Parameter(name = "params", optional = true) Map params
 	)
-	throws IOException, SubgraphError, SyntaxError
+	throws SubgraphError, SyntaxError
 	{
 		return new GeoffResultRepresentation(
 			Geoff.insertIntoNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))
@@ -77,7 +76,7 @@ public class GeoffPlugin extends ServerPlugin {
 		@Description("Named entity references to pass into delete routine")
 		@Parameter(name = "params", optional = true) Map params
 	)
-	throws IOException, SubgraphError, SyntaxError
+	throws SubgraphError, SyntaxError
 	{
 		return new GeoffResultRepresentation(
 			Geoff.deleteFromNeo4j(new Subgraph(subgraph), graphDB, GeoffParams.toEntities(params, graphDB))

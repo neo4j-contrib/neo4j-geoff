@@ -317,6 +317,19 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		return nodes;
 	}
 
+	/**
+	 * Create relationships described by the supplied tokens. Should only be
+	 * called if the RelationshipToken <code>r</code> does not describe a
+	 * pre-existing relationship.
+	 *
+	 * @param a start nodes
+	 * @param r relationships
+	 * @param b end nodes
+	 * @param properties relationship properties
+	 * @param bothWays bi-directional relationship
+	 * @return
+	 * @throws SubgraphError
+	 */
 	private Set<Relationship> createRelationships(NodeToken a, RelationshipToken r, NodeToken b, Map<String, Object> properties, boolean bothWays)
 		throws SubgraphError
 	{
@@ -743,6 +756,12 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		return matches;
 	}
 
+	/**
+	 * Replace all entity properties on a collection of entities.
+	 *
+	 * @param entities the entities on which to replaces properties
+	 * @param properties the new properties
+	 */
 	private void setProperties(Set<? extends PropertyContainer> entities, Map<String, Object> properties) {
 		if (properties != null) {
 			for (PropertyContainer entity : entities) {
@@ -751,12 +770,16 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 		}
 	}
 
+	/**
+	 * Replace all entity properties with a new set, as supplied.
+	 *
+	 * @param entity the entity on which to replace properties
+	 * @param properties the new properties
+	 */
 	private void setProperties(PropertyContainer entity, Map<String, Object> properties) {
 		if (properties != null) {
-			int count = 0;
 			for (String key : entity.getPropertyKeys()) {
 				entity.removeProperty(key);
-				count++;
 			}
 			for (Map.Entry<String, Object> entry : properties.entrySet()) {
 				String key = entry.getKey();

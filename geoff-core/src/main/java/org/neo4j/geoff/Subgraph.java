@@ -32,23 +32,23 @@ import java.io.StringReader;
 import java.util.*;
 
 /**
- * A subgraph is an ordered collection of Geoff rules
+ * An ordered collection of Geoff rules.
  */
 public class Subgraph implements Iterable<Subgraph.Rule> {
 
 	/**
-	 * A Rule is a Descriptor:Data pair
+	 * A Descriptor:Data pair.
 	 *
 	 */
 	public static class Rule {
 
 		/**
-		 * A Descriptor is a pattern consisting of tokens and symbols which is
-		 * used to denote a Node, Relationship or Index entry within a Subgraph.
-		 * Heavily influenced by Cypher, a Geoff Descriptor uses parentheses to
-		 * denote a Node and square brackets for a Relationship while enclosing
-		 * Index names within pipe symbols. The following summary illustrates the
-		 * main combinations available:
+		 * A pattern consisting of tokens and symbols, used to denote a Node,
+		 * Relationship or Index entry within a Subgraph. Heavily influenced
+		 * by Cypher, a Geoff Descriptor uses parentheses to denote a Node and
+		 * square brackets for a Relationship while enclosing Index names
+		 * within pipe symbols. The following summary illustrates the main
+		 * combinations available:
 		 *
 		 * (A)
 		 * [R]

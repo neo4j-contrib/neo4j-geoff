@@ -22,8 +22,17 @@ package org.neo4j.geoff.util;
 import java.io.IOException;
 import java.io.Reader;
 
+/**
+ * Wrapper around standard {@link java.io.Reader} class. Throws exceptions
+ * when the end of a stream is reached or when an unexpected character is
+ * encountered.
+ */
 public class UeberReader {
 
+	/**
+	 * Thrown when a {@link UeberReader} instance reaches the end of the
+	 * stream being read.
+	 */
 	public static class EndOfStreamException extends Exception {
 
 		public EndOfStreamException() {
@@ -32,6 +41,9 @@ public class UeberReader {
 
 	}
 
+	/**
+	 * Thrown when the next character read is not the one expected.
+	 */
 	public static class UnexpectedCharacterException extends Exception {
 
 		public UnexpectedCharacterException(char ch) {
@@ -42,6 +54,11 @@ public class UeberReader {
 
 	private final Reader reader;
 
+	/**
+	 * Create a new UeberReader instance based on a {@link java.io.Reader}.
+	 *
+	 * @param reader {@link java.io.Reader} instance to wrap
+	 */
 	public UeberReader(Reader reader) {
 		this.reader = reader;
 	}

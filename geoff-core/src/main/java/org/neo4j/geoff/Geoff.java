@@ -27,9 +27,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Main entry point for high-level functions. A {@link Subgraph} may be merged into,
- * inserted into or deleted from a Neo4j graph database using one of the static
+ * Main entry point for high-level functions. A {@link Subgraph} may be {@link
+ * #mergeIntoNeo4j(Subgraph, org.neo4j.graphdb.GraphDatabaseService,
+ * java.util.Map) merged into}, {@link #insertIntoNeo4j(Subgraph,
+ * org.neo4j.graphdb.GraphDatabaseService, java.util.Map) inserted into} or
+ * {@link #deleteFromNeo4j(Subgraph, org.neo4j.graphdb.GraphDatabaseService,
+ * java.util.Map) deleted from} a Neo4j graph database using one of the static
  * methods contained within this class.
+ *
+ * Example usage:
+ * <pre>
+ * {@code
+ * Subgraph subgraph = new Subgraph(
+ *     "(A) {\"name\": \"Alice\"}",
+ *     "(B) {\"name\": \"Bob\"}",
+ *     "(A)-[AB:KNOWS]->(B)"
+ * );
+ * Map<String, PropertyContainer> out = Geoff.insertIntoNeo4j(subgraph, graphDB, null);
+ * Node alice = (Node) out.get("(A)");
+ * }
+ * </pre>
  */
 public class Geoff {
 
@@ -39,40 +56,17 @@ public class Geoff {
 	private Geoff() { }
 
 	/**
-	 * Merge a subgraph into a graph database. The following rules describe specific behaviour:
+	 * Merge a {@link Subgraph} into a graph database. Outputs a map of
+	 * named entities, e.g. {"(A)": Node(123), "(B)": Node(234), "[AB]":
+	 * Rel(456)}. Can accept a similar map of named entities as input
+	 * parameters.
 	 *
-	 * <h3>Nodes</h3>
-	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
-	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>(A) defined</th><th>(A) undefined</th></tr>
-	 *     <tr><td>(A)</td><td>update (A)</td><td>define (A) as new node</td></tr>
-	 * </table>
-	 *
-	 * <h3>Named Relationships</h3>
-	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
-	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>[R] defined</th><th>[R] undefined</th></tr>
-	 *     <tr><td>[R]</td><td>update [R]</td><td>~</td></tr>
-	 *     <tr><td>(A)-[R]->(B)</td><td>update [R]</td><td>define and update [R] as existing relationship between
-	 *     (A) and (B) if one exists</td></tr>
-	 *     <tr><td>[R:TYPE]</td><td>update [R]</td><td>define [R] as new relationship of type TYPE between two new
-	 *     nodes</td></tr>
-	 *     <tr><td>(A)-[R:TYPE]->(B)</td><td>update [R]</td><td>define and update [R] as existing relationship of type TYPE
-	 *     between (A) and (B) if one exists, or create new relationship otherwise</td></tr>
-	 * </table>
-	 *
-	 * <h3>Unnamed Relationships</h3>
-	 * <table border="1" cellpadding="4" style="border: 1px solid #000; border-collapse: collapse; font-size: small; text-align: center;">
-	 *     <tr style="background-color: #DDD;"><th>Rule</th><th>Behaviour</th></tr>
-	 *     <tr><td>[]</td><td>~</td></tr>
-	 *     <tr><td>(A)-[]->(B)</td><td>~</td></tr>
-	 *     <tr><td>[:TYPE]</td><td>create relationship of type TYPE between two new nodes</td></tr>
-	 *     <tr><td>(A)-[:TYPE]->(B)</td><td>create relationship of type TYPE between (A) and (B)</td></tr>
-	 * </table>
-	 *
-	 * @param subgraph the subgraph to merge
+	 * @param subgraph the {@link Subgraph} to merge
 	 * @param graphDB the database into which to merge
 	 * @param params the input parameters for the merge operation
 	 * @return the output parameters from the merge operation
-	 * @throws SubgraphError if there is an error processing the subgraph provided
+	 * @throws SubgraphError if there is an error processing the {@link
+	 * Subgraph} provided
 	 */
 	public static Map<String, PropertyContainer> mergeIntoNeo4j(
 		Subgraph subgraph,
@@ -90,13 +84,17 @@ public class Geoff {
 	}
 
 	/**
-	 * Insert a subgraph into a graph database. The following rules describe specific behaviour:
+	 * Insert a {@link Subgraph} into a graph database. Outputs a map of
+	 * named entities, e.g. {"(A)": Node(123), "(B)": Node(234), "[AB]":
+	 * Rel(456)}. Can accept a similar map of named entities as input
+	 * parameters.
 	 *
-	 * @param subgraph the subgraph to insert
+	 * @param subgraph the {@link Subgraph} to insert
 	 * @param graphDB the database into which to insert
 	 * @param params the input parameters for the insert operation
 	 * @return the output parameters from the insert operation
-	 * @throws SubgraphError if there is an error processing the subgraph provided
+	 * @throws SubgraphError if there is an error processing the {@link
+	 * Subgraph} provided
 	 */
 	public static Map<String, PropertyContainer> insertIntoNeo4j(
 		Subgraph subgraph,
@@ -114,13 +112,17 @@ public class Geoff {
 	}
 
 	/**
-	 * Delete a subgraph from a graph database. The following rules describe specific behaviour:
+	 * Delete a {@link Subgraph} from a graph database. Outputs a map of
+	 * named entities, e.g. {"(A)": Node(123), "(B)": Node(234), "[AB]":
+	 * Rel(456)}. Can accept a similar map of named entities as input
+	 * parameters.
 	 *
-	 * @param subgraph the subgraph to delete
+	 * @param subgraph the {@link Subgraph} to delete
 	 * @param graphDB the database from which to delete
 	 * @param params the input parameters for the delete operation
 	 * @return the output parameters from the delete operation
-	 * @throws SubgraphError if there is an error processing the subgraph provided
+	 * @throws SubgraphError if there is an error processing the {@link
+	 * Subgraph} provided
 	 */
 	public static Map<String, PropertyContainer> deleteFromNeo4j(
 		Subgraph subgraph,
