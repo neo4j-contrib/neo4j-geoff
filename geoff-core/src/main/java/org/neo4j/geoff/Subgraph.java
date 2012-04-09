@@ -105,20 +105,56 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 			return new Rule(new Descriptor(descriptor), dataMap);
 		}
 
-		public static Rule from(String text) throws SyntaxError {
+		/**
+		 * Read one or more rules from a string, returning all rules read in
+		 * a list. Each descriptor may or may not be followed by a data map.
+		 *
+		 * @param text the string from which to read the rules
+		 * @return collection of rules read
+		 * @throws SyntaxError if JSON is unparsable
+		 */
+		public static List<Rule> from(String text) throws SyntaxError {
 			if (Geoff.DEBUG) {
 				System.out.println("Parsing rule: " + text);
 			}
-			String[] bits = text.split("\\s+", 2);
-			try {
+			ArrayList<Rule> rules = new ArrayList<Rule>();
+			text = text.trim();
+			while (text.length() > 0) {
+				String[] bits = text.split("\\s+", 2);
+				Descriptor descriptor = new Descriptor(bits[0]);
+				Map<String, Object> data;
 				if (bits.length == 1) {
-					return new Rule(new Descriptor(bits[0]), null);
+					data = null;
+					text = "";
+				} else if (bits[1].charAt(0) == '{') {
+					data = null;
+					// look for each '}' in turn, trying to parse
+					// JSON up to that point; bit brute force but
+					// easier than building a JSON parser...
+					int pos = 0;
+					do {
+						pos = bits[1].indexOf('}', pos + 1);
+						if (pos >= 0) {
+							try {
+								data = JSON.toObject(bits[1].substring(0, pos + 1));
+							} catch(JSONException e) {
+								data = null;
+							}
+						}
+					} while (pos >= 0 && data == null);
+					if (data == null) {
+						throw new SyntaxError("Unparsable JSON in rule: " + text);
+					}
+					// now continue parsing the string
+					text = bits[1].substring(pos + 1).trim();
 				} else {
-					return new Rule(new Descriptor(bits[0]), JSON.toObject(bits[1]));
+					data = null;
+					text = bits[1];
 				}
-			} catch (JSONException e) {
-				throw new SyntaxError("Unparsable JSON in rule: " + text, e);
+				Rule rule = new Rule(descriptor, data);
+				rules.add(rule);
 			}
+			return rules;
 		}
 
 		private final Descriptor descriptor;
@@ -224,13 +260,13 @@ public class Subgraph implements Iterable<Subgraph.Rule> {
 				} else if (ruleString.startsWith("[\"")) {
 					try {
 						for(String string : JSON.toListOfStrings(ruleString)) {
-							this.rules.add(Rule.from(string));
+							this.rules.addAll(Rule.from(string));
 						}
 					} catch (JSONException e) {
 						throw new SyntaxError("Cannot parse JSON list", e);
 					}
 				} else {
-					this.rules.add(Rule.from(ruleString));
+					this.rules.addAll(Rule.from(ruleString));
 				}
 			}
 		}

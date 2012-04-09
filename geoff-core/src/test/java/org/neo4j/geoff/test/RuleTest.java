@@ -26,17 +26,17 @@ import org.neo4j.geoff.store.NodeToken;
 import org.neo4j.geoff.store.RelationshipToken;
 import org.neo4j.geoff.store.Token;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class RuleTest {
 
 	@Test
 	public void canBuildNodeRule() throws Exception {
 		String source = "(A) {\"name\": \"Alice\"}";
-		Subgraph.Rule rule = Subgraph.Rule.from(source);
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		Subgraph.Rule rule = rules.get(0);
 		assertNotNull(rule);
 		assertEquals("N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
@@ -51,7 +51,8 @@ public class RuleTest {
 	@Test
 	public void canBuildRelationshipRule() throws Exception {
 		String source = "[:KNOWS] {\"since\": 1977}";
-		Subgraph.Rule rule = Subgraph.Rule.from(source);
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		Subgraph.Rule rule = rules.get(0);
 		assertNotNull(rule);
 		assertEquals("R", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof RelationshipToken);
@@ -67,7 +68,8 @@ public class RuleTest {
 	@Test
 	public void canBuildPathRule() throws Exception {
 		String source = "(A)-[:KNOWS]->(B) {\"since\": 1977}";
-		Subgraph.Rule rule = Subgraph.Rule.from(source);
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		Subgraph.Rule rule = rules.get(0);
 		assertNotNull(rule);
 		assertEquals("N-R->N", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
@@ -93,7 +95,8 @@ public class RuleTest {
 	@Test
 	public void canBuildNodeIndexEntryRule() throws Exception {
 		String source = "(A)<=|People| {\"name\": \"Alice\"}";
-		Subgraph.Rule rule = Subgraph.Rule.from(source);
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		Subgraph.Rule rule = rules.get(0);
 		assertNotNull(rule);
 		assertEquals("N^I", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof NodeToken);
@@ -114,7 +117,8 @@ public class RuleTest {
 	@Test
 	public void canBuildRelationshipIndexEntryRule() throws Exception {
 		String source = "[R]<=|People| {\"name\": \"Alice\"}";
-		Subgraph.Rule rule = Subgraph.Rule.from(source);
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		Subgraph.Rule rule = rules.get(0);
 		assertNotNull(rule);
 		assertEquals("R^I", rule.getDescriptor().getPattern());
 		assertTrue(rule.getDescriptor().getToken(0) instanceof RelationshipToken);
@@ -132,4 +136,29 @@ public class RuleTest {
 		assertEquals("Alice", rule.getData().get("name"));
 	}
 
+	@Test
+	public void canParseMultipleRules() throws Exception {
+		String source = "(A) {\"name\": \"Alice\"} (B) {\"name\": \"Bob\"} (A)-[:KNOWS]->(B) {\"odd_value\": \"{#!:\\\"}\"} (C) (D) (C)-[:LIKES]->(D)";
+		List<Subgraph.Rule> rules = Subgraph.Rule.from(source);
+		assertEquals(6, rules.size());
+		Subgraph.Rule aliceRule = rules.get(0);
+		Subgraph.Rule bobRule = rules.get(1);
+		Subgraph.Rule aliceKnowsBobRule = rules.get(2);
+		Subgraph.Rule ruleC = rules.get(3);
+		Subgraph.Rule ruleD = rules.get(4);
+		Subgraph.Rule ruleCD = rules.get(5);
+		assertEquals("(A)", aliceRule.getDescriptor().toString());
+		assertEquals("Alice", aliceRule.getData().get("name"));
+		assertEquals("(B)", bobRule.getDescriptor().toString());
+		assertEquals("Bob", bobRule.getData().get("name"));
+		assertEquals("(A)-[:KNOWS]->(B)", aliceKnowsBobRule.getDescriptor().toString());
+		assertEquals("{#!:\"}", aliceKnowsBobRule.getData().get("odd_value"));
+		assertEquals("(C)", ruleC.getDescriptor().toString());
+		assertNull(ruleC.getData());
+		assertEquals("(D)", ruleD.getDescriptor().toString());
+		assertNull(ruleD.getData());
+		assertEquals("(C)-[:LIKES]->(D)", ruleCD.getDescriptor().toString());
+		assertNull(ruleCD.getData());
+	}
+	
 }

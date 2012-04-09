@@ -21,6 +21,10 @@ package org.neo4j.geoff.except;
 
 public class SyntaxError extends Exception {
 
+	public SyntaxError(String s) {
+		super(s);
+	}
+
 	public SyntaxError(String s, Throwable throwable) {
 		super(s, throwable);
 	}
