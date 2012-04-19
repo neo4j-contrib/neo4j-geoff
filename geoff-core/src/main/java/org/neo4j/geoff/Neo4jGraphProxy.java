@@ -109,7 +109,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	public void merge(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
-			for (Subgraph.Rule rule : subgraph) {
+			for (Rule rule : subgraph) {
 				this.ruleNumber++;
 				String pattern = rule.getDescriptor().getPattern();
 				if ("N".equals(pattern)) {
@@ -175,7 +175,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	public void insert(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
-			for (Subgraph.Rule rule : subgraph) {
+			for (Rule rule : subgraph) {
 				this.ruleNumber++;
 				String pattern = rule.getDescriptor().getPattern();
 				if ("N".equals(pattern)) {
@@ -241,7 +241,7 @@ public class Neo4jGraphProxy implements GraphProxy<PropertyContainer> {
 	public void delete(Subgraph subgraph) throws SubgraphError {
 		Transaction tx = graphDB.beginTx();
 		try {
-			for (Subgraph.Rule rule : subgraph.reverse()) {
+			for (Rule rule : subgraph.reverse()) {
 				this.ruleNumber++;
 				String pattern = rule.getDescriptor().getPattern();
 				if ("N".equals(pattern)) {

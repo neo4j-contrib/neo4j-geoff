@@ -20,12 +20,9 @@
 package org.neo4j.geoff;
 
 import org.neo4j.geoff.except.SyntaxError;
-import org.neo4j.geoff.store.Token;
-import org.neo4j.geoff.store.TokenReader;
 import org.neo4j.geoff.util.JSON;
 import org.neo4j.geoff.util.JSONException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -34,312 +31,282 @@ import java.util.*;
 /**
  * An ordered collection of Geoff rules.
  */
-public class Subgraph implements Iterable<Subgraph.Rule> {
+public class Subgraph implements Iterable<Rule> {
 
-	/**
-	 * A Descriptor:Data pair.
-	 *
-	 */
-	public static class Rule {
+    private final ArrayList<Rule> rules = new ArrayList<Rule>();
 
-		/**
-		 * A pattern consisting of tokens and symbols, used to denote a Node,
-		 * Relationship or Index entry within a Subgraph. Heavily influenced
-		 * by Cypher, a Geoff Descriptor uses parentheses to denote a Node and
-		 * square brackets for a Relationship while enclosing Index names
-		 * within pipe symbols. The following summary illustrates the main
-		 * combinations available:
-		 *
-		 * (A)
-		 * [R]
-		 * [R:TYPE]
-		 * (A)-[R]->(B)
-		 * (A)-[:TYPE]->(B)
-		 * (A)-[R:TYPE]->(B)
-		 * (A)<=|Index|
-		 * [R]<=|Index|
-		 * [R:TYPE]<=|Index|
-		 *
-		 */
-		public static class Descriptor {
+    /**
+     * Create an empty subgraph.
+     */
+    public Subgraph() { }
 
-			private final String text;
-			private final Token[] tokens;
-			private final String pattern;
+    /**
+     * Create a subgraph from one or more {@link Rule} objects.
+     *
+     * @param rules initial rules to add
+     */
+    public Subgraph(Rule... rules) {
+        this.add(rules);
+    }
 
-			public Descriptor(String text) throws SyntaxError {
-				this.text = text;
-				TokenReader reader = new TokenReader(new StringReader(text));
-				try {
-					this.tokens = reader.readTokens();
-				} catch(IOException e) {
-					throw new IllegalArgumentException("Unparsable descriptor text", e);
-				}
-				StringBuilder str = new StringBuilder(tokens.length);
-				for(Token token : tokens) {
-					str.append(token.getTokenType().getSymbol());
-				}
-				this.pattern = str.toString();
-			}
+    /**
+     * Create a subgraph from one or more String formatted rules.
+     *
+     * @param rules initial rules to add
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public Subgraph(String... rules) throws SyntaxError {
+        this.add(rules);
+    }
 
-			public Token getToken(int index) {
-				return this.tokens[index];
-			}
+    /**
+     * Create a subgraph by reading through String formatted rules.
+     *
+     * @param reader Reader object to read initial rules from
+     * @throws IOException if a read failure occurs
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public Subgraph(Reader reader) throws IOException, SyntaxError {
+        this.add(reader);
+    }
 
-			public String getPattern() {
-				return this.pattern;
-			}
+    /**
+     * Create a subgraph from a variable collection of objects.
+     *
+     * @param rules objects from which to obtain initial rules
+     * @throws IOException if a read failure occurs
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public Subgraph(Iterable<?> rules) throws IOException, SyntaxError {
+        this.add(rules);
+    }
 
-			@Override
-			public String toString() {
-				return this.text;
-			}
+    /**
+     * Add one or more {@link Rule} objects.
+     *
+     * @param rules rules to add
+     */
+    public void add(Rule... rules) {
+        this.rules.addAll(Arrays.asList(rules));
+    }
 
-		}
+    /**
+     * Add one or more String formatted rules.
+     *
+     * @param rules rules to add
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public void add(String... rules) throws SyntaxError {
+        for (String ruleString : rules) {
+            add(ruleString);
+        }
+    }
 
-		public static Rule fromValues(String descriptor, Object... data) throws SyntaxError {
-			HashMap<String, Object> dataMap = new HashMap<String, Object>(data.length / 2);
-			for (int i = 0; i < data.length; i += 2) {
-				dataMap.put(data[i].toString(), data[i + 1]);
-			}
-			return new Rule(new Descriptor(descriptor), dataMap);
-		}
+    /**
+     * Add rules from a string
+     * TODO: tidy this code up a bit :-/
+     *
+     * @param text the text to parse for rules
+     * @throws SyntaxError if the text cannot be parsed
+     */
+    public void add(String text) throws SyntaxError {
+        if (text == null) {
+            return;
+        }
+        text = text.trim();
+        while (text.length() > 0) {
+            int pos;
+            char ch = text.charAt(0);
+            switch (ch) {
+            case '#':
+                pos = text.indexOf('\n', 1);
+                if (pos >= 0) {
+                    text = text.substring(pos + 1).trim();
+                } else {
+                    text = "";
+                }
+                break;
+            case '(':
+                pos = text.indexOf(')', 1);
+                if (pos >= 0) {
+                    addDescriptor(new Descriptor(text.substring(0, pos + 1)));
+                    text = text.substring(pos + 1).trim();
+                } else {
+                    throw new SyntaxError("')' not found");
+                }
+                break;
+            case '[':
+                pos = text.indexOf(']', 1);
+                if (pos >= 0) {
+                    addDescriptor(new Descriptor(text.substring(0, pos + 1)));
+                    text = text.substring(pos + 1).trim();
+                } else {
+                    throw new SyntaxError("']' not found");
+                }
+                break;
+            case '|':
+                pos = text.indexOf('|', 1);
+                if (pos >= 0) {
+                    addDescriptor(new Descriptor(text.substring(0, pos + 1)));
+                    text = text.substring(pos + 1).trim();
+                } else {
+                    throw new SyntaxError("'|' not found");
+                }
+                break;
+            case '{':
+                Map<String, Object> data = null;
+                // look for each '}' in turn, trying to parse
+                // JSON up to that point; bit brute force but
+                // easier than building a JSON parser...
+                pos = 0;
+                do {
+                    pos = text.indexOf('}', pos + 1);
+                    if (pos >= 0) {
+                        try {
+                            data = JSON.toObject(text.substring(0, pos + 1));
+                        } catch(JSONException e) {
+                            data = null;
+                        }
+                    }
+                } while (pos >= 0 && data == null);
+                if (data == null) {
+                    throw new SyntaxError("Unparsable JSON: " + text);
+                }
+                // now continue parsing the string
+                addData(data);
+                text = text.substring(pos + 1).trim();
+                break;
+            case '-':
+            case '<':
+            case '=':
+            case '>':
+                pos = 1;
+                while (pos < text.length() && "-<=>".indexOf(text.charAt(pos)) >= 0) {
+                    pos += 1;
+                }
+                addDescriptor(new Descriptor(text.substring(0, pos)));
+                text = text.substring(pos).trim();
+                break;
+            default:
+                throw new SyntaxError("Unexpected character '" + ch + "' found");
+            }
+            text = text.trim();
+        }
+    }
 
-		/**
-		 * Read one or more rules from a string, returning all rules read in
-		 * a list. Each descriptor may or may not be followed by a data map.
-		 *
-		 * @param text the string from which to read the rules
-		 * @return collection of rules read
-		 * @throws SyntaxError if JSON is unparsable
-		 */
-		public static List<Rule> from(String text) throws SyntaxError {
-			if (Geoff.DEBUG) {
-				System.out.println("Parsing rule: " + text);
-			}
-			ArrayList<Rule> rules = new ArrayList<Rule>();
-			text = text.trim();
-			while (text.length() > 0) {
-				String[] bits = text.split("\\s+", 2);
-				Descriptor descriptor = new Descriptor(bits[0]);
-				Map<String, Object> data;
-				if (bits.length == 1) {
-					data = null;
-					text = "";
-				} else if (bits[1].charAt(0) == '{') {
-					data = null;
-					// look for each '}' in turn, trying to parse
-					// JSON up to that point; bit brute force but
-					// easier than building a JSON parser...
-					int pos = 0;
-					do {
-						pos = bits[1].indexOf('}', pos + 1);
-						if (pos >= 0) {
-							try {
-								data = JSON.toObject(bits[1].substring(0, pos + 1));
-							} catch(JSONException e) {
-								data = null;
-							}
-						}
-					} while (pos >= 0 && data == null);
-					if (data == null) {
-						throw new SyntaxError("Unparsable JSON in rule: " + text);
-					}
-					// now continue parsing the string
-					text = bits[1].substring(pos + 1).trim();
-				} else {
-					data = null;
-					text = bits[1];
-				}
-				Rule rule = new Rule(descriptor, data);
-				rules.add(rule);
-			}
-			return rules;
-		}
+    /**
+     * Add to subgraph by reading through String formatted rules.
+     *
+     * @param reader Reader object to read rules from
+     * @throws IOException if a read failure occurs
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public void add(Reader reader) throws IOException, SyntaxError {
+        StringBuilder content = new StringBuilder(10000);
+        char[] buf = new char[1024];
+        int n;
+        while((n = reader.read(buf)) != -1){
+            content.append(buf, 0, n);
+        }
+        reader.close();
+        add(content.toString());
+    }
 
-		private final Descriptor descriptor;
-		private final Map<String, Object> data;
+    /**
+     * Add to subgraph from a variable collection of objects.
+     *
+     * @param rules objects from which to obtain rules
+     * @throws IOException if a read failure occurs
+     * @throws SyntaxError if a rule string is badly formatted
+     */
+    public void add(Iterable<?> rules) throws IOException, SyntaxError {
+        for(Object item : rules) {
+            if (item instanceof Rule) {
+                this.rules.add((Rule) item);
+            } else if (item instanceof Iterable) {
+                this.add((Iterable) item);
+            } else if (item instanceof Reader) {
+                this.add((Reader) item);
+            } else if (item instanceof String) {
+                this.add((String) item);
+            } else {
+                throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
+            }
+        }
+    }
 
-		public Rule(Descriptor descriptor, Map<String, Object> data) {
-			this.descriptor = descriptor;
-			this.data = data;
-		}
+    /**
+     * Add descriptor to subgraph - may create new rule containing only
+     * this descriptor or may append to last descriptor in list.
+     *
+     * @param descriptor new Descriptor to add
+     */
+    public void addDescriptor(Descriptor descriptor) {
+        if (this.rules.isEmpty()) {
+            this.rules.add(new Rule(descriptor));
+        } else {
+            Rule lastRule = this.rules.get(this.rules.size() - 1);
+            Descriptor lastDescriptor = lastRule.getDescriptor();
+            if (descriptor.startsWith('-', '<', '=', '>') || lastDescriptor.endsWith('-', '<', '=', '>')) {
+                lastDescriptor.append(descriptor);
+            } else {
+                this.rules.add(new Rule(descriptor));
+            }
+        }
+    }
 
-		public Descriptor getDescriptor() {
-			return this.descriptor;
-		}
+    /**
+     * Merge data with last rule in list.
+     *
+     * @param data data map to merge
+     * @throws SyntaxError if no rules in Subgraph
+     */
+    public void addData(Map<String, Object> data) throws SyntaxError {
+        if (this.rules.isEmpty()) {
+            throw new SyntaxError("No rule to merge data into");
+        } else {
+            Rule lastRule = this.rules.get(this.rules.size() - 1);
+            lastRule.putData(data);
+        }
+    }
 
-		public Map<String, Object> getData() {
-			return this.data;
-		}
+    public boolean isEmpty() {
+        return this.rules.isEmpty();
+    }
+    
+    public int size() {
+        return this.rules.size();
+    }
+    
+    public Subgraph copy() {
+        Subgraph subgraph = new Subgraph();
+        subgraph.rules.addAll(this.rules);
+        return subgraph;
+    }
+    
+    public Subgraph reverse() {
+        Subgraph subgraph = this.copy();
+        Collections.reverse(subgraph.rules);
+        return subgraph;
+    }
+    
+    public List<Rule> getRules() {
+        return this.rules;
+    }
+    
+    @Override
+    public Iterator<Rule> iterator() {
+        return this.rules.iterator();
+    }
 
-		@Override
-		public String toString() {
-			return this.descriptor.toString() + " {...}"; //TODO: append data in JSON format
-		}
-
-	}
-
-	private final ArrayList<Rule> rules = new ArrayList<Rule>();
-
-	/**
-	 * Create an empty subgraph.
-	 */
-	public Subgraph() { }
-
-	/**
-	 * Create a subgraph from one or more {@link Rule} objects.
-	 *
-	 * @param rules initial rules to add
-	 */
-	public Subgraph(Rule... rules) {
-		this.add(rules);
-	}
-
-	/**
-	 * Create a subgraph from one or more String formatted rules.
-	 *
-	 * @param rules initial rules to add
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public Subgraph(String... rules) throws SyntaxError {
-		this.add(rules);
-	}
-
-	/**
-	 * Create a subgraph by reading through String formatted rules.
-	 *
-	 * @param reader Reader object to read initial rules from
-	 * @throws IOException if a read failure occurs
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public Subgraph(Reader reader) throws IOException, SyntaxError {
-		this.add(reader);
-	}
-
-	/**
-	 * Create a subgraph from a variable collection of objects.
-	 *
-	 * @param rules objects from which to obtain initial rules
-	 * @throws IOException if a read failure occurs
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public Subgraph(Iterable<?> rules) throws IOException, SyntaxError {
-		this.add(rules);
-	}
-
-	/**
-	 * Add one or more {@link Rule} objects.
-	 *
-	 * @param rules rules to add
-	 */
-	public void add(Rule... rules) {
-		this.rules.addAll(Arrays.asList(rules));
-	}
-
-	/**
-	 * Add one or more String formatted rules.
-	 *
-	 * @param rules rules to add
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public void add(String... rules) throws SyntaxError {
-		for (String ruleString : rules) {
-			if (ruleString.contains("\n")) {
-				StringReader reader = new StringReader(ruleString);
-				try {
-					this.add(reader);
-				} catch (IOException ex) {
-					//
-				} finally {
-					reader.close();
-				}
-			} else {
-				if (ruleString.trim().isEmpty() || ruleString.charAt(0) == '#') {
-					// empty line or comment
-				} else if (ruleString.startsWith("[\"")) {
-					try {
-						for(String string : JSON.toListOfStrings(ruleString)) {
-							this.rules.addAll(Rule.from(string));
-						}
-					} catch (JSONException e) {
-						throw new SyntaxError("Cannot parse JSON list", e);
-					}
-				} else {
-					this.rules.addAll(Rule.from(ruleString));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Add to subgraph by reading through String formatted rules.
-	 *
-	 * @param reader Reader object to read rules from
-	 * @throws IOException if a read failure occurs
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public void add(Reader reader) throws IOException, SyntaxError {
-		BufferedReader bufferedReader = new BufferedReader(reader);
-		try {
-			String ruleString = bufferedReader.readLine();
-			while (ruleString != null) {
-				this.add(ruleString);
-				ruleString = bufferedReader.readLine();
-			}
-		} finally {
-			bufferedReader.close();
-		}
-	}
-
-	/**
-	 * Add to subgraph from a variable collection of objects.
-	 *
-	 * @param rules objects from which to obtain rules
-	 * @throws IOException if a read failure occurs
-	 * @throws SyntaxError if a rule string is badly formatted
-	 */
-	public void add(Iterable<?> rules) throws IOException, SyntaxError {
-		StringReader reader;
-		for(Object item : rules) {
-			if (item instanceof Rule) {
-				this.rules.add((Rule) item);
-			} else if (item instanceof Iterable) {
-				this.add((Iterable) item);
-			} else if (item instanceof Reader) {
-				this.add((Reader) item);
-			} else if (item instanceof CharSequence) {
-				reader = new StringReader(item.toString());
-				try {
-					this.add(reader);
-				} finally {
-					reader.close();
-				}
-			} else {
-				throw new IllegalArgumentException("Cannot process rules of type " + item.getClass().getName());
-			}
-		}
-	}
-
-	public int size() {
-		return this.rules.size();
-	}
-	
-	public Subgraph copy() {
-		Subgraph subgraph = new Subgraph();
-		subgraph.rules.addAll(this.rules);
-		return subgraph;
-	}
-	
-	public Subgraph reverse() {
-		Subgraph subgraph = this.copy();
-		Collections.reverse(subgraph.rules);
-		return subgraph;
-	}
-	
-	@Override
-	public Iterator<Rule> iterator() {
-		return this.rules.iterator();
-	}
-
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        for (Rule rule : this.rules) {
+            b.append(rule.toString());
+            b.append('\n');
+        }
+        return b.toString();
+    }
+    
 }

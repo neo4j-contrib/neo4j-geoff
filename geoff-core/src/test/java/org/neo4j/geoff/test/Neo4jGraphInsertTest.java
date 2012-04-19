@@ -818,7 +818,7 @@ public class Neo4jGraphInsertTest extends TestBase {
 			"(bar) {\"position\": \"south-east\"}",
 			"(one) {\"position\": \"north-west\"}",
 			"(two) {\"position\": \"south-west\"}",
-			"[\"(foo)-[:SOUTH]->(bar)\", \"(bar)-[:WEST]->(two)\", \"(two)-[:NORTH]->(one)\", \"(one)-[:EAST]->(foo)\"]"
+			"(foo)-[:SOUTH]->(bar) (bar)-[:WEST]->(two) (two)-[:NORTH]->(one) (one)-[:EAST]->(foo)"
 		);
 		org.neo4j.graphdb.Transaction tx = db.beginTx();
 		Node nodeOne = db.createNode();

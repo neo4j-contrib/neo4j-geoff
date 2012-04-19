@@ -25,6 +25,7 @@ import org.neo4j.geoff.util.UeberReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TokenReader extends UeberReader {
 
@@ -40,7 +41,11 @@ public class TokenReader extends UeberReader {
 		return Character.isLetterOrDigit(ch) || ch == '_';
 	}
 
-	public Token[] readTokens() throws IOException, SyntaxError {
+    public static boolean isWhitespace(char ch) {
+        return Character.isWhitespace(ch);
+    }
+
+	public List<Token> readTokens() throws IOException, SyntaxError {
 		ArrayList<Token> tokens = new ArrayList<Token>(20);
 		boolean done = false;
 		while(!done) {
@@ -79,10 +84,10 @@ public class TokenReader extends UeberReader {
 			} catch (EndOfStreamException e) {
 				done = true;
 			} catch (UnexpectedCharacterException e) {
-				throw new SyntaxError("Unexpected character encountered in token", e);
+                throw new SyntaxError("Unexpected character '" + e.getMessage() + "' encountered in token");
 			}
 		}
-		return tokens.toArray(new Token[tokens.size()]);
+		return tokens;
 	}
 
 	public NodeToken readNodeToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {

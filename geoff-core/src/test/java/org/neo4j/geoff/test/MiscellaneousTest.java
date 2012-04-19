@@ -21,6 +21,7 @@ package org.neo4j.geoff.test;
 
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
+import org.neo4j.geoff.Rule;
 import org.neo4j.geoff.Subgraph;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.Node;
@@ -52,13 +53,12 @@ public class MiscellaneousTest extends TestBase{
 
 	@Test
 	public void canCreateGraphWithHookToReferenceNode() throws Exception {
-		Subgraph subgraph = new Subgraph("[" +
-				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
-				"\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
-				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
-				"\"(doc)<=|People|     {\\\"name\\\": \\\"The Doctor\\\"}\"," +
-				"\"(ref)-[:TIMELORD]->(doc)\"" +
-				"]");
+		Subgraph subgraph = new Subgraph("" +
+				"(doc) {\"name\": \"doctor\"}\n" +
+				"(dal) {\"name\": \"dalek\"}\n" +
+				"(doc)-[:ENEMY_OF]->(dal) {\"since\":\"forever\"}\n" +
+				"(doc)<=|People|     {\"name\": \"The Doctor\"}\n" +
+				"(ref)-[:TIMELORD]->(doc)");
 		HashMap<String,PropertyContainer> hooks = new HashMap<String,PropertyContainer>(1);
 		hooks.put("ref", db.getReferenceNode());
 		Geoff.insertIntoNeo4j(subgraph, db, hooks);
@@ -71,8 +71,8 @@ public class MiscellaneousTest extends TestBase{
 	@Test
 	public void canLoadRulesCreatedFromValues() throws Exception {
 		Subgraph rules = new Subgraph();
-		rules.add(Subgraph.Rule.fromValues("(doc)", "name", "doctor", "age", 991));
-		rules.add(Subgraph.Rule.fromValues("(doc)<=|People|", "name", "The Doctor"));
+		rules.add(Rule.fromValues("(doc)", "name", "doctor", "age", 991));
+		rules.add(Rule.fromValues("(doc)<=|People|", "name", "The Doctor"));
 		Geoff.insertIntoNeo4j(rules, db, null);
 		assertTrue(db.index().existsForNodes("People"));
 		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
