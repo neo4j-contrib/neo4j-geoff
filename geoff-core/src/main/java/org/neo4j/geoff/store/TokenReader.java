@@ -41,10 +41,6 @@ public class TokenReader extends UeberReader {
 		return Character.isLetterOrDigit(ch) || ch == '_';
 	}
 
-    public static boolean isWhitespace(char ch) {
-        return Character.isWhitespace(ch);
-    }
-
 	public List<Token> readTokens() throws IOException, SyntaxError {
 		ArrayList<Token> tokens = new ArrayList<Token>(20);
 		boolean done = false;
