@@ -319,6 +319,24 @@ public class Neo4jGraphMergeTest extends TestBase {
 		db.assertCounts(3, 1);
 	}
 
+    @Test
+    public void canCreateRelationshipWithSpacesInType() throws Exception {
+        TestDatabase db = new TestDatabase();
+        Subgraph geoff = new Subgraph("(A)-[:ONCE DID SOMETHING INVOLVING]->(B)");
+        Map<String, PropertyContainer> out = Geoff.mergeIntoNeo4j(geoff, db, null);
+        assertNodesExist(out, "(A)", "(B)");
+        db.assertCounts(3, 1);
+    }
+
+    @Test
+    public void canCreateRelationshipWithSpacesInTypeWithinBackticks() throws Exception {
+        TestDatabase db = new TestDatabase();
+        Subgraph geoff = new Subgraph("(A)-[:`ONCE DID SOMETHING INVOLVING`]->(B)");
+        Map<String, PropertyContainer> out = Geoff.mergeIntoNeo4j(geoff, db, null);
+        assertNodesExist(out, "(A)", "(B)");
+        db.assertCounts(3, 1);
+    }
+
 	/////////////////////
 
 	@Test(expected = SubgraphError.class)

@@ -123,4 +123,16 @@ public class UeberReader {
 		}
 	}
 
+    public String readUntil(char marker, boolean inclusive) throws EndOfStreamException, IOException {
+        StringBuilder str = new StringBuilder(1024);
+        char ch;
+        do {
+            ch = peek();
+            if (ch != marker || inclusive) {
+                str.append(read());
+            }
+        } while (ch != marker);
+        return str.toString();
+    }
+    
 }

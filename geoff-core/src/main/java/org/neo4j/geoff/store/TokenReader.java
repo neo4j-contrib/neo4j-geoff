@@ -29,109 +29,115 @@ import java.util.List;
 
 public class TokenReader extends UeberReader {
 
-	public TokenReader(Reader reader) {
-		super(reader);
-	}
+    public TokenReader(Reader reader) {
+        super(reader);
+    }
 
-	public static boolean isDigit(char ch) {
-		return Character.isDigit(ch);
-	}
+    public static boolean isDigit(char ch) {
+        return Character.isDigit(ch);
+    }
 
-	public static boolean isNameChar(char ch) {
-		return Character.isLetterOrDigit(ch) || ch == '_';
-	}
+    public static boolean isNameChar(char ch) {
+        return Character.isLetterOrDigit(ch) || ch == '_';
+    }
 
-	public List<Token> readTokens() throws IOException, SyntaxError {
-		ArrayList<Token> tokens = new ArrayList<Token>(20);
-		boolean done = false;
-		while(!done) {
-			try {
-				char ch = peek();
-				switch(ch) {
-				case '(':
-					tokens.add(readNodeToken());
-					break;
-				case '[':
-					tokens.add(readRelationshipToken());
-					break;
-				case '|':
-					tokens.add(readIndexToken());
-					break;
-				case '-':
-					read('-');
-					tokens.add(new Token(Token.Type.CONNECTS));
-					break;
-				case '>':
-					read('>');
-					tokens.add(new Token(Token.Type.TO));
-					break;
-				case '<':
-					read('<');
-					if (peek() == '=') {
-						read('=');
-						tokens.add(new Token(Token.Type.IS_ENTRY_IN));
-					} else {
-						tokens.add(new Token(Token.Type.FROM));
-					}
-					break;
-				default:
-					throw new UnexpectedCharacterException(ch);
-				}
-			} catch (EndOfStreamException e) {
-				done = true;
-			} catch (UnexpectedCharacterException e) {
+    public List<Token> readTokens() throws IOException, SyntaxError {
+        ArrayList<Token> tokens = new ArrayList<Token>(20);
+        boolean done = false;
+        while(!done) {
+            try {
+                char ch = peek();
+                switch(ch) {
+                case '(':
+                    tokens.add(readNodeToken());
+                    break;
+                case '[':
+                    tokens.add(readRelationshipToken());
+                    break;
+                case '|':
+                    tokens.add(readIndexToken());
+                    break;
+                case '-':
+                    read('-');
+                    tokens.add(new Token(Token.Type.CONNECTS));
+                    break;
+                case '>':
+                    read('>');
+                    tokens.add(new Token(Token.Type.TO));
+                    break;
+                case '<':
+                    read('<');
+                    if (peek() == '=') {
+                        read('=');
+                        tokens.add(new Token(Token.Type.IS_ENTRY_IN));
+                    } else {
+                        tokens.add(new Token(Token.Type.FROM));
+                    }
+                    break;
+                default:
+                    throw new UnexpectedCharacterException(ch);
+                }
+            } catch (EndOfStreamException e) {
+                done = true;
+            } catch (UnexpectedCharacterException e) {
                 throw new SyntaxError("Unexpected character '" + e.getMessage() + "' encountered in token");
-			}
-		}
-		return tokens;
-	}
+            }
+        }
+        return tokens;
+    }
 
-	public NodeToken readNodeToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
-		read('(');
-		NodeToken token;
-		String name = readName();
-		token = new NodeToken(name);
-		read(')');
-		return token;
-	}
+    public NodeToken readNodeToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+        read('(');
+        NodeToken token;
+        String name = readName();
+        token = new NodeToken(name);
+        read(')');
+        return token;
+    }
 
-	public RelationshipToken readRelationshipToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
-		read('[');
-		String name = readName();
-		String type = "";
-		if(peek() == ':') {
-			read(':');
-			type = readName();
-		}
-		read(']');
-		return new RelationshipToken(name, type);
-	}
+    public RelationshipToken readRelationshipToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+        read('[');
+        String name = readName();
+        String type = "";
+        if (peek() == ':') {
+            read(':');
+            if (peek() == '`') {
+                read('`');
+                type = readUntil('`', false);
+                read('`');
+            } else {
+                type = readUntil(']', false);
+            }
+        }
+        read(']');
+        return new RelationshipToken(name, type);
+    }
 
-	public Token readIndexToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
-		read('|');
-		String name = readName();
-		read('|');
-		return new IndexToken(name);
-	}
+    public Token readIndexToken() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+        read('|');
+        String name = readName();
+        read('|');
+        return new IndexToken(name);
+    }
 
-	public String readName() throws IOException, EndOfStreamException, UnexpectedCharacterException {
-		StringBuilder str = new StringBuilder(80);
-		while (isNameChar(peek())) {
-			str.append(read());
-		}
-		if (peek() == '.') {
-			str.append(read('.'));
-			char ch = peek();
-			if (ch >= '1' && ch <= '9') {
-				str.append(read(ch));
-			} else {
-				throw new UnexpectedCharacterException(ch);
-			}
-			while (isDigit(peek())) {
-				str.append(read());
-			}
-		}
-		return str.toString();
-	}
+    public String readName() throws IOException, EndOfStreamException, UnexpectedCharacterException {
+        StringBuilder str = new StringBuilder(80);
+        while (isNameChar(peek())) {
+            str.append(read());
+        }
+        if (peek() == '.') {
+            str.append(read('.'));
+            char ch = peek();
+            if (ch >= '1' && ch <= '9') {
+                str.append(read(ch));
+            } else {
+                throw new UnexpectedCharacterException(ch);
+            }
+            while (isDigit(peek())) {
+                str.append(read());
+            }
+        }
+        return str.toString();
+    }
 
 }
