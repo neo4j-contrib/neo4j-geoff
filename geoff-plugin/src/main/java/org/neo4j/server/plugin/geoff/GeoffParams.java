@@ -54,7 +54,7 @@ public abstract class GeoffParams {
 					if (value.startsWith("/node/")) {
 						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(6))));
 					} else if (value.startsWith("/relationship/")) {
-						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(13))));
+						p2.put(key, graphDB.getNodeById(Integer.parseInt(value.substring(14))));
 					} else {
 						throw new IllegalArgumentException("Cannot resolve parameter: " + key);
 					}
