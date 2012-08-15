@@ -2,7 +2,7 @@
   <parent>
     <groupId>org.neo4j.build</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>31</version>
+    <version>35</version>
     <relativePath />
   </parent>
 
@@ -10,7 +10,7 @@
   <groupId>org.neo4j.server.plugin</groupId>
   <artifactId>neo4j-geoff-plugin</artifactId>
   <packaging>jar</packaging>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.8-SNAPSHOT</version>
   <name>neo4j-geoff-plugin</name>
 
   <properties>
@@ -18,7 +18,7 @@
     <junit.version>4.8.2</junit.version>
     <jackson.version>1.8.3</jackson.version>
     <servlet-api.version>2.5</servlet-api.version>
-    <neo4j.version>1.7-SNAPSHOT</neo4j.version>
+    <neo4j.version>1.8-SNAPSHOT</neo4j.version>
     <jersey.server.version>1.6</jersey.server.version>
     <license-text.header>GPL-3-header.txt</license-text.header>
   </properties>

@@ -3,14 +3,13 @@
   <parent>
     <groupId>org.neo4j.build</groupId>
     <artifactId>parent-central</artifactId>
-    <version>31</version>
-    <relativePath />
+    <version>35</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.neo4j.build</groupId>
   <artifactId>neo4j-geoff</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.8-SNAPSHOT</version>
   <name>Neo4j GEOFF components</name>
   <packaging>pom</packaging>
   <description>Project that builds the Neo4j GEOFF components</description>
