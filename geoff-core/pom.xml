@@ -10,7 +10,7 @@
 
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-geoff-core</artifactId>
-  <version>1.8-SNAPSHOT</version>
+  <version>1.9-SNAPSHOT</version>
   <name>Neo4j - GEOFF</name>
   <description>Utility component to parse Neo4j graphs in GEOFF format, see http://py2neo.org/geoff.</description>
 
@@ -50,12 +50,12 @@ the relevant Commercial Agreement.
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <version>1.9-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-kernel</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <version>1.9-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
