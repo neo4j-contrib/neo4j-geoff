@@ -20,6 +20,7 @@
 package org.neo4j.geoff.test;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.except.SubgraphError;
@@ -43,7 +44,6 @@ public class Neo4jGraphDeleteTest extends TestBase {
 		}
 	}
 
-	@Test
 	public void canDeleteAllTestTransactions() throws IOException, SubgraphError {
 		for (TestTransaction txn : this.testTransactions) {
 			Geoff.deleteFromNeo4j(txn, db, null);

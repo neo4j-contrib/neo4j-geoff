@@ -9,7 +9,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.neo4j.build</groupId>
   <artifactId>neo4j-geoff</artifactId>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.9.4</version>
   <name>Neo4j GEOFF components</name>
   <packaging>pom</packaging>
   <description>Project that builds the Neo4j GEOFF components</description>

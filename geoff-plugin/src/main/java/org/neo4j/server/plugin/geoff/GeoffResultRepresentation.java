@@ -20,6 +20,7 @@
 package org.neo4j.server.plugin.geoff;
 
 import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.server.rest.repr.MapRepresentation;
 import org.neo4j.server.rest.repr.MappingRepresentation;
 import org.neo4j.server.rest.repr.ObjectRepresentation;
 import org.neo4j.server.rest.repr.Representation;
@@ -40,7 +41,7 @@ public class GeoffResultRepresentation extends ObjectRepresentation {
 
 	@Mapping("params")
 	public Representation params() {
-		return MappingRepresentation.stringMap("params", this.params);
+		return new MapRepresentation(this.params);
 	}
 
 }
