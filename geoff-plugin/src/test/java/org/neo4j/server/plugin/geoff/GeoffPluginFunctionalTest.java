@@ -22,6 +22,7 @@ package org.neo4j.server.plugin.geoff;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.kernel.impl.annotations.Documented;
 import org.neo4j.server.rest.AbstractRestFunctionalTestBase;
 import org.neo4j.server.rest.RESTDocsGenerator;
 
@@ -31,7 +32,16 @@ import static org.junit.Assert.assertTrue;
 public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
     private static final String GEOFF_INSERT = "ext/GeoffPlugin/graphdb/insert";
 
+    protected String getDocumentationSectionName() {
+        return "rest-api";
+    }
+    /**
+     * Inserting a Geoff representation.
+     * This is the normal scheme for loading data into a clean graph, looking up some of the
+     * data via an index rule.
+     */
     @Test
+    @Documented
     public void canLoadGeoffRuleList() {
 
         GraphDatabaseService db = graphdb();
@@ -47,7 +57,6 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
                 .expectedStatus(200)
                 .payload(payload)
                 .post(getDataUri() + GEOFF_INSERT);
-        String res = response.entity();
         Transaction tx = db.beginTx();
         try {
 

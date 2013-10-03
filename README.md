@@ -5,3 +5,7 @@ plugin, enabling usage via the RESTful web service interface.
 
 For full details of the format and how to use this plugin, please visit
 [http://geoff.nigelsmall.net/](http://geoff.nigelsmall.net/).
+
+## Building docs:
+
+  mvn -Pneo-docs-build clean install
