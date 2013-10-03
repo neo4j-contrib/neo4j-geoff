@@ -22,7 +22,6 @@
         <neo4j.version>2.0.0-M05</neo4j.version>
         <jersey.server.version>1.6</jersey.server.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
-        <github.global.server>github</github.global.server>
     </properties>
     <licenses>
         <license>
@@ -344,30 +343,7 @@
                         </executions>
                     </plugin>
 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.github</groupId>
-                        <artifactId>site-maven-plugin</artifactId>
-                        <version>0.8</version>
-                        <configuration>
-                            <message>Creating site for ${project.version}</message>
-                            <outputDirectory>target/html5</outputDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>site</goal>
-                                </goals>
-                                <phase>site</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
+                   
                 </plugins>
             </build>
             <properties>
