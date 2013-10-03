@@ -5,17 +5,18 @@
   <parent>
     <groupId>org.neo4j.build</groupId>
     <artifactId>parent-central</artifactId>
-    <version>35</version>
+    <version>39</version>
   </parent>
 
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-geoff-core</artifactId>
-  <version>1.9.4</version>
+  <version>2.0-SNPASHOT</version>
   <name>Neo4j - GEOFF</name>
   <description>Utility component to parse Neo4j graphs in GEOFF format, see http://py2neo.org/geoff.</description>
 
   <properties>
     <bundle.namespace>org.neo4j.visualization</bundle.namespace>
+    <neo4j.version>2.0.0-M05</neo4j.version>
   </properties>
   <licenses>
     <license>
@@ -50,12 +51,12 @@ the relevant Commercial Agreement.
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j</artifactId>
-      <version>1.9.4</version>
+      <version>${neo4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-kernel</artifactId>
-      <version>1.9.4</version>
+      <version>${neo4j.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

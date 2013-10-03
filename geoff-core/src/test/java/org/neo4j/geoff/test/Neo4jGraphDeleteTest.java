@@ -20,35 +20,38 @@
 package org.neo4j.geoff.test;
 
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.neo4j.geoff.Geoff;
 import org.neo4j.geoff.except.SubgraphError;
 import org.neo4j.geoff.except.SyntaxError;
+import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 
 public class Neo4jGraphDeleteTest extends TestBase {
 
-	private final TestTransaction[] testTransactions;
-	
-	public Neo4jGraphDeleteTest() throws IOException, SyntaxError {
-		this.testTransactions = getTestTransactions(50);
-	}
-	
-	@Before
-	public void setUp() throws IOException, SubgraphError {
-		db = new TestDatabase();
-		for (TestTransaction txn : this.testTransactions) {
-			Geoff.insertIntoNeo4j(txn, db, null);
-		}
-	}
+    private final TestTransaction[] testTransactions;
 
-	public void canDeleteAllTestTransactions() throws IOException, SubgraphError {
-		for (TestTransaction txn : this.testTransactions) {
-			Geoff.deleteFromNeo4j(txn, db, null);
-		}
-		db.assertCounts(1, 0);
-	}
+    public Neo4jGraphDeleteTest() throws IOException, SyntaxError {
+        this.testTransactions = getTestTransactions(50);
+    }
 
+    @Before
+    public void setUp() throws IOException, SubgraphError {
+        db = new TestDatabase();
+        for (TestTransaction txn : this.testTransactions) {
+            Geoff.insertIntoNeo4j(txn, db, null);
+        }
+    }
+
+    public void canDeleteAllTestTransactions() throws IOException, SubgraphError {
+        for (TestTransaction txn : this.testTransactions) {
+            Geoff.deleteFromNeo4j(txn, db, null);
+        }
+        Transaction tx = db.beginTx();
+        try {
+            db.assertCounts(1, 0);
+        } finally {
+            tx.close();
+        }
+    }
 }
