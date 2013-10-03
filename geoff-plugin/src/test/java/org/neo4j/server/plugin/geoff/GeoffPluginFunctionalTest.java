@@ -19,44 +19,44 @@
  */
 package org.neo4j.server.plugin.geoff;
 
-import com.sun.jersey.api.client.ClientResponse;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.server.NeoServer;
-import org.neo4j.server.helpers.ServerHelper;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.server.rest.AbstractRestFunctionalTestBase;
 import org.neo4j.server.rest.RESTDocsGenerator;
-import org.neo4j.test.server.ExclusiveServerTestBase;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class GeoffPluginFunctionalTest  extends AbstractRestFunctionalTestBase  {
-	private static final String GEOFF_INSERT = "ext/GeoffPlugin/graphdb/insert";
-    
-	@Test
-	public void canLoadGeoffRuleList() {
-        
+public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
+    private static final String GEOFF_INSERT = "ext/GeoffPlugin/graphdb/insert";
+
+    @Test
+    public void canLoadGeoffRuleList() {
+
         GraphDatabaseService db = graphdb();
-		String geoff = "[" +
-				"\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
-				"\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
-				"\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
-				"\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
-				"]";
-		String payload = "{\"subgraph\":" + geoff + "}";
+        String geoff = "[" +
+                "\"(doc) {\\\"name\\\": \\\"doctor\\\"}\"," +
+                "\"(dal) {\\\"name\\\": \\\"dalek\\\"}\"," +
+                "\"(doc)-[:ENEMY_OF]->(dal) {\\\"since\\\":\\\"forever\\\"}\"," +
+                "\"(doc)<=|People| {\\\"name\\\": \\\"The Doctor\\\"}\"" +
+                "]";
+        String payload = "{\"subgraph\":" + geoff + "}";
         RESTDocsGenerator.ResponseEntity response = gen.get()
                 .noGraph()
-                .expectedStatus( 200 )
-                .payload(payload  )
-                .post( getDataUri() + GEOFF_INSERT );
-		String res = response.entity();
-		assertTrue(db.index().existsForNodes("People"));
-		assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
-		assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
-	}
+                .expectedStatus(200)
+                .payload(payload)
+                .post(getDataUri() + GEOFF_INSERT);
+        String res = response.entity();
+        Transaction tx = db.beginTx();
+        try {
+
+            assertTrue(db.index().existsForNodes("People"));
+            assertTrue(db.index().forNodes("People").get("name", "The Doctor").hasNext());
+            assertEquals("doctor", db.index().forNodes("People").get("name", "The Doctor").getSingle().getProperty("name"));
+            tx.success();
+        } finally {
+            tx.close();
+        }
+    }
 }

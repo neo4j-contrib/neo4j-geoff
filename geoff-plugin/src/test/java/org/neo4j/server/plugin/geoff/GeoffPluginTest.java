@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.neo4j.geoff.util.JSON;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.server.rest.repr.OutputFormat;
 import org.neo4j.server.rest.repr.formats.JsonFormat;
 import org.neo4j.test.GraphDescription;
@@ -40,62 +41,62 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class GeoffPluginTest implements GraphHolder
-{
+public class GeoffPluginTest implements GraphHolder {
 
     private static ImpermanentGraphDatabase db;
-    public @Rule
-    TestData<Map<String, Node>> data = TestData.producedThrough( GraphDescription.createGraphFor(
-            this, true ) );
+    public
+    @Rule
+    TestData<Map<String, Node>> data = TestData.producedThrough(GraphDescription.createGraphFor(
+            this, true));
     private GeoffPlugin plugin;
     private OutputFormat json;
 
+    @BeforeClass
+    public static void startDatabase() {
+        db = new ImpermanentGraphDatabase();
+        db.cleanContent(false);
+
+    }
+
     @Before
-    public void setUp() throws Exception
-    {
+    public void setUp() throws Exception {
         db = new ImpermanentGraphDatabase();
         plugin = new GeoffPlugin();
-        json = new OutputFormat( new JsonFormat(),
-                new URI( "http://localhost/" ), null );
+        json = new OutputFormat(new JsonFormat(),
+                new URI("http://localhost/"), null);
     }
 
     @Test
-    public void runSimpleQuery() throws Exception
-    {
+    public void runSimpleQuery() throws Exception {
         db.cleanContent(false);
-        expectNodes( 0 );
-        Node i = data.get().get( "I" );
+        expectNodes(0);
+        Node i = data.get().get("I");
         //Representation result = testQuery( JSON.toObject( "{\"(Joe)\":{\"name\":\"Joe\"}}" ) );
-	    List<String> rules = JSON.toListOfStrings("[\"(Joe) {\\\"name\\\":\\\"Joe\\\"}\"]");
-	    plugin.insert(db, rules.toArray(new String[rules.size()]), null);
-        expectNodes( 1 );
+        List<String> rules = JSON.toListOfStrings("[\"(Joe) {\\\"name\\\":\\\"Joe\\\"}\"]");
+        plugin.insert(db, rules.toArray(new String[rules.size()]), null);
+        expectNodes(1);
     }
 
-    private void expectNodes( int i )
-    {
-        int count = 0;
-        Iterator<Node> allNodes = db.getAllNodes().iterator();
-        while ( allNodes.hasNext() )
-        {
-            allNodes.next();
-            count++;
+    private void expectNodes(int i) {
+        Transaction tx = db.beginTx();
+        try {
+            int count = 0;
+            Iterator<Node> allNodes = db.getAllNodes().iterator();
+            while (allNodes.hasNext()) {
+                allNodes.next();
+                count++;
+            }
+            assertEquals(i, count);
+            tx.success();
+        } finally {
+            tx.close();
         }
-        assertEquals(i, count );
 
     }
 
     @Override
-    public GraphDatabaseService graphdb()
-    {
+    public GraphDatabaseService graphdb() {
         return db;
-    }
-
-    @BeforeClass
-    public static void startDatabase()
-    {
-        db = new ImpermanentGraphDatabase(  );
-        db.cleanContent(false);
-
     }
 
 }
