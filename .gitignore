@@ -1,9 +1,0 @@
-.classpath
-.idea
-.project
-.settings
-bin
-out
-*.iml
-target
-*~
