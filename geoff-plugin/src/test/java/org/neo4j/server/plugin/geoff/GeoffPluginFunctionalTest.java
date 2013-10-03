@@ -53,7 +53,6 @@ public class GeoffPluginFunctionalTest extends AbstractRestFunctionalTestBase {
                 "]";
         String payload = "{\"subgraph\":" + geoff + "}";
         RESTDocsGenerator.ResponseEntity response = gen.get()
-                .noGraph()
                 .expectedStatus(200)
                 .payload(payload)
                 .post(getDataUri() + GEOFF_INSERT);

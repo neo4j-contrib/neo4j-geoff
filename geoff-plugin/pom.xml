@@ -22,6 +22,7 @@
         <neo4j.version>2.0.0-M05</neo4j.version>
         <jersey.server.version>1.6</jersey.server.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
+        <github.global.server>github</github.global.server>
     </properties>
     <licenses>
         <license>
@@ -33,7 +34,7 @@
                 parties and that license is included below.
 
                 However, if you have executed an End User Software License and Services
-                Agreement or an OEM Software License and Support Services Agreement, or
+                Agreement o r an OEM Software License and Support Services Agreement, or
                 another commercial license agreement with Neo Technology or one of its
                 affiliates (each, a "Commercial Agreement"), the terms of the license in
                 such Commercial Agreement will supersede the GNU GENERAL PUBLIC LICENSE
@@ -44,9 +45,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/neo4j/geoff-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:neo4j/geoff-plugin.git</developerConnection>
-        <url>https://github.com/neo4j/geoff-plugin</url>
+        <connection>scm:git:git://github.com/neo4j-contrib/geoff-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:neo4j-contrib/geoff-plugin.git</developerConnection>
+        <url>https://github.com/neo4j-contrib/geoff-plugin</url>
     </scm>
 
     <dependencies>
